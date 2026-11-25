@@ -7,6 +7,9 @@ import { initPick } from './pick.js';
 import { initBout } from './bout.js';
 import { initTools } from './tools.js';
 import { unlockAudio, setMuted, playSfx } from './sound.js';
+import { applyButtonArt } from './btnart.js';
+
+applyButtonArt();
 
 const SAVE_KEY = 'sumo-proto-v1';
 const state = { shape: null, drive: 'hop', seed: 1, mute: false, short: false };
