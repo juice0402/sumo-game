@@ -5,7 +5,14 @@ import { TITLES } from '../data/titles.js';
 import { shikonaText, titleText, wordLabel, randomShikona } from '../game/names.js';
 import { drawShapeThumb } from './pick.js';
 
-// 力士のカード（部屋の力士・力士選出で使う）。opt：{ active, onPick(i), emptyOk }
+// 縦書きの名前：字の数を --n に入れて、列の高さに収まる大きさにする（CSS の font-size が --n を使う）
+export function fitText(el, text) {
+  el.textContent = text;
+  el.style.setProperty('--n', String(Math.max(2, Array.from(text).length)));
+  el.classList.add('fit');
+}
+
+// 力士のカード（部屋の力士・力士選出で使う）。番付表の1列＝1力士。opt：{ active, onPick(i), emptyOk }
 export function renderSlots(el, slots, opt) {
   el.textContent = '';
   slots.forEach((s, i) => {
@@ -16,11 +23,11 @@ export function renderSlots(el, slots, opt) {
     if (s) {
       b.innerHTML = '<canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span>';
       b.querySelector('small').textContent = titleText(s.title);
-      b.querySelector('b').textContent = shikonaText(s.shikona);
+      fitText(b.querySelector('b'), shikonaText(s.shikona));
       b.querySelector('em').textContent = T.rec(s.rec);
     } else {
       b.innerHTML = '<span class="plus brush">＋</span><span class="who"><b class="brush"></b><em></em></span>';
-      b.querySelector('b').textContent = T.slotEmpty;
+      fitText(b.querySelector('b'), T.slotEmpty);
       b.querySelector('em').textContent = opt.emptyOk ? T.slotCut : '';
     }
     b.addEventListener('click', () => opt.onPick(i));
@@ -86,11 +93,11 @@ export function initEdit(cb) {
     const s = cb.getSlot(idx);
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
-    document.getElementById('ed-name').textContent = shikonaText(s.shikona);
+    fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
     document.getElementById('ed-rec').textContent = T.rec(s.rec);
     for (const b of document.querySelectorAll('#s-edit .word')) {
       const g = b.dataset.g;
-      b.textContent = g === 'title' ? titleText(s.title) : wordLabel(s.shikona[G[g]]);
+      fitText(b.querySelector('b'), g === 'title' ? titleText(s.title) : wordLabel(s.shikona[G[g]]));
     }
     drawShapeThumb(cv, s.shape);
   }

@@ -38,7 +38,7 @@ let cur = null;
 const nav = [];
 const onShow = {};
 // 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
-const ENTER = '.menu > *, .modes > *, .slots > *, .stagecards > *, .sched > *, .ladder > *, .mine, .profile, .myrank, .foecard, .field, .selhead, .nowhead';
+const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .actions > *, .note, .drive';
 function enter(el) {
   el.classList.remove('enter');
   void el.offsetWidth;   // 動きを最初から
@@ -91,7 +91,7 @@ function loadLibs() {
 }
 
 function boot() {
-  let editSlot = 0, bzTitle = '番付';
+  let editSlot = 0, bzTitle = '番付', stamping = false;
   // 切る：どの枠を切るか・切ったあとどこへ行くか
   let cutSlot = 0, afterCut = null;
   function cutFor(i, then) {
@@ -124,7 +124,11 @@ function boot() {
     },
     onBack: back,
   });
-  onShow['s-pick'] = () => pick.show();
+  onShow['s-pick'] = () => {
+    pick.show();
+    const s = activeSlot();
+    document.getElementById('me-text').textContent = s ? shikonaText(s.shikona) : T.yourShape;
+  };
 
   const bout = initBout({
     getDrive: () => state.drive,
@@ -145,7 +149,15 @@ function boot() {
   }
   onShow['s-select'] = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
-    onPick(i) { loadLibs().then(() => fight(i)); },
+    // 選んだ列に朱の判子をポンと押してから取組へ
+    onPick(i) {
+      if (stamping) return;
+      stamping = true;
+      const btn = document.querySelectorAll('#sel-slots .slot')[i];
+      if (btn) btn.classList.add('stamp');
+      playSfx('ton', { vol: 0.7 });
+      setTimeout(() => loadLibs().then(() => { stamping = false; fight(i); }), 460);
+    },
   });
   function fight(i) {
     const me = state.slots[i];
@@ -248,14 +260,6 @@ function boot() {
   };
   toggle('b-mute', 'mute', () => setMuted(state.mute));
   toggle('b-short', 'short');
-  // 見た目の案（試作のあいだだけ・道具で切りかえ）
-  const lookSeg = document.getElementById('look-seg');
-  const paintLook = () => {
-    document.documentElement.dataset.look = state.look;
-    for (const b of lookSeg.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.l === state.look));
-  };
-  lookSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.look = b.dataset.l; save(); paintLook(); });
-  paintLook();
   document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });

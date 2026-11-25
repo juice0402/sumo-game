@@ -105,11 +105,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .err{position:absolute;inset:auto 16px 30% 16px;text-align:center;color:#e9a097}
 @media (min-width:700px){.bar h1{font-size:30px}}
 @media (prefers-reduced-motion:reduce){.cutin.go .band,.cutin.go .word,.kimarite,.stamp{animation-duration:.01s}}
-/* 部屋・力士・巡業・本場所（11/25 案A：相撲部屋は筆の帯のメニューを縦に） */
-.screen .body{flex:1;overflow-y:auto;min-height:0;padding-bottom:8px}
-.screen h2{font-size:15px;color:var(--dim);margin:18px 0 6px;font-weight:500}
-.note{margin:10px 0;text-align:center;font-size:13px;color:var(--dim)}
+/* ===== 案A「番付表」（11/25 しょーくん「スタイリッシュすぎてかっこいい・とことん突き詰めよう」）=====
+   本物の番付表のように：見出しは右に縦書き（金の細い罫）・中身は上下を二重の罫でかこみ、右から縦の列で読む。
+   いまの・主のものは縦の朱の筆の帯。字（Yuji Syuku の縦書き）そのものを主役にして、飾りは足さない */
 .tiny{margin:0 0 14px;text-align:center;font-size:12px;color:var(--dim)}
+.note{margin:0 0 12px;text-align:center;font-size:13px;color:var(--dim)}
 /* タイトル */
 #s-title{justify-content:center}
 .logo{position:relative;align-self:center;width:min(78vw,340px);aspect-ratio:1;display:grid;place-items:center;margin-top:auto}
@@ -117,134 +117,148 @@ button{font:inherit;color:inherit;cursor:pointer}
 .logo .word{position:relative;font-size:min(19vw,84px);line-height:.92;letter-spacing:.02em;color:var(--washi);text-shadow:4px 4px 0 var(--sumi);transform:rotate(-6deg)}
 .logo .tate{position:absolute;right:4%;bottom:0;writing-mode:vertical-rl;font-size:22px;letter-spacing:.3em;color:var(--washi2)}
 .catch{text-align:center;font-size:20px;margin:6px 0 auto;color:var(--washi2);letter-spacing:.1em}
-/* 相撲部屋 */
-.mine{display:flex;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);padding:6px 2px 12px;text-align:left}
-.mine canvas{width:56px;height:74px;flex:none}
-.who{display:flex;flex-direction:column;min-width:0}
+
+/* 画面のわく：右に縦の見出し／左上にもどる・道具／左に主役（hero）／下に二重の罫の表（frame2）／いちばん下にボタン */
+.screen.v{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto auto;column-gap:10px}
+.screen.v>.bar{display:contents}
+.screen.v>.bar h1{grid-column:2;grid-row:1/3;align-self:start;writing-mode:vertical-rl;font-size:clamp(34px,10.5vw,44px);letter-spacing:.18em;line-height:1.1;padding:14px 0 0 12px;border-left:1px solid var(--kin);margin:0;max-height:100%;overflow:hidden}
+.screen.v>.bar>button{grid-column:1;grid-row:1;align-self:start;justify-self:start;margin-top:8px}
+.screen.v>.bar>.ghost{justify-self:end}
+.screen.v>.hero{grid-column:1;grid-row:2;min-height:0}
+.screen.v>.frame2{grid-column:1/3;grid-row:3}
+.screen.v>:is(.actions,.note,.foot,.drive){grid-column:1/3;grid-row:4}
+.frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 14px}
+.cols{display:flex;flex-direction:row-reverse;align-items:stretch;height:clamp(200px,36vh,300px)}
+.cols.tall{height:clamp(280px,56vh,460px)}
+.cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:16px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
+.cols>*:last-child{border-left:0}
+.cols>button:active{background-color:rgba(238,233,222,.06)}
+.cols b,.fit{font-size:min(var(--max,32px),calc(var(--room,230px) / var(--n,4) * .9));letter-spacing:.06em;line-height:1.1;white-space:nowrap}
+.cols small,.cols span,.cols em{flex:none}
+/* いまの・主のもの＝縦の朱の帯 */
+.cols>.on,.cols>.main,.menu #m-shobu,.ladder li.on{background:var(--b-shuv) center/88% 100% no-repeat;border-left-color:transparent}
+.cols>.on+*,.cols>.main+*{border-left-color:var(--line)}
+.who{display:flex;flex-direction:column;min-width:0;gap:4px}
 .who small{font-size:12px;color:var(--kin);line-height:1.3}
-.who b{font-size:24px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who em{font-style:normal;font-size:13px;color:var(--dim)}
-.menu{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:12px 0 28px}
-.menu .seal{width:min(100%,320px);justify-content:flex-start;padding:0 30px;font-size:20px;letter-spacing:.14em}
-.menu .seal svg{width:22px;height:22px}
+.on .who small,.on .who em{color:var(--washi)}
+
+/* 相撲部屋 */
+.mine{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;background:none;border:0;padding:0;color:var(--washi)}
+.mine .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.mine .who b{--max:58px;--room:300px}
+.mine .who small{font-size:14px}
+.mine .who em{font-size:14px;color:var(--kin)}
+.mine canvas{width:84px;height:110px;align-self:flex-end;flex:none}
+.menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
+.menu .seal svg{width:20px;height:20px}
+.menu #m-shobu{font-size:38px;letter-spacing:.24em;flex-grow:1.5}
 /* 勝負 */
-.modes{flex:1;display:flex;flex-direction:column;gap:12px;padding:10px 0 24px;justify-content:center}
-.modecard{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:16px;align-items:center;text-align:left;background:var(--sumi2);border:1px solid var(--line);border-radius:4px;padding:14px 16px}
-.modecard:active{background:var(--sumi3)}
-.modecard b{grid-row:1/3;font-size:38px;line-height:1}
-.modecard span{font-size:14px;color:var(--washi2)}
+.modecard{gap:12px}
+.modecard b{font-size:44px;letter-spacing:.2em}
+.modecard span{font-size:13px;letter-spacing:.08em;color:var(--washi2)}
 .modecard small{font-size:13px;color:var(--kin)}
-.modecard.main{border-color:var(--shu);border-left:6px solid var(--shu);border-radius:0 4px 4px 0}
-/* 力士のカード（部屋の力士・選出） */
-.slots{display:flex;flex-direction:column;gap:10px;padding:10px 0;overflow-y:auto}
-.slot{display:flex;align-items:center;gap:14px;text-align:left;background:var(--sumi2);border:1px solid var(--line);border-radius:4px;padding:10px 14px;min-height:96px}
-.slot:active{background:var(--sumi3)}
-.slot canvas{width:58px;height:76px;flex:none}
-.slot.on{border-color:var(--shu);border-left:6px solid var(--shu);border-radius:0 4px 4px 0}
-.slot.empty{border-style:dashed;background:none}
-.slot.empty .who b{color:var(--dim)}
-.slot:disabled{opacity:.45}
-.plus{width:58px;text-align:center;font-size:34px;color:var(--dim);flex:none}
+.modecard.main{flex-grow:1.9;padding:22px 0 14px}
+.modecard.main span,.modecard.main small{color:var(--washi)}
+/* 力士の列（部屋の力士・選出） */
+.slots{overflow:hidden}
+.slot{position:relative}
+.slot .who{order:-1;align-items:center}
+.slot b{--max:38px}
+.slots.tall .slot b{--room:250px}
+.slots:not(.tall) .slot b{--room:170px}
+.slot canvas{width:58px;height:76px;flex:none;margin-top:auto}
+.slot.empty b{color:var(--dim)}
+.plus{font-size:30px;color:var(--dim);margin-top:auto;writing-mode:horizontal-tb}
+.slot:disabled{opacity:.4}
+/* 朱の判子：選んだ列にポンと押す */
+@keyframes hanko{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2) rotate(-14deg)}60%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(-6deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-8deg)}}
+.slot.stamp::after{content:"出";position:absolute;left:50%;top:46%;width:54px;height:54px;display:grid;place-items:center;writing-mode:horizontal-tb;font-family:"Yuji Syuku",serif;font-size:32px;color:var(--washi);background:var(--shu);border:3px double var(--washi);border-radius:4px;animation:hanko .34s cubic-bezier(.2,.9,.2,1) both}
 /* 力士の編集 */
-.profile{display:flex;align-items:center;gap:16px;padding:6px 0 14px;border-bottom:1px solid var(--line)}
-.profile canvas{width:96px;height:126px;flex:none}
-.profile .who b{font-size:30px;white-space:normal}
-.field{padding:12px 0 4px}
-.flabel{font-size:13px;color:var(--dim);margin-bottom:2px}
-.wordrow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
-.word{font-family:"Yuji Syuku",serif;font-size:22px;min-width:56px}
-#ed-rand{font-size:14px;margin-top:2px}
-#s-edit .actions{margin-top:auto}
+.profile{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:20px;position:relative}
+.profile .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.profile .who b{--max:56px;--room:280px}
+.profile .who small{font-size:14px}
+.profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
+#ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
+.edit4{height:clamp(170px,27vh,230px)}
+.edit4 .word small{font-size:12px;color:var(--kin);letter-spacing:.1em}
+.edit4 .word b{--max:34px;--room:150px}
+.edit4 .word.ti{flex-grow:1.3;border-left:0}
+.edit4 .word.ti b{--max:26px;--room:140px}
+.edit4 .word:nth-child(3){border-left:3px double var(--line)}
+#s-edit .actions{padding-top:0}
+/* 語をえらぶシート */
+#s-words .body{border-top:5px double var(--washi2);margin-top:6px}
+#s-words h2{font-size:13px;color:var(--kin);margin:16px 0 4px;font-weight:500;letter-spacing:.2em}
 .words{display:flex;flex-wrap:wrap;gap:2px 8px}
-.words .ghost{font-family:"Yuji Syuku",serif;font-size:21px;min-width:52px}
+.words .ghost{font-family:"Yuji Syuku",serif;font-size:22px;min-width:52px}
 /* 土俵巡業 */
-.nowhead{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 6px;font-size:14px;color:var(--washi2)}
-.nowhead em{font-style:normal;font-size:13px;color:var(--kin)}
-.stagecards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stagecard{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--sumi2);border:1px solid var(--line);border-radius:4px;padding:12px 8px}
-.stagecard b{font-size:20px}
-.stagecard span{font-size:13px;color:var(--dim)}
-.sw{position:relative;width:84px;height:46px;margin-bottom:4px}
-.sw::before{content:"";position:absolute;left:0;right:0;bottom:0;height:16px;background:var(--side);border:1.5px solid var(--sumi)}
-.sw i{position:absolute;left:0;right:0;top:0;height:32px;background:var(--top);border:1.5px solid var(--sumi);clip-path:polygon(14% 0,86% 0,100% 100%,0 100%)}
+.jghero{display:flex;flex-direction:column;min-height:0}
+.nowhead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px;font-size:13px;color:var(--washi2)}
+.nowhead em{font-style:normal;color:var(--kin)}
+.stagecards{flex:1;min-height:0;display:flex;flex-direction:row-reverse;gap:0;border-top:1px solid var(--line)}
+.stagecard{flex:1 1 0;writing-mode:vertical-rl;display:flex;align-items:center;gap:10px;padding:14px 0 10px;border-left:1px solid var(--line)}
+.stagecard:last-child{border-left:0}
+.stagecard b{font-size:clamp(26px,8vw,34px);letter-spacing:.12em}
+.stagecard span{font-size:12px;color:var(--dim)}
+.sw{order:2;margin-top:auto;writing-mode:horizontal-tb;position:relative;width:76px;height:42px;flex:none}
+.sw::before{content:"";position:absolute;left:0;right:0;bottom:0;height:15px;background:var(--side);border:1.5px solid var(--sumi)}
+.sw i{position:absolute;left:0;right:0;top:0;height:29px;background:var(--top);border:1.5px solid var(--sumi);clip-path:polygon(14% 0,86% 0,100% 100%,0 100%)}
 .sw i::after{content:"";position:absolute;left:28%;right:28%;top:22%;bottom:22%;border:2.5px solid var(--ring);border-radius:50%}
-.sched{display:flex;flex-direction:column}
-.srow{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px}
-.srow em{font-style:normal;color:var(--dim);font-variant-numeric:tabular-nums}
+.sched{max-height:26vh;overflow-y:auto}
+.srow{display:grid;grid-template-columns:62px 1fr 1fr;gap:8px;padding:7px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.srow:last-child{border-bottom:0}
+.srow em{font-style:normal;color:var(--kin);font-variant-numeric:tabular-nums}
+.srow span{font-family:"Yuji Syuku",serif;font-size:16px}
 /* 番付 */
-.myrank{display:flex;align-items:center;gap:16px;padding:8px 0 14px;border-bottom:1px solid var(--line)}
-.myrank b{font-size:52px;line-height:1;color:var(--washi)}
-.myrank div{display:flex;flex-direction:column;font-size:13px;color:var(--washi2)}
-.myrank em{font-style:normal;font-size:15px;color:var(--kin);font-variant-numeric:tabular-nums}
-.ladder{list-style:none;margin:10px 0 0;padding:0}
-.ladder li{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-bottom:1px solid var(--line)}
-.ladder li b{font-size:20px;color:var(--washi2)}
-.ladder li span{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
-.ladder li.on{background:var(--b-shu) center/100% 100% no-repeat}
+.myrank{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px}
+.myrank b{writing-mode:vertical-rl;font-size:clamp(56px,17vw,76px);letter-spacing:.1em;line-height:1}
+.myrank .info{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--washi2);max-height:100%}
+.myrank em{font-style:normal;font-size:16px;color:var(--kin);text-combine-upright:none}
+.ladder{list-style:none;padding:0;height:clamp(180px,30vh,240px)}
+.ladder li{padding:12px 0 8px;gap:6px}
+.ladder li b{--max:21px;--room:150px;color:var(--washi2)}
+.ladder li span{writing-mode:horizontal-tb;margin-top:auto;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
 .ladder li.on b,.ladder li.on span{color:var(--washi)}
+.foot .actions{padding-top:4px}
 /* 力士選出 */
-.selhead{display:flex;align-items:baseline;gap:12px;padding:4px 0 8px}
-.selhead b{font-size:26px}
-.selhead span{font-size:14px;color:var(--washi2)}
-.foecard{display:flex;align-items:center;gap:14px;padding:8px 14px;border:1px dashed var(--line);border-radius:4px;color:var(--dim);font-size:14px}
-.foecard .q{font-size:38px;width:58px;text-align:center;color:var(--washi2)}
+.selhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:stretch;gap:26px;padding-top:8px}
+.selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
+.selhead b{font-size:clamp(44px,13vw,58px);letter-spacing:.14em;line-height:1}
+.selhead span{font-size:13px;color:var(--washi2)}
+.foecard{writing-mode:vertical-rl;display:flex;align-items:center;gap:10px;padding:0 10px;border-left:1px dashed var(--line);border-right:1px dashed var(--line);color:var(--dim);font-size:13px}
+.foecard .q{font-size:46px;color:var(--washi2)}
+/* 稽古 */
+.me{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:18px;position:relative;border:0;padding:0}
+.me p{writing-mode:vertical-rl;margin:0;font-size:clamp(30px,9vw,44px);letter-spacing:.08em;color:var(--washi);flex:none;max-height:100%}
+.me canvas{width:76px;height:100px;align-self:flex-end}
+#b-all{position:absolute;left:0;bottom:0}
+.foes{display:flex;grid-template-columns:none;overflow:hidden;padding:0;gap:0}
+.foe{border-radius:0}
+.foe b{order:-1;font-size:24px;letter-spacing:.1em}
+.foe canvas{width:54px;height:72px;margin-top:auto}
+.foe .marks{writing-mode:horizontal-tb;flex-wrap:wrap;justify-content:center;width:44px}
+.drive{padding-bottom:10px}
 /* 取組の結果：番付・戦績のひとこと */
 .result .gain{margin-top:auto;margin-bottom:10px;text-align:center;font-size:15px;color:var(--kin);font-variant-numeric:tabular-nums;text-shadow:1px 1px 0 var(--sumi)}
 .result .gain[hidden]+.row{margin-top:auto}
-/* ===== 動き：画面を開くと、右から順にシュッと入る（11/25 しょーくん「右から、しししシュッ」）===== */
+
+/* ===== 動き（11/25 しょーくん「右から、しししシュッ」・できるだけカッコよく）=====
+   ひとつの流れにまとめる：見出しが筆で上から書かれる → 主役が入る → 表の列が右から順に飛びこむ（少し行きすぎて戻る）→ ボタン */
 @keyframes whip{0%{opacity:0;transform:translateX(115%) skewX(-16deg)}62%{opacity:1;transform:translateX(-4%) skewX(3deg)}100%{opacity:1;transform:none}}
-@keyframes inkin{from{clip-path:inset(-10% 100% -10% 0)}to{clip-path:inset(-10% -5% -10% 0)}}
 @keyframes inkdown{from{clip-path:inset(0 -10% 100% -10%)}to{clip-path:inset(0 -10% -5% -10%)}}
-.screen.enter :is(.menu,.modes,.slots,.stagecards,.sched,.ladder) > *,
-.screen.enter :is(.mine,.profile,.myrank,.foecard,.field,.selhead,.nowhead){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 40ms)}
-.screen.enter .bar h1{animation:inkin .42s cubic-bezier(.3,.7,.3,1) both}
-.slots,.screen .body,.menu,.modes{overflow-x:hidden}
+@keyframes inkin{from{clip-path:inset(-10% 100% -10% 0)}to{clip-path:inset(-10% -5% -10% 0)}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sunin{0%{opacity:0;transform:scale(1.5) rotate(-20deg)}70%{opacity:.92;transform:scale(.96) rotate(2deg)}100%{opacity:.92;transform:none}}
+.screen.enter.v>.bar h1{animation:inkdown .5s cubic-bezier(.3,.7,.3,1) both}
+.screen.enter :is(.hero,.cols>*,.stagecards>*,.sched>*,.actions>*,.note,.drive){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 90ms)}
+.screen.enter .hero{animation-name:rise;animation-duration:.4s}
+#s-title.enter .sun{animation:sunin .55s .05s cubic-bezier(.2,.9,.2,1) both}
+#s-title.enter .word{animation:inkin .55s .35s cubic-bezier(.3,.7,.3,1) both}
+#s-title.enter .tate{animation:inkdown .5s .75s both}
+#s-title.enter .catch{animation:rise .6s 1s both}
+#s-title.enter .actions>*{animation:whip .44s 1.25s cubic-bezier(.2,.9,.25,1) both}
+.screen .body,.cols,.sched{overflow-x:hidden}
 @media (prefers-reduced-motion:reduce){.screen.enter *{animation-duration:.01s!important;animation-delay:0s!important}}
-
-/* ===== 見た目の案A「番付表」：縦書き・二重の罫・縦の朱の帯 ===== */
-html[data-look=a] #s-home,html[data-look=a] #s-mode{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto minmax(0,1fr) auto;column-gap:10px}
-html[data-look=a] :is(#s-home,#s-mode) .bar{display:contents}
-html[data-look=a] :is(#s-home,#s-mode) .bar h1{grid-column:2;grid-row:1/3;writing-mode:vertical-rl;font-size:46px;letter-spacing:.2em;padding:14px 0 0 12px;border-left:1px solid var(--kin);align-self:start;animation-name:inkdown}
-html[data-look=a] #s-mode .bar .back{grid-column:1;grid-row:1;margin-top:8px}
-html[data-look=a] #b-tools{grid-column:1;grid-row:1;justify-self:start;align-self:start;margin-top:6px}
-html[data-look=a] .mine{grid-column:1;grid-row:2;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;border:0;padding:0}
-html[data-look=a] .mine .who{writing-mode:vertical-rl;max-height:300px;gap:6px}
-html[data-look=a] .mine .who b{font-size:58px;letter-spacing:.08em;white-space:nowrap}
-html[data-look=a] .mine .who small{font-size:14px}
-html[data-look=a] .mine .who em{font-size:14px;color:var(--kin)}
-html[data-look=a] .mine canvas{width:84px;height:110px;align-self:flex-end}
-html[data-look=a] .menu{grid-column:1/3;grid-row:3;flex-direction:row-reverse;align-items:stretch;justify-content:stretch;gap:0;height:clamp(220px,40vh,320px);padding:0;margin:14px 0 18px;border-top:5px double var(--washi2);border-bottom:5px double var(--washi2)}
-html[data-look=a] .menu .seal{writing-mode:vertical-rl;flex:1 1 0;width:auto;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi);border-left:1px solid var(--line)}
-html[data-look=a] .menu .seal:last-child{border-left:0}
-html[data-look=a] .menu .seal svg{width:20px;height:20px}
-html[data-look=a] .menu #m-shobu{background:var(--b-shuv) center/86% 100% no-repeat;font-size:38px;letter-spacing:.24em;flex-grow:1.5;border-left:0}
-html[data-look=a] .modes{grid-column:1/3;grid-row:2/4;flex-direction:row-reverse;gap:0;padding:0;margin:14px 0 18px;align-items:stretch;border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);max-height:62vh;align-self:end}
-html[data-look=a] .modecard{writing-mode:vertical-rl;display:flex;flex-direction:column;flex:1 1 0;gap:10px;align-items:center;justify-content:flex-start;background:none;border:0;border-left:1px solid var(--line);border-radius:0;padding:18px 0}
-html[data-look=a] .modecard:last-child{border-left:0}
-html[data-look=a] .modecard b{font-size:44px;letter-spacing:.2em}
-html[data-look=a] .modecard span{font-size:13px;letter-spacing:.08em}
-html[data-look=a] .modecard.main{background:var(--b-shuv) center/94% 100% no-repeat;border-left:0;border-radius:0;flex-grow:1.9;padding:22px 0 14px}
-html[data-look=a] .modecard.main small,html[data-look=a] .modecard.main span{color:var(--washi)}
-
-/* ===== 見た目の案B「切り紙」：はさみで切った和紙が、墨の机に置いてある ===== */
-html[data-look=b] #s-home .bar h1::after{content:"紙";display:inline-grid;place-items:center;width:30px;height:30px;margin-left:12px;vertical-align:4px;background:var(--shu);color:var(--washi);font-size:17px;border-radius:3px;rotate:-6deg;letter-spacing:0}
-html[data-look=b] #s-home .bar h1{font-size:34px}
-html[data-look=b] .mine{border:0;gap:20px;padding:10px 4px 6px}
-html[data-look=b] .mine canvas{width:112px;height:148px;rotate:-5deg;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.5))}
-html[data-look=b] .mine .who b{font-size:36px;white-space:normal;line-height:1.15}
-html[data-look=b] .mine .who em{color:var(--kin);font-size:14px;margin-top:4px}
-html[data-look=b] .menu{gap:6px;align-items:stretch;padding:10px 6px 26px}
-html[data-look=b] .menu .seal{width:auto;min-height:66px;background:var(--c-paper1) center/100% 100% no-repeat;color:var(--sumi);font-size:21px;padding:0 34px 4px}
-html[data-look=b] .menu .seal:nth-child(1){background-image:var(--c-shu);color:var(--washi);rotate:-1.6deg;min-height:76px;font-size:26px;margin-right:18px}
-html[data-look=b] .menu .seal:nth-child(2){background-image:var(--c-paper2);rotate:1deg;margin-left:22px}
-html[data-look=b] .menu .seal:nth-child(3){background-image:var(--c-paper3);rotate:-.8deg;margin-right:30px}
-html[data-look=b] .menu .seal:nth-child(4){background-image:var(--c-paper4);rotate:1.4deg;margin-left:10px}
-html[data-look=b] .modes{gap:4px}
-html[data-look=b] .modecard{background:var(--c-tile) center/100% 100% no-repeat;border:0;border-radius:0;color:var(--sumi);padding:22px 38px 30px 26px}
-html[data-look=b] .modecard span{color:#5b554b}
-html[data-look=b] .modecard small{color:var(--shu)}
-html[data-look=b] .modecard:nth-child(1){rotate:-1.2deg;margin-right:26px}
-html[data-look=b] .modecard:nth-child(3){rotate:1.1deg;margin-left:30px}
-html[data-look=b] .modecard.main{background-image:var(--c-tileshu);color:var(--washi);border:0;border-radius:0;padding:30px 28px 36px;rotate:.6deg}
-html[data-look=b] .modecard.main b{font-size:48px}
-html[data-look=b] .modecard.main span,html[data-look=b] .modecard.main small{color:var(--washi)}
+@media (min-width:700px){.screen.v>.bar h1{font-size:48px}.cols b{--max:40px}}

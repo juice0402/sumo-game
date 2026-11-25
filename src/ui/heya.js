@@ -5,6 +5,7 @@ import { stagesOf, slotIndex } from '../game/jungyo.js';
 import { rankOf } from '../game/rating.js';
 import { shikonaText, titleText } from '../game/names.js';
 import { drawShapeThumb } from './pick.js';
+import { fitText } from './roster.js';
 
 export function initHeya(cb) {
   const on = (id, f) => document.getElementById(id).addEventListener('click', f);
@@ -26,7 +27,7 @@ export function initHeya(cb) {
       const cv = el.querySelector('canvas');
       cv.hidden = !s;
       el.querySelector('small').textContent = s ? titleText(s.title) : '';
-      el.querySelector('b').textContent = s ? shikonaText(s.shikona) : T.needRikishi;
+      fitText(el.querySelector('b'), s ? shikonaText(s.shikona) : T.needRikishi);
       el.querySelector('em').textContent = T.rateLine(rankOf(st.rate).name, st.rate);
       if (s) drawShapeThumb(cv, s.shape);
     },
