@@ -11,8 +11,8 @@ export function rand(seed) {
   return () => (s = (s * 16807) % 2147483647) / 2147483647;
 }
 
-export function setupCanvas(cv) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+export function setupCanvas(cv, maxDpr = 2.5) {
+  const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
   const r = cv.getBoundingClientRect();
   const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
   if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
