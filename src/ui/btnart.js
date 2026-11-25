@@ -41,7 +41,7 @@ export function applyButtonArt() {
   s.setProperty('--b-shu', url(brushBand(COL.shu, 3)));
   s.setProperty('--b-shu2', url(brushBand('#c4493d', 3)));
   s.setProperty('--b-off', url(brushBand('#3a3631', 3)));
-  s.setProperty('--b-paper', url(brushBand('#cfc8b8', 3)));   // 和紙の帯（仕切り直し）
+  s.setProperty('--b-paper', url(brushBand('#cfc8b8', 3)));   // 和紙の帯（切り直す）
   s.setProperty('--b-paper2', url(brushBand('#EEE9DE', 3)));
   s.setProperty('--b-line', url(brushBand('#cfc8b8', 8)));    // 字の下の筆の線（ふつうのボタン）
   s.setProperty('--b-lineshu', url(brushBand(COL.shu, 8)));

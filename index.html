@@ -131,7 +131,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <p class="hint" id="cut-hint">一筆で、力士の形を描こう</p>
     <div class="checks" id="cut-checks" hidden></div>
     <footer class="actions pair">
-      <button id="b-redo" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg>仕切り直し</button>
+      <button id="b-redo" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg>切り直す</button>
       <button id="b-ok" class="seal" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>決定</button>
     </footer>
   </section>
@@ -2692,7 +2692,7 @@ function applyButtonArt() {
   s.setProperty('--b-shu', url(brushBand(COL.shu, 3)));
   s.setProperty('--b-shu2', url(brushBand('#c4493d', 3)));
   s.setProperty('--b-off', url(brushBand('#3a3631', 3)));
-  s.setProperty('--b-paper', url(brushBand('#cfc8b8', 3)));   // 和紙の帯（仕切り直し）
+  s.setProperty('--b-paper', url(brushBand('#cfc8b8', 3)));   // 和紙の帯（切り直す）
   s.setProperty('--b-paper2', url(brushBand('#EEE9DE', 3)));
   s.setProperty('--b-line', url(brushBand('#cfc8b8', 8)));    // 字の下の筆の線（ふつうのボタン）
   s.setProperty('--b-lineshu', url(brushBand(COL.shu, 8)));
