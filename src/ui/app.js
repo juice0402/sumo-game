@@ -5,7 +5,7 @@ import { T } from '../data/text.js';
 import { STAGES, HONBASHO_STAGE } from '../data/stages.js';
 import { setRapier } from '../sim/battle.js';
 import { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } from '../game/save.js';
-import { shikonaText, titleText, randomShikona } from '../game/names.js';
+import { shikonaText, titleText, randomShikona, ownedWords } from '../game/names.js';
 import { CPU_SHAPES } from '../data/cpu-shapes.js';
 import { rankOf, eloDelta } from '../game/rating.js';
 import { drawStage } from '../game/jungyo.js';
@@ -113,7 +113,7 @@ function boot() {
       playSfx('kami', { vol: 0.8 });
       const s = state.slots[cutSlot];
       const isNew = !s;
-      if (s) s.shape = pts; else state.slots[cutSlot] = newRikishi(pts);
+      if (s) s.shape = pts; else state.slots[cutSlot] = newRikishi(pts, ownedWords(state.words));
       state.active = cutSlot;
       save();
       loadLibs().then(() => afterCut(isNew));
@@ -231,7 +231,7 @@ function boot() {
     setTimeout(() => playSfx('ton', { vol: 0.75 }), 1150);
   };
   document.getElementById('mm-again').addEventListener('click', () => {
-    state.slots[meimeiSlot].shikona = randomShikona();
+    state.slots[meimeiSlot].shikona = randomShikona(Math.random, ownedWords(state.words));
     save();
     show('s-meimei');
   });
@@ -248,6 +248,7 @@ function boot() {
   });
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
+    getOwned: () => ownedWords(state.words),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
     onRetire(i) {
@@ -281,7 +282,7 @@ function boot() {
   // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
   const unstashBtn = document.getElementById('b-unstash');
   const paintStash = () => { unstashBtn.hidden = !hasStash(); };
-  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun'];
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words'];
   document.getElementById('b-intro').addEventListener('click', () => {
     stashSave();
     Object.assign(state, freshProgress());

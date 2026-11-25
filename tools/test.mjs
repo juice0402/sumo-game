@@ -9,12 +9,12 @@ import { randomShape } from '../src/geom/random.js';
 import { decideKimarite } from '../src/data/kimarite.js';
 import { T } from '../src/data/text.js';
 import { BENCH } from '../src/sim/bench.js';
-import { SHIKONA } from '../src/data/shikona.js';
+import { SHIKONA, SHIKONA_START, SHIKONA_FOE_SKIP } from '../src/data/shikona.js';
 import { TITLES } from '../src/data/titles.js';
 import { STAGES, JUNGYO, HONBASHO_STAGE } from '../src/data/stages.js';
 import { DOHYO } from '../src/data/dohyo.js';
 import { BANZUKE } from '../src/data/banzuke.js';
-import { randomShikona, validShikona, shikonaText } from '../src/game/names.js';
+import { randomShikona, validShikona, shikonaText, ownedWords, isWord } from '../src/game/names.js';
 import { rankOf, eloDelta } from '../src/game/rating.js';
 import { schedule, stagesOf } from '../src/game/jungyo.js';
 import { makeRng } from '../src/sim/rng.js';
@@ -88,6 +88,18 @@ for (const g of ['kami', 'tsunagi', 'shimo']) for (const w of SHIKONA[g]) { ok(!
 for (const t of TITLES) { ok(!ids.has(t.id), `称号の id がかぶる: ${t.id}`); ids.add(t.id); }
 const nrng = makeRng(7);
 for (let i = 0; i < 200; i++) ok(validShikona(randomShikona(nrng)), 'ランダムな四股名が正しくない');
+// はじめから持っている語：上の句5・下の句5・つなぎ全部。さずかる名前はその中だけ・相手はかけだしの上の句を使わない
+for (const id of SHIKONA_START) ok(isWord(id), `はじめの語がない: ${id}`);
+ok(SHIKONA_START.filter((id) => id.startsWith('k_')).length === 5 && SHIKONA_START.filter((id) => id.startsWith('s_')).length === 5, 'はじめの語が上5・下5でない');
+{
+  const has = ownedWords();
+  const foeSkip = new Set(SHIKONA.kami.filter((w) => SHIKONA_FOE_SKIP.includes(w.cat)).map((w) => w.id));
+  for (let i = 0; i < 300; i++) {
+    const n = randomShikona(nrng, has);
+    ok(validShikona(n) && n.every((id) => has.has(id)), `さずかる名前が、はじめの語の外: ${n}`);
+    ok(!foeSkip.has(randomShikona(nrng)[0]), '相手の名前に、かけだしの上の句');
+  }
+}
 const NG = ['若乃花', '貴乃花', '千代の富士', '栃錦', '照ノ富士', '霧島', '大鵬', '北の湖', '朝青龍', '白鵬', '鶴竜', '雷電', '双葉山', '大の里', '稀勢の里', '武蔵丸', '曙', '鬼太郎', '猫侍', '死', '殺'];
 let names = 0;
 for (const k of SHIKONA.kami) for (const t of SHIKONA.tsunagi) for (const s2 of SHIKONA.shimo) {

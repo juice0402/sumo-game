@@ -37,7 +37,7 @@ export function renderSlots(el, slots, opt) {
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape); });
 }
 
-// 語をえらぶシート：groups＝[{ title, items:[{id, label}] }]
+// 語をえらぶシート：groups＝[{ title, items:[{id, label}] }]・note：いちばん下のひとこと
 function initWordSheet() {
   const sheet = document.getElementById('s-words');
   const list = document.getElementById('w-list');
@@ -50,7 +50,7 @@ function initWordSheet() {
     onPick(b.dataset.id);
   });
   return {
-    open(title, groups, current, pick) {
+    open(title, groups, current, pick, note = '') {
       onPick = pick;
       document.getElementById('w-title').textContent = title;
       list.textContent = '';
@@ -69,20 +69,22 @@ function initWordSheet() {
         }
         list.appendChild(grid);
       }
+      if (note) { const p = document.createElement('p'); p.className = 'locked'; p.textContent = note; list.appendChild(p); }
       sheet.hidden = false;
       list.scrollTop = 0;
     },
   };
 }
 
-function groupsOf(g) {
+// has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
+function groupsOf(g, has) {
   if (g === 'title') return [{ title: '', items: TITLES.map((t) => ({ id: t.id, label: t.t })) }];
   const by = {};
-  for (const w of SHIKONA[g]) (by[w.cat] = by[w.cat] || []).push({ id: w.id, label: wordLabel(w.id) });
+  for (const w of SHIKONA[g]) if (has.has(w.id)) (by[w.cat] = by[w.cat] || []).push({ id: w.id, label: wordLabel(w.id) });
   return Object.keys(by).map((c) => ({ title: g === 'tsunagi' ? '' : SHIKONA_CATS[c], items: by[c] }));
 }
 
-// 力士の編集。cb：{ getSlot(i), onChange(i), onRecut(i), onRetire(i), onDone() }
+// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, onChange(i), onRecut(i), onRetire(i), onDone() }
 export function initEdit(cb) {
   const words = initWordSheet();
   const cv = document.getElementById('ed-cv');
@@ -106,16 +108,18 @@ export function initEdit(cb) {
     b.addEventListener('click', () => {
       const s = cb.getSlot(idx), g = b.dataset.g;
       const cur = g === 'title' ? s.title : s.shikona[G[g]];
-      words.open(T.pickTitle(T.pick[g]), groupsOf(g), cur, (id) => {
+      const has = cb.getOwned();
+      const locked = g === 'title' ? 0 : SHIKONA[g].filter((w) => !has.has(w.id)).length;
+      words.open(T.pickTitle(T.pick[g]), groupsOf(g, has), cur, (id) => {
         if (g === 'title') s.title = id; else s.shikona[G[g]] = id;
         cb.onChange(idx);
         paint();
-      });
+      }, locked ? T.lockedWords(locked) : '');
     });
   }
   document.getElementById('ed-rand').addEventListener('click', () => {
     const s = cb.getSlot(idx);
-    s.shikona = randomShikona();
+    s.shikona = randomShikona(Math.random, cb.getOwned());
     cb.onChange(idx);
     paint();
   });

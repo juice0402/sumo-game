@@ -1,5 +1,5 @@
 // 四股名と称号：id → 字、ランダムに作る、正しいか確かめる
-import { SHIKONA, SHIKONA_LINK_WEIGHTS } from '../data/shikona.js';
+import { SHIKONA, SHIKONA_LINK_WEIGHTS, SHIKONA_START, SHIKONA_FOE_SKIP } from '../data/shikona.js';
 import { TITLES, TITLE_START } from '../data/titles.js';
 import { T } from '../data/text.js';
 
@@ -9,6 +9,7 @@ const TITLE = {};
 for (const t of TITLES) TITLE[t.id] = t;
 
 export function wordText(id) { return WORD[id] ? WORD[id].t : ''; }
+export function isWord(id) { return !!WORD[id]; }
 export function shikonaText(ids) { return Array.isArray(ids) ? ids.map(wordText).join('') : ''; }
 export function titleText(id) { return TITLE[id] ? TITLE[id].t : ''; }
 // 選ぶ画面に出す字（つなぎの「なし」も見えるように）
@@ -21,14 +22,26 @@ export function validTitle(id) { return !!TITLE[id]; }
 
 function pick(list, rng) { return list[Math.floor(rng() * list.length)]; }
 
-export function randomShikona(rng = Math.random) {
-  const k = pick(SHIKONA.kami, rng).id;
-  let s = pick(SHIKONA.shimo, rng).id;
-  for (let i = 0; i < 6 && wordText(s) === wordText(k); i++) s = pick(SHIKONA.shimo, rng).id;   // 同じ字をくり返さない
+// 持っている語（はじめから持っている語＋手に入れた語 extra）
+export function ownedWords(extra = []) { return new Set([...SHIKONA_START, ...extra]); }
+export function isStartWord(id) { return SHIKONA_START.includes(id); }
+
+// has：持っている語（Set）→ その中から（自分の力士）。なし → 相手用（かけだしの上の句は使わない・ほかは全部）
+export function randomShikona(rng = Math.random, has = null) {
+  const okW = has ? (w) => has.has(w.id) : () => true;
+  const kami = SHIKONA.kami.filter(has ? okW : (w) => !SHIKONA_FOE_SKIP.includes(w.cat));
+  const shimo = SHIKONA.shimo.filter(okW);
+  const k = pick(kami, rng).id;
+  let s = pick(shimo, rng).id;
+  for (let i = 0; i < 6 && wordText(s) === wordText(k); i++) s = pick(shimo, rng).id;   // 同じ字をくり返さない
   let total = 0;
-  for (const id in SHIKONA_LINK_WEIGHTS) total += SHIKONA_LINK_WEIGHTS[id];
+  for (const id in SHIKONA_LINK_WEIGHTS) if (!has || has.has(id)) total += SHIKONA_LINK_WEIGHTS[id];
   let r = rng() * total, t = 't_no';
-  for (const id in SHIKONA_LINK_WEIGHTS) { r -= SHIKONA_LINK_WEIGHTS[id]; if (r < 0) { t = id; break; } }
+  for (const id in SHIKONA_LINK_WEIGHTS) {
+    if (has && !has.has(id)) continue;
+    r -= SHIKONA_LINK_WEIGHTS[id];
+    if (r < 0) { t = id; break; }
+  }
   return [k, t, s];
 }
 export function randomTitle(rng = Math.random) { return pick(TITLES, rng).id; }

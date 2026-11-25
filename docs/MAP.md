@@ -17,7 +17,7 @@
 | data/text.js | 画面の文字（翻訳はここに足す）・決まり手の名前・クレジット |
 | data/dohyo.js | 土俵の見た目（1つの土俵＝1項目：紙の箱・氷の箱・激震の箱。項目を足せば別の土俵） |
 | data/stages.js | 土俵の種類＝物理の上書き（標準・氷・激震）＋本場所の土俵＋土俵巡業（2時間ごと・2つ・24時間先まで）。スキンは dohyo.js、物理は ここ |
-| data/shikona.js | 四股名の語（上の句・つなぎ・下の句・「id:字」）。実在の四股名になる字は入れない（test の NG で確かめる） |
+| data/shikona.js | 四股名の語（上の句・つなぎ・下の句・「id:字」）。はじめから持っている語 SHIKONA_START（かけだしの上の句5・山 川 海 里 富士・つなぎ全部）・相手に使わないなかま SHIKONA_FOE_SKIP。実在の四股名になる字は入れない（test の NG で確かめる） |
 | data/titles.js | 称号（「id:字」） |
 | data/banzuke.js | 番付の帯とレート（仮：1500 で序ノ口・100 ごと・2400 で横綱・Elo K=32） |
 | data/look.js | 演出の数字（旋回・カメラ・紙の厚み・スロー）。物理にさわらないので CONFIG_VERSION は上げない |
@@ -32,8 +32,8 @@
 | sim/table.js | 相性表の集計 |
 | sim/bench.js | 指紋用の決まった3番 |
 | sim/rng.js | シードつき乱数・FNV-1a |
-| game/save.js | 保存（キー `sumo-proto-v1` のまま中身を足す：力士3枠 slots・active・rate・hon・jun。試作①②の shape は1枠目へ）。道具の「はじめての流れを見る」用に、いまの保存を `sumo-proto-v1-bak` へ1つだけ取っておく（stashSave・unstashSave） |
-| game/names.js | 四股名と称号（id → 字・ランダム・正しいか） |
+| game/save.js | 保存（キー `sumo-proto-v1` のまま中身を足す：力士3枠 slots・active・rate・hon・jun・words＝手に入れた語（前からいる力士の語は持っていることにする）。試作①②の shape は1枠目へ）。道具の「はじめての流れを見る」用に、いまの保存を `sumo-proto-v1-bak` へ1つだけ取っておく（stashSave・unstashSave） |
+| game/names.js | 四股名と称号（id → 字・ランダム・正しいか）。randomShikona(rng, has)：has＝持っている語の Set → その中から（自分）／なし → 相手用。ownedWords(state.words) |
 | game/rating.js | 番付（rankOf・nextRank）・Elo（eloDelta）・仮の相手のレート |
 | game/jungyo.js | 土俵巡業の予定（時刻 → 枠 → 2つの土俵・世界で同じ）・取組前の抽選 |
 | game/foe.js | 巡業・本場所の仮の相手（CPU の形＋ランダムな四股名・称号・近いレート） |

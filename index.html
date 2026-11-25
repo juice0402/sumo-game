@@ -209,7 +209,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
 .edit4{height:clamp(170px,27vh,230px)}
 .edit4 .word small{font-size:12px;color:var(--kin);letter-spacing:.1em}
-.edit4 .word b{--max:34px;--room:150px}
+.edit4 .word b{--max:34px;--room:min(120px,calc(clamp(170px,27vh,230px) - 85px))}   /* 4字（これから など）も列に収まる */
 .edit4 .word.ti{flex-grow:1.3;border-left:0}
 .edit4 .word.ti b{--max:26px;--room:140px}
 .edit4 .word:nth-child(3){border-left:3px double var(--line)}
@@ -219,6 +219,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #s-words h2{font-size:13px;color:var(--kin);margin:16px 0 4px;font-weight:500;letter-spacing:.2em}
 .words{display:flex;flex-wrap:wrap;gap:2px 8px}
 .words .ghost{font-family:"Yuji Syuku",serif;font-size:22px;min-width:52px}
+#s-words .locked{margin:22px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--dim);letter-spacing:.04em}
 /* 土俵巡業 */
 .jghero{display:flex;flex-direction:column;min-height:0}
 .nowhead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px;font-size:13px;color:var(--washi2)}
@@ -529,6 +530,7 @@ const T = {
   rec: (r) => (r && (r.w || r.l || r.d) ? `${r.w}勝${r.l}敗${r.d ? r.d + '分' : ''}` : 'まだ取っていない'),
   pick: { kami: '上の句', tsunagi: 'つなぎ', shimo: '下の句', title: '称号' },
   pickTitle: (what) => `${what}をえらぶ`,
+  lockedWords: (n) => `まだ持っていない語が、あと${n}。取組で相手の四股名を見てみよう`,
   linkNone: '（なし）',
   retire: '引退',
   retireAgain: 'もう一度で引退',
@@ -1316,9 +1318,10 @@ return { checkShape };
 __m['src/data/shikona.js'] = (function () {
 // 四股名の語（上の句＋つなぎ＋下の句）。自由に打ちこむ名前は使わない（要件 10）。
 // 1語＝「id:字」。id は保存とサーバーで使う共通の ID（字を直しても id は変えない）。翻訳は id ごとに足す。
-// 試作のあいだは全部使える。あとで報酬でふやす語には start を外す予定（いまは全部 start）。
+// はじめから持っているのは SHIKONA_START だけ（かけだしの上の句5つ・ふつうの下の句5つ・つなぎ全部）。ほかの語は、あとで手に入れる。
+// 相手（CPU・あとで世界の力士）は、かけだしの上の句を使わず全部の語から → 相手の四股名を見て「こんなのほしい！」に（11/26 しょーくん）。
 // 実在の力士の四股名にならないよう、よくある頭の字（若・千代・栃・朝・旭・琴・貴・照・北・白・大 など）と、
-// 富士・花・錦・里・竜・鵬 などは入れていない。だめな組み合わせは tools/test.mjs の NG で確かめる。
+// 花・錦・竜・鵬 などは入れていない（富士・里は、頭の字がないので下の句に入れた）。だめな組み合わせは tools/test.mjs の NG で確かめる。
 
 function words(prefix, groups) {
   const out = [];
@@ -1333,11 +1336,12 @@ function words(prefix, groups) {
 
 // 語群のなかま（選ぶ画面の見出し）
 const SHIKONA_CATS = {
-  sumo: '相撲', nature: '自然', animal: '動物', food: '食べ物', cool: '格好いい', surreal: 'シュール', myth: '神話', wa: '日本文化', link: 'つなぎ',
+  kakedashi: 'かけだし', sumo: '相撲', nature: '自然', animal: '動物', food: '食べ物', cool: '格好いい', surreal: 'シュール', myth: '神話', wa: '日本文化', link: 'つなぎ',
 };
 
 const SHIKONA = {
   kami: words('k_', [
+    ['kakedashi', 'korekara:これから kakedashi:かけだし saisho:最初 imakara:今から hiyokko:ひよっこ'],
     ['sumo', 'seki:関 dohyo:土俵 shiko:四股 mawashi:廻し tsuna:綱 gyoji:行司'],
     ['nature', 'yama:山 umi:海 arashi:嵐 kaminari:雷 yuki:雪 tsuki:月 hoshi:星 kaze:風 kiri:霧 sakura:桜 momiji:紅葉 nami:波'],
     ['animal', 'taka:鷹 tora:虎 ookami:狼 kame:亀 kuma:熊 neko:猫 inu:犬 kitsune:狐 tanuki:狸 kujira:鯨 tako:蛸 kaeru:蛙'],
@@ -1351,7 +1355,7 @@ const SHIKONA = {
     ['link', 'no:の no2:乃 no3:ノ no4:之 ga:ヶ none:-'],
   ]),
   shimo: words('s_', [
-    ['sumo', 'zeki:関 hiro:洋 nada:灘 yama:山 umi:海 kawa:川'],
+    ['sumo', 'yama:山 kawa:川 umi:海 sato:里 fuji:富士 zeki:関 hiro:洋 nada:灘'],
     ['nature', 'mine:嶺 sora:空 kumo:雲 iwa:岩 taki:滝 fuji2:藤 matsu:松'],
     ['animal', 'washi:鷲 shishi:獅子 kujira:鯨 kitsune:狐 tanuki:狸 tora:虎 tako:蛸'],
     ['food', 'tofu:豆腐 daifuku:大福 manju:饅頭 tenpura:天ぷら nabe:鍋 oden:おでん mochi:餅'],
@@ -1362,10 +1366,19 @@ const SHIKONA = {
   ]),
 };
 
+// はじめから持っている語（入門のときにさずかる四股名は、この中から）
+const SHIKONA_START = [
+  'k_korekara', 'k_kakedashi', 'k_saisho', 'k_imakara', 'k_hiyokko',
+  's_yama', 's_kawa', 's_umi', 's_sato', 's_fuji',
+  ...SHIKONA.tsunagi.map((w) => w.id),
+];
+// 相手の四股名に使わない上の句のなかま（かけだしは自分だけ）
+const SHIKONA_FOE_SKIP = ['kakedashi'];
+
 // 新しい力士・相手の力士の四股名（ランダム）。つなぎは「の」がいちばん出やすい
 const SHIKONA_LINK_WEIGHTS = { t_no: 5, t_no2: 2, t_no3: 1, t_no4: 1, t_ga: 1, t_none: 2 };
 
-return { SHIKONA_CATS, SHIKONA, SHIKONA_LINK_WEIGHTS };
+return { SHIKONA_CATS, SHIKONA, SHIKONA_START, SHIKONA_FOE_SKIP, SHIKONA_LINK_WEIGHTS };
 })();
 
 __m['src/data/titles.js'] = (function () {
@@ -1387,7 +1400,7 @@ return { TITLES, TITLE_START };
 
 __m['src/game/names.js'] = (function () {
 // 四股名と称号：id → 字、ランダムに作る、正しいか確かめる
-const { SHIKONA, SHIKONA_LINK_WEIGHTS } = __m['src/data/shikona.js'];
+const { SHIKONA, SHIKONA_LINK_WEIGHTS, SHIKONA_START, SHIKONA_FOE_SKIP } = __m['src/data/shikona.js'];
 const { TITLES, TITLE_START } = __m['src/data/titles.js'];
 const { T } = __m['src/data/text.js'];
 
@@ -1397,6 +1410,7 @@ const TITLE = {};
 for (const t of TITLES) TITLE[t.id] = t;
 
 function wordText(id) { return WORD[id] ? WORD[id].t : ''; }
+function isWord(id) { return !!WORD[id]; }
 function shikonaText(ids) { return Array.isArray(ids) ? ids.map(wordText).join('') : ''; }
 function titleText(id) { return TITLE[id] ? TITLE[id].t : ''; }
 // 選ぶ画面に出す字（つなぎの「なし」も見えるように）
@@ -1409,20 +1423,32 @@ function validTitle(id) { return !!TITLE[id]; }
 
 function pick(list, rng) { return list[Math.floor(rng() * list.length)]; }
 
-function randomShikona(rng = Math.random) {
-  const k = pick(SHIKONA.kami, rng).id;
-  let s = pick(SHIKONA.shimo, rng).id;
-  for (let i = 0; i < 6 && wordText(s) === wordText(k); i++) s = pick(SHIKONA.shimo, rng).id;   // 同じ字をくり返さない
+// 持っている語（はじめから持っている語＋手に入れた語 extra）
+function ownedWords(extra = []) { return new Set([...SHIKONA_START, ...extra]); }
+function isStartWord(id) { return SHIKONA_START.includes(id); }
+
+// has：持っている語（Set）→ その中から（自分の力士）。なし → 相手用（かけだしの上の句は使わない・ほかは全部）
+function randomShikona(rng = Math.random, has = null) {
+  const okW = has ? (w) => has.has(w.id) : () => true;
+  const kami = SHIKONA.kami.filter(has ? okW : (w) => !SHIKONA_FOE_SKIP.includes(w.cat));
+  const shimo = SHIKONA.shimo.filter(okW);
+  const k = pick(kami, rng).id;
+  let s = pick(shimo, rng).id;
+  for (let i = 0; i < 6 && wordText(s) === wordText(k); i++) s = pick(shimo, rng).id;   // 同じ字をくり返さない
   let total = 0;
-  for (const id in SHIKONA_LINK_WEIGHTS) total += SHIKONA_LINK_WEIGHTS[id];
+  for (const id in SHIKONA_LINK_WEIGHTS) if (!has || has.has(id)) total += SHIKONA_LINK_WEIGHTS[id];
   let r = rng() * total, t = 't_no';
-  for (const id in SHIKONA_LINK_WEIGHTS) { r -= SHIKONA_LINK_WEIGHTS[id]; if (r < 0) { t = id; break; } }
+  for (const id in SHIKONA_LINK_WEIGHTS) {
+    if (has && !has.has(id)) continue;
+    r -= SHIKONA_LINK_WEIGHTS[id];
+    if (r < 0) { t = id; break; }
+  }
   return [k, t, s];
 }
 function randomTitle(rng = Math.random) { return pick(TITLES, rng).id; }
 function startTitle() { return TITLE_START; }
 
-return { wordText, shikonaText, titleText, wordLabel, validShikona, validTitle, randomShikona, randomTitle, startTitle };
+return { wordText, isWord, shikonaText, titleText, wordLabel, validShikona, validTitle, ownedWords, isStartWord, randomShikona, randomTitle, startTitle };
 })();
 
 __m['src/data/banzuke.js'] = (function () {
@@ -1455,8 +1481,9 @@ __m['src/game/save.js'] = (function () {
 //   shape・drive・mute・short：試作①②から（shape はいま選んでいる力士の形を写す＝道具が使う）
 //   slots：力士3枠（{ shape, shikona:[上・つなぎ・下], title, rec:{w,l,d} } か null）・active：いま選んでいる枠
 //   rate・hon・jun：本場所のレートと戦績・巡業の戦績（オンラインになったらサーバーが正）
+//   words：手に入れた四股名の語（はじめから持っている SHIKONA_START のほか。11/26〜）
 const { checkShape } = __m['src/geom/check.js'];
-const { validShikona, validTitle, randomShikona, startTitle } = __m['src/game/names.js'];
+const { validShikona, validTitle, randomShikona, startTitle, ownedWords, isStartWord, isWord } = __m['src/game/names.js'];
 const { RATE } = __m['src/data/banzuke.js'];
 
 const SAVE_KEY = 'sumo-proto-v1';
@@ -1464,22 +1491,23 @@ const SLOT_COUNT = 3;
 
 function rec(r) { return { w: (r && r.w) | 0, l: (r && r.l) | 0, d: (r && r.d) | 0 }; }
 
-function newRikishi(shape) {
-  return { shape, shikona: randomShikona(), title: startTitle(), rec: rec() };
+// has：持っている語（Set）。新しい力士の四股名は、その中から
+function newRikishi(shape, has = ownedWords()) {
+  return { shape, shikona: randomShikona(Math.random, has), title: startTitle(), rec: rec() };
 }
 
 function cleanSlot(s) {
   if (!s || !s.shape || !checkShape(s.shape).ok) return null;
   return {
     shape: s.shape,
-    shikona: validShikona(s.shikona) ? s.shikona : randomShikona(),
+    shikona: validShikona(s.shikona) ? s.shikona : randomShikona(Math.random, ownedWords()),
     title: validTitle(s.title) ? s.title : startTitle(),
     rec: rec(s.rec),
   };
 }
 
 function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
+  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [] };
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
@@ -1491,7 +1519,10 @@ function loadState() {
     if (Number.isFinite(d.rate)) st.rate = Math.round(d.rate);
     st.hon = rec(d.hon);
     st.jun = rec(d.jun);
+    if (Array.isArray(d.words)) st.words = d.words.filter((id) => isWord(id) && !isStartWord(id));
   } catch (e) { /* 保存できない画面でも遊べる */ }
+  // 前からいる力士の語は、持っていることにする（11/26 より前の力士の名前を、編集で元にもどせるように）
+  for (const s of st.slots) if (s) for (const id of s.shikona) if (!isStartWord(id) && !st.words.includes(id)) st.words.push(id);
   if (!st.slots[st.active]) st.active = Math.max(0, st.slots.findIndex(Boolean));
   return st;
 }
@@ -1501,7 +1532,7 @@ function saveState(st) {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
-      slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun,
+      slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
     }));
   } catch (e) { /* */ }
 }
@@ -1509,7 +1540,7 @@ function saveState(st) {
 // 道具の「はじめての流れを見る」（試作だけ）：いまの保存を1つだけ取っておき、まっさらな部屋から見なおす／もどす
 const STASH_KEY = SAVE_KEY + '-bak';
 function freshProgress() {
-  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
+  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [] };
 }
 function hasStash() {
   try { return !!localStorage.getItem(STASH_KEY); } catch (e) { return false; }
@@ -3654,7 +3685,7 @@ function renderSlots(el, slots, opt) {
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape); });
 }
 
-// 語をえらぶシート：groups＝[{ title, items:[{id, label}] }]
+// 語をえらぶシート：groups＝[{ title, items:[{id, label}] }]・note：いちばん下のひとこと
 function initWordSheet() {
   const sheet = document.getElementById('s-words');
   const list = document.getElementById('w-list');
@@ -3667,7 +3698,7 @@ function initWordSheet() {
     onPick(b.dataset.id);
   });
   return {
-    open(title, groups, current, pick) {
+    open(title, groups, current, pick, note = '') {
       onPick = pick;
       document.getElementById('w-title').textContent = title;
       list.textContent = '';
@@ -3686,20 +3717,22 @@ function initWordSheet() {
         }
         list.appendChild(grid);
       }
+      if (note) { const p = document.createElement('p'); p.className = 'locked'; p.textContent = note; list.appendChild(p); }
       sheet.hidden = false;
       list.scrollTop = 0;
     },
   };
 }
 
-function groupsOf(g) {
+// has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
+function groupsOf(g, has) {
   if (g === 'title') return [{ title: '', items: TITLES.map((t) => ({ id: t.id, label: t.t })) }];
   const by = {};
-  for (const w of SHIKONA[g]) (by[w.cat] = by[w.cat] || []).push({ id: w.id, label: wordLabel(w.id) });
+  for (const w of SHIKONA[g]) if (has.has(w.id)) (by[w.cat] = by[w.cat] || []).push({ id: w.id, label: wordLabel(w.id) });
   return Object.keys(by).map((c) => ({ title: g === 'tsunagi' ? '' : SHIKONA_CATS[c], items: by[c] }));
 }
 
-// 力士の編集。cb：{ getSlot(i), onChange(i), onRecut(i), onRetire(i), onDone() }
+// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, onChange(i), onRecut(i), onRetire(i), onDone() }
 function initEdit(cb) {
   const words = initWordSheet();
   const cv = document.getElementById('ed-cv');
@@ -3723,16 +3756,18 @@ function initEdit(cb) {
     b.addEventListener('click', () => {
       const s = cb.getSlot(idx), g = b.dataset.g;
       const cur = g === 'title' ? s.title : s.shikona[G[g]];
-      words.open(T.pickTitle(T.pick[g]), groupsOf(g), cur, (id) => {
+      const has = cb.getOwned();
+      const locked = g === 'title' ? 0 : SHIKONA[g].filter((w) => !has.has(w.id)).length;
+      words.open(T.pickTitle(T.pick[g]), groupsOf(g, has), cur, (id) => {
         if (g === 'title') s.title = id; else s.shikona[G[g]] = id;
         cb.onChange(idx);
         paint();
-      });
+      }, locked ? T.lockedWords(locked) : '');
     });
   }
   document.getElementById('ed-rand').addEventListener('click', () => {
     const s = cb.getSlot(idx);
-    s.shikona = randomShikona();
+    s.shikona = randomShikona(Math.random, cb.getOwned());
     cb.onChange(idx);
     paint();
   });
@@ -4051,7 +4086,7 @@ const { T } = __m['src/data/text.js'];
 const { STAGES, HONBASHO_STAGE } = __m['src/data/stages.js'];
 const { setRapier } = __m['src/sim/battle.js'];
 const { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } = __m['src/game/save.js'];
-const { shikonaText, titleText, randomShikona } = __m['src/game/names.js'];
+const { shikonaText, titleText, randomShikona, ownedWords } = __m['src/game/names.js'];
 const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
 const { rankOf, eloDelta } = __m['src/game/rating.js'];
 const { drawStage } = __m['src/game/jungyo.js'];
@@ -4159,7 +4194,7 @@ function boot() {
       playSfx('kami', { vol: 0.8 });
       const s = state.slots[cutSlot];
       const isNew = !s;
-      if (s) s.shape = pts; else state.slots[cutSlot] = newRikishi(pts);
+      if (s) s.shape = pts; else state.slots[cutSlot] = newRikishi(pts, ownedWords(state.words));
       state.active = cutSlot;
       save();
       loadLibs().then(() => afterCut(isNew));
@@ -4277,7 +4312,7 @@ function boot() {
     setTimeout(() => playSfx('ton', { vol: 0.75 }), 1150);
   };
   document.getElementById('mm-again').addEventListener('click', () => {
-    state.slots[meimeiSlot].shikona = randomShikona();
+    state.slots[meimeiSlot].shikona = randomShikona(Math.random, ownedWords(state.words));
     save();
     show('s-meimei');
   });
@@ -4294,6 +4329,7 @@ function boot() {
   });
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
+    getOwned: () => ownedWords(state.words),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
     onRetire(i) {
@@ -4327,7 +4363,7 @@ function boot() {
   // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
   const unstashBtn = document.getElementById('b-unstash');
   const paintStash = () => { unstashBtn.hidden = !hasStash(); };
-  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun'];
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words'];
   document.getElementById('b-intro').addEventListener('click', () => {
     stashSave();
     Object.assign(state, freshProgress());
