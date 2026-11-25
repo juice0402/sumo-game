@@ -2,7 +2,7 @@
 // 同じ形・同じシード・同じ設定なら、どの端末でも同じ結果（指紋も同じ）。
 // 決まり：時間きざみ固定・作る順番固定・四則演算だけ（Math.sin などを使わない）。
 import { PAPER, PHYS } from '../data/config.js';
-import { bbox } from '../geom/poly.js';
+import { bbox, clipBand, area } from '../geom/poly.js';
 import { decompose } from '../geom/decompose.js';
 import { makeRng, fnv1a } from './rng.js';
 
@@ -26,14 +26,21 @@ function localPieces(pts, side, phys) {
   const s = phys.paperM / PAPER.w;
   const bb = bbox(pts);
   const cx = (bb.x0 + bb.x1) / 2;
-  return pieces.map((pc) => {
-    const arr = new Float32Array(pc.length * 2);
-    for (let i = 0; i < pc.length; i++) {
-      arr[i * 2] = side * (pc[i][0] - cx) * s;
-      arr[i * 2 + 1] = (bb.y1 - pc[i][1]) * s;
+  // 力士のいちばん下から footH（紙の高さの割合）までが「足」、それより上が「体」（土俵についたら負け）。凸の形を線で2つに切る
+  const yl = bb.y1 - phys.footH * PAPER.h;
+  const out = [];
+  for (const pc of pieces) {
+    for (const [part, isBody] of [[clipBand(pc, -1e9, yl), true], [clipBand(pc, yl, 1e9), false]]) {
+      if (part.length < 3 || area(part) < 1) continue;
+      const arr = new Float32Array(part.length * 2);
+      for (let i = 0; i < part.length; i++) {
+        arr[i * 2] = side * (part[i][0] - cx) * s;
+        arr[i * 2 + 1] = (bb.y1 - part[i][1]) * s;
+      }
+      out.push({ arr, isBody });
     }
-    return arr;
-  });
+  }
+  return out;
 }
 
 function pulse(u) {
@@ -68,10 +75,15 @@ export function createBout(opts) {
     const body = world.createRigidBody(
       R.RigidBodyDesc.dynamic().setTranslation(x0, 0.002)
         .setLinearDamping(phys.linearDamping).setAngularDamping(phys.angularDamping).setCcdEnabled(true));
-    const cols = pieces.map((arr) => world.createCollider(
-      R.ColliderDesc.convexHull(arr).setDensity(phys.density).setFriction(phys.frictionBody).setFrictionCombineRule(Max)
-        .setRestitution(phys.restitution), body));
-    return { body, cols, dir: side, fallCount: 0, lost: null };
+    const cols = [], bodyCols = [];
+    for (const pc of pieces) {
+      const c = world.createCollider(
+        R.ColliderDesc.convexHull(pc.arr).setDensity(phys.density).setFriction(phys.frictionBody).setFrictionCombineRule(Max)
+          .setRestitution(phys.restitution), body);
+      cols.push(c);
+      if (pc.isBody) bodyCols.push(c);
+    }
+    return { body, cols, bodyCols, dir: side, fallCount: 0, touchCount: 0, lost: null, at: null };
   };
   // 左（a）は右向き、右（b）は左右反転して左向き
   const A = makeFighter(opts.a, 1);
@@ -81,6 +93,7 @@ export function createBout(opts) {
   const settleSteps = Math.round(phys.settle / dt);
   const maxSteps = settleSteps + Math.round(phys.maxTime / dt);
   const fallSteps = Math.round(phys.fallHold / dt);
+  const touchSteps = Math.max(1, Math.round(phys.touchHold / dt));
   const tapSteps = Math.round(phys.tapPeriod / dt);
   const tapLenSteps = Math.max(1, Math.round(phys.tapLen / dt));
   const firstTap = settleSteps + Math.round(rng() * tapSteps * 0.5);
@@ -144,6 +157,24 @@ export function createBout(opts) {
     if (f.lost) return;
     const com = f.body.worldCom();
     if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; return; }
+    if (phys.touchLose) {
+      // 体が土俵に touchHold 秒ついたら負け（はねて一瞬かすっただけは負けにしない）
+      let hit = null;
+      for (const c of f.bodyCols) {
+        world.contactPair(ringCol, c, (m) => {
+          if (hit || m.numContacts() === 0) return;
+          const p = m.numSolverContacts() > 0 ? m.solverContactPoint(0) : null;
+          hit = p ? { x: p.x, y: p.y } : { x: 0, y: 0 };
+        });
+        if (hit) break;
+      }
+      if (hit) {
+        f.touchCount++;
+        if (f.touchCount >= touchSteps) { f.lost = 'touch'; f.at = hit; return; }
+      } else {
+        f.touchCount = 0;
+      }
+    }
     const ang = f.body.rotation();
     if (ang > phys.fallAngle || ang < -phys.fallAngle) {
       f.fallCount++;
@@ -195,6 +226,7 @@ export function createBout(opts) {
       if (A.lost || B.lost) {
         if (A.lost && B.lost) { result.kind = 'both'; }
         else { result.winner = A.lost ? 'b' : 'a'; result.loser = A.lost ? 'a' : 'b'; result.kind = A.lost || B.lost; }
+        result.at = (A.lost && A.at) || (B.lost && B.at) || null;
       } else if (step >= maxSteps) {
         result.kind = 'time';
       }

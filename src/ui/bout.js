@@ -1,7 +1,8 @@
 // 取組の画面（真横の2D）。物理は記録してから再生するだけ＝演出（スロー・ヒットストップ・揺れ）は勝敗にさわらない。
 import { T } from '../data/text.js';
+import { PAPER } from '../data/config.js';
 import { createBout, toLocal } from '../sim/battle.js';
-import { COL, setupCanvas, paperPiece, makeSplash } from './ink.js';
+import { COL, setupCanvas, paperPiece, makeSplash, polyPath as polyPathLocal } from './ink.js';
 
 export function initBout({ getDrive, onFoe, onRecut }) {
   const cv = document.getElementById('bout-cv');
@@ -31,7 +32,7 @@ export function initBout({ getDrive, onFoe, onRecut }) {
     const bout = createBout({ a: me, b: foe.pts, seed, phys: { drive: getDrive() }, record: true });
     st = {
       me, foe, seed, bout, phys: bout.phys, rec: bout.rec,
-      la: toLocal(me, 1, bout.phys).outline, lb: toLocal(foe.pts, -1, bout.phys).outline,
+      la: toLocal(me, 1, bout.phys), lb: toLocal(foe.pts, -1, bout.phys),
       t: 0, last: performance.now(), play: -1, idx: 0, hold: 0, endHold: 0, firstHit: true,
       shake: 0, splash: [], prevTouch: 0, shown: false,
     };
@@ -75,13 +76,13 @@ export function initBout({ getDrive, onFoe, onRecut }) {
     if (touch && !s.prevTouch && s.play >= 0) {
       const mx = (f[o] + f[o + 3]) / 2, my = (f[o + 1] + f[o + 4]) / 2 + 0.45;
       s.splash.push(...makeSplash(mx, my, s.firstHit ? 1 : 0.3));
-      if (s.firstHit) { s.hold = 0.09; s.shake = 1; }
+      if (s.firstHit) { s.hold = 0.08; s.shake = 1; }
       s.firstHit = false;
     }
     s.prevTouch = touch;
     for (const p of s.splash) { p.x += p.vx * fdt; p.y += p.vy * fdt; p.vy -= 6 * fdt; p.life -= fdt * 1.6; }
     s.splash = s.splash.filter((p) => p.life > 0);
-    s.shake = Math.max(0, s.shake - fdt * 6);
+    s.shake = Math.max(0, s.shake - fdt * 5);
     draw(o);
     raf = requestAnimationFrame(frame);
   }
@@ -89,16 +90,18 @@ export function initBout({ getDrive, onFoe, onRecut }) {
   function draw(o) {
     const s = st, { ctx, W, H, dpr } = lay, P = s.phys, f = s.rec.f;
     const sc = Math.min(W / (2 * P.ringHalf + 0.4), H / 3.4);
-    const cx = W / 2 + (Math.random() - 0.5) * s.shake * 8 * dpr;
-    const gy = H * 0.62 + (Math.random() - 0.5) * s.shake * 6 * dpr;
-    const X = (x) => cx + x * sc, Y = (y) => gy - y * sc;
+    // カメラは土俵にくっつける（土俵のトンで画面がゆれないように）。ぶつかった瞬間だけ小さくなめらかに揺らす
+    const ry = f[o + 6];
+    const cx = W / 2 + Math.sin(s.t * 55) * s.shake * 3 * dpr;
+    const gy = H * 0.62;
+    const X = (x) => cx + x * sc, Y = (y) => gy - (y - ry) * sc;
     ctx.fillStyle = COL.sumi;
     ctx.fillRect(0, 0, W, H);
     // うしろの朱の円
     ctx.fillStyle = 'rgba(171,57,47,0.13)';
     ctx.beginPath(); ctx.arc(X(0), Y(1.05), 1.25 * sc, 0, Math.PI * 2); ctx.fill();
     // 土俵
-    const ry = f[o + 6], top = Y(ry), L = X(-P.ringHalf), R = X(P.ringHalf), d = 0.1 * sc;
+    const top = Y(ry), L = X(-P.ringHalf), R = X(P.ringHalf), d = 0.1 * sc;
     ctx.fillStyle = COL.clayFace;
     ctx.fillRect(L, top, R - L, P.ringDepth * sc);
     ctx.fillStyle = COL.clayDark;
@@ -111,14 +114,29 @@ export function initBout({ getDrive, onFoe, onRecut }) {
     ctx.fillStyle = COL.kin;
     for (const ex of [L + d * 0.6, R - d * 0.6]) { ctx.beginPath(); ctx.ellipse(ex, top - d * 0.35, d * 0.7, d * 0.45, 0, 0, Math.PI * 2); ctx.fill(); }
     ctx.strokeStyle = 'rgba(238,233,222,0.12)';
-    ctx.beginPath(); ctx.moveTo(0, Y(-P.ringDepth)); ctx.lineTo(W, Y(-P.ringDepth)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, Y(ry - P.ringDepth)); ctx.lineTo(W, Y(ry - P.ringDepth)); ctx.stroke();
+    // トン（土俵の突き上げ）の合図：土俵の両わきに短い線（カメラは土俵についているので、ゆれのかわりに見せる）
+    const k = Math.min(1, ry / (P.tapAmp * 0.6));
+    if (k > 0.05) {
+      ctx.strokeStyle = `rgba(238,233,222,${0.5 * k})`;
+      ctx.lineWidth = 2 * dpr;
+      const len = (0.12 + 0.1 * k) * sc;
+      ctx.beginPath();
+      for (const [ex, dir] of [[L, -1], [R, 1]]) {
+        for (const yy of [0.15, 0.4, 0.65]) {
+          const y = top + P.ringDepth * sc * yy;
+          ctx.moveTo(ex + dir * 0.06 * sc, y); ctx.lineTo(ex + dir * (0.06 * sc + len), y);
+        }
+      }
+      ctx.stroke();
+    }
     // 影と力士
     const fighters = [
       { x: f[o], y: f[o + 1], a: f[o + 2], ol: s.la, dark: false },
       { x: f[o + 3], y: f[o + 4], a: f[o + 5], ol: s.lb, dark: true },
     ];
     for (const g of fighters) {
-      if (g.y < -0.05) continue;
+      if (g.y < ry - 0.05) continue;
       const lift = Math.max(0, g.y - ry);
       ctx.fillStyle = `rgba(0,0,0,${Math.max(0.05, 0.28 - lift * 0.6)})`;
       ctx.beginPath(); ctx.ellipse(X(g.x), top - d * 0.4, 0.36 * sc, d * 0.35, 0, 0, Math.PI * 2); ctx.fill();
@@ -126,7 +144,25 @@ export function initBout({ getDrive, onFoe, onRecut }) {
     for (const g of fighters) {
       const c = Math.cos(g.a), sn = Math.sin(g.a);
       const tx = (p) => [X(g.x + p[0] * c - p[1] * sn), Y(g.y + p[0] * sn + p[1] * c)];
-      paperPiece(ctx, g.ol, tx, { line: Math.max(2, 0.024 * sc), shade: 0.025 * sc, dark: g.dark });
+      paperPiece(ctx, g.ol.outline, tx, { line: Math.max(2, 0.024 * sc), shade: 0.025 * sc, dark: g.dark });
+      // 体と足のさかい（ここより上が土俵についたら負け）
+      const yl = P.footH * PAPER.h * g.ol.s;
+      ctx.save();
+      polyPathLocal(ctx, g.ol.outline, tx);
+      ctx.clip();
+      const p0 = tx([-1, yl]), p1 = tx([1, yl]);
+      ctx.setLineDash([5 * dpr, 5 * dpr]);
+      ctx.strokeStyle = 'rgba(32,30,27,0.35)';
+      ctx.lineWidth = 1.2 * dpr;
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      ctx.restore();
+    }
+    // 体がついた所
+    const r = s.bout.result;
+    if (r.kind === 'touch' && r.at && o >= (s.rec.n - 1) * 8) {
+      ctx.strokeStyle = COL.shu;
+      ctx.lineWidth = 3 * dpr;
+      ctx.beginPath(); ctx.arc(X(r.at.x), Y(r.at.y), 0.09 * sc, 0, Math.PI * 2); ctx.stroke();
     }
     // 墨のしぶき
     ctx.fillStyle = COL.sumi;

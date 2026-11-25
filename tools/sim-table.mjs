@@ -50,10 +50,10 @@ res.grid.forEach((row, i) => {
   lines.push(`| ${res.shapes[i].name} | ` + row.map((c) => pct(scoreOf(c))).join(' | ') + ` | ${pct((p.w + p.d * 0.5) / p.n)} |`);
 });
 lines.push('');
-lines.push('| 形 | 勝 | 負 | 分 | 負けのうち転倒 | 負けのうち場外 | 時間切れ | 平均の時間 |');
-lines.push('|---|---|---|---|---|---|---|---|');
+lines.push('| 形 | 勝 | 負 | 分 | 負け：体がついた | 負け：転倒 | 負け：場外 | 時間切れ | 平均の時間 |');
+lines.push('|---|---|---|---|---|---|---|---|---|');
 res.per.forEach((p, i) => {
-  lines.push(`| ${res.shapes[i].name} | ${p.w} | ${p.l} | ${p.d} | ${p.fall} | ${p.out} | ${p.time} | ${(p.t / p.n).toFixed(1)}秒 |`);
+  lines.push(`| ${res.shapes[i].name} | ${p.w} | ${p.l} | ${p.d} | ${p.touch} | ${p.fall} | ${p.out} | ${p.time} | ${(p.t / p.n).toFixed(1)}秒 |`);
 });
 const all = res.per.reduce((a, p) => ({ n: a.n + p.n, d: a.d + p.d, t: a.t + p.t }), { n: 0, d: 0, t: 0 });
 lines.push('');
