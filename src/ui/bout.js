@@ -86,9 +86,12 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
-    const match = opt.mode === 'jungyo' || opt.mode === 'honbasho';
-    btn('b-again').hidden = match; btn('b-foe').hidden = match; btn('b-recut').hidden = match;
-    btn('b-next').hidden = !match;
+    // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
+    const keiko = !opt.mode || opt.mode === 'keiko';
+    btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
+    btn('b-next').hidden = keiko;
+    btn('b-next').textContent = opt.nextLabel || T.nextBout;
+    btn('b-home').hidden = opt.mode === 'shodohyo';
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
     stage.setFighters(la, lb);
     const short = !!getShort();

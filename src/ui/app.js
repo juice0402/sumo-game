@@ -5,16 +5,17 @@ import { T } from '../data/text.js';
 import { STAGES, HONBASHO_STAGE } from '../data/stages.js';
 import { setRapier } from '../sim/battle.js';
 import { loadState, saveState, newRikishi, addRec } from '../game/save.js';
-import { shikonaText, titleText } from '../game/names.js';
+import { shikonaText, titleText, randomShikona } from '../game/names.js';
+import { CPU_SHAPES } from '../data/cpu-shapes.js';
 import { rankOf, eloDelta } from '../game/rating.js';
 import { drawStage } from '../game/jungyo.js';
 import { makeFoe } from '../game/foe.js';
 import { initCut } from './cut.js';
-import { initPick } from './pick.js';
+import { initPick, drawShapeThumb } from './pick.js';
 import { initBout } from './bout.js';
 import { initTools } from './tools.js';
 import { initHeya } from './heya.js';
-import { renderSlots, initEdit } from './roster.js';
+import { renderSlots, initEdit, fitText } from './roster.js';
 import { initJungyo, initBanzuke, initSelect } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
@@ -94,11 +95,11 @@ function boot() {
   let editSlot = 0, bzTitle = '番付', stamping = false;
   // 切る：どの枠を切るか・切ったあとどこへ行くか
   let cutSlot = 0, afterCut = null;
-  function cutFor(i, then) {
+  function cutFor(i, then, opt) {
     cutSlot = i;
     afterCut = then;
     go('s-cut');
-    cut.show(state.slots[i] ? state.slots[i].shape : null);
+    cut.show(state.slots[i] ? state.slots[i].shape : null, opt);
   }
   const cut = initCut({
     onDecide(pts) {
@@ -135,7 +136,7 @@ function boot() {
     getShort: () => state.short,
     onFoe() { show('s-pick'); },
     onRecut() { cutFor(state.active, () => { pick.resetMarks(); show('s-pick'); }); },
-    onNext(mode) { openSelect(mode); },
+    onNext(mode) { if (mode === 'shodohyo') show('s-meimei'); else openSelect(mode); },
     onHome: home,
   });
 
@@ -190,17 +191,9 @@ function boot() {
 
   // 部屋・勝負
   const heya = initHeya({
-    onStart() {
-      if (hasRikishi()) { home(); return; }
-      // はじめて：紙を切って、そのまま CPU と稽古（要件 16）
-      nav.length = 0; nav.push('s-home');
-      cutFor(0, () => { pick.resetMarks(); show('s-pick'); });
-    },
-    onRoster() { go('s-roster'); },
-    onShobu() {
-      if (!hasRikishi()) { cutFor(state.slots.findIndex((s) => !s), () => show('s-mode')); return; }
-      go('s-mode');
-    },
+    onStart: home,
+    onRoster() { if (hasRikishi()) go('s-roster'); else startIntro(); },
+    onShobu() { if (hasRikishi()) go('s-mode'); else startIntro(); },
     onBanzuke() { bzTitle = '番付'; go('s-banzuke'); },
     onJungyo() { go('s-jungyo'); },
     onJungyoMatch() { go('s-jungyo'); },
@@ -208,6 +201,35 @@ function boot() {
     onKeiko() { pick.resetMarks(); go('s-pick'); },
   });
   onShow['s-home'] = () => heya.home(state);
+
+  // はじめての流れ（11/25 しょーくん「BからのA」）：空の相撲部屋 →「力士をつくる」→ お手本つきで切る
+  //   → 初土俵（CPU の釣鐘と1番・戦績には数えない）→ 四股名をさずかる → 相撲部屋
+  function startIntro() {
+    const i = Math.max(0, state.slots.findIndex((s) => !s));
+    cutFor(i, () => shodohyo(i), { demo: true });
+  }
+  function shodohyo(i) {
+    const me = state.slots[i];
+    const foe = CPU_SHAPES[0];
+    meimeiSlot = i;
+    show('s-bout');
+    bout.start(me.shape, foe, state.seed++, { mode: 'shodohyo', a: { name: T.you, sub: T.shodohyo }, b: { name: foe.name }, nextLabel: T.toMeimei });
+  }
+  let meimeiSlot = 0;
+  onShow['s-meimei'] = () => {
+    const s = state.slots[meimeiSlot];
+    document.getElementById('mm-title').textContent = titleText(s.title);
+    fitText(document.getElementById('mm-name'), shikonaText(s.shikona));
+    drawShapeThumb(document.getElementById('mm-cv'), s.shape);
+    setTimeout(() => playSfx('sumi', { vol: 0.45 }), 380);
+    setTimeout(() => playSfx('ton', { vol: 0.75 }), 1150);
+  };
+  document.getElementById('mm-again').addEventListener('click', () => {
+    state.slots[meimeiSlot].shikona = randomShikona();
+    save();
+    show('s-meimei');
+  });
+  document.getElementById('mm-ok').addEventListener('click', home);
   onShow['s-mode'] = () => heya.mode(state);
 
   // 部屋の力士（3枠）と編集

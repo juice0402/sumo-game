@@ -3,6 +3,7 @@ import { PAPER, CHECK } from '../data/config.js';
 import { T } from '../data/text.js';
 import { strokeToOutline, isNearStart } from '../geom/stroke.js';
 import { checkShape } from '../geom/check.js';
+import { CPU_SHAPES } from '../data/cpu-shapes.js';
 import { COL, setupCanvas, tornRect, fiberPattern, polyPath, paperPiece, inkStroke } from './ink.js';
 import { playSfx } from './sound.js';
 
@@ -18,6 +19,42 @@ export function initCut({ onDecide }) {
   let outline = null, check = null, fallT = -1;
   let lay = null;
   let pred = [], rafId = 0;   // pred＝指の少し先（ブラウザの予測・描くだけで形には入れない）
+  // はじめての人へのお手本：釣鐘の形を、筆がすっと一筆でなぞる（指を置いたら消える）
+  let demo = null;
+  const DEMO_SEC = 2.2, DEMO_HOLD = 0.9;
+  function demoPath() {
+    const pts = CPU_SHAPES[0].pts.concat([CPU_SHAPES[0].pts[0]]);
+    const len = [0];
+    for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    return { pts, len, total: len[len.length - 1] };
+  }
+  function demoTick() {
+    if (!demo) return;
+    if (!drawing && !outline && !raw.length) draw();
+    requestAnimationFrame(demoTick);
+  }
+  function drawDemo(ctx, dpr) {
+    const t = (performance.now() - demo.t0) / 1000 % (DEMO_SEC + DEMO_HOLD + 0.5);
+    const u = Math.min(1, t / DEMO_SEC), fade = t > DEMO_SEC + DEMO_HOLD ? 1 - (t - DEMO_SEC - DEMO_HOLD) / 0.5 : 1;
+    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;   // はじめと終わりをゆっくり
+    const want = e * demo.path.total, out = [];
+    const { pts, len } = demo.path;
+    for (let i = 0; i < pts.length; i++) {
+      if (len[i] <= want) { out.push(pts[i]); continue; }
+      const k = (want - len[i - 1]) / (len[i] - len[i - 1]);
+      out.push([pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k]);
+      break;
+    }
+    ctx.save();
+    ctx.globalAlpha = 0.5 * Math.max(0, fade);
+    inkStroke(ctx, out, tx, 3 * dpr);
+    const p0 = tx(pts[0]), pe = tx(out[out.length - 1]);
+    ctx.globalAlpha = Math.max(0, fade);
+    ctx.fillStyle = COL.shu;
+    ctx.beginPath(); ctx.arc(p0[0], p0[1], 5 * dpr, 0, Math.PI * 2); ctx.fill();
+    if (u < 1) { ctx.fillStyle = COL.sumi; ctx.beginPath(); ctx.arc(pe[0], pe[1], 7 * dpr, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
 
   function layout() {
     const c = setupCanvas(cv, 2);   // 描く画面は2倍まで（スマホで1こまが重くならないように）
@@ -146,6 +183,7 @@ export function initCut({ onDecide }) {
         }
       }
     }
+    if (demo && !cut && !raw.length) drawDemo(ctx, dpr);
     // 描いている線
     if (!cut && raw.length) {
       inkStroke(ctx, drawing && pred.length ? raw.concat(pred) : raw, tx, 3.4 * dpr);
@@ -210,6 +248,7 @@ export function initCut({ onDecide }) {
     if (!lay) layout();
     e.preventDefault();
     cv.setPointerCapture(e.pointerId);
+    demo = null;
     raw = [toPaper(e)]; pred = []; outline = null; check = null; fallT = -1;
     drawing = true; near = false;
     playSfx('fude', { vol: 0.45 });
@@ -241,11 +280,15 @@ export function initCut({ onDecide }) {
   window.addEventListener('resize', () => { lay = null; draw(); });
 
   return {
-    show(pts) {
+    // opt.demo：はじめての人にお手本を見せる
+    show(pts, opt = {}) {
       lay = null;
+      demo = null;
       if (pts) setOutline(pts, false); else clear();
+      if (!pts && opt.demo) { demo = { t0: performance.now(), path: demoPath() }; setHint(T.cutDemo); requestAnimationFrame(demoTick); }
       draw();
     },
+    stopDemo() { demo = null; },
     clear,
   };
 }

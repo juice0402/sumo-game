@@ -165,6 +165,21 @@ button{font:inherit;color:inherit;cursor:pointer}
 .menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
 .menu .seal svg{width:20px;height:20px}
 .menu #m-shobu{font-size:38px;letter-spacing:.24em;flex-grow:1.5}
+/* まだ力士がいない部屋：「力士をつくる」だけ朱の帯・ほかは暗く */
+#s-home.fresh .menu>*:not(#m-rikishi){opacity:.36}
+#s-home.fresh .menu #m-shobu{background:none;font-size:23px;letter-spacing:.32em;flex-grow:1}
+#s-home.fresh .menu #m-rikishi{background:var(--b-shuv) center/88% 100% no-repeat;font-size:27px;letter-spacing:.14em;flex-grow:1.5}
+#s-home.fresh .mine .who b{color:var(--washi2)}
+/* 四股名をさずかる */
+.meimei{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;position:relative}
+.meimei .who{writing-mode:vertical-rl;max-height:100%;gap:10px}
+.meimei .who b{--max:72px;--room:340px}
+.meimei .who small{font-size:14px}
+.meimei canvas{width:96px;height:126px;align-self:flex-end;flex:none}
+.meihan{position:absolute;left:30%;top:80%;width:44px;padding:6px 0;text-align:center;font-size:19px;line-height:1.05;color:var(--washi);background:var(--shu);border:3px double var(--washi);border-radius:4px;opacity:0}
+#s-meimei>.note{grid-row:3;margin:10px 0}
+#s-meimei.enter #mm-name{animation:inkdown .7s .35s cubic-bezier(.3,.7,.3,1) both}
+#s-meimei.enter .meihan{animation:hanko .34s 1.12s cubic-bezier(.2,.9,.2,1) both}
 /* 勝負 */
 .modecard{gap:12px}
 .modecard b{font-size:44px;letter-spacing:.2em}
@@ -353,6 +368,14 @@ button{font:inherit;color:inherit;cursor:pointer}
     <p class="note">出す力士をえらぶ</p>
   </section>
 
+  <!-- はじめての流れの最後：初土俵のあと、四股名をさずかる -->
+  <section id="s-meimei" class="screen v" hidden>
+    <header class="bar"><h1 class="brush">四股名</h1></header>
+    <div class="hero meimei"><canvas id="mm-cv"></canvas><div class="who"><small id="mm-title"></small><b class="brush" id="mm-name"></b></div><span class="meihan brush">入<br>門</span></div>
+    <p class="note">この四股名で土俵に上がろう。あとで部屋の力士から変えられるよ</p>
+    <footer class="actions pair"><button id="mm-again" class="seal sub" type="button">ほかの名前</button><button id="mm-ok" class="seal" type="button">相撲部屋へ</button></footer>
+  </section>
+
   <section id="s-cut" class="screen" hidden>
     <header class="bar">
       <button id="b-cutback" class="round" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -477,6 +500,10 @@ const T = {
   retire: '引退',
   retireAgain: 'もう一度で引退',
   needRikishi: 'まず力士をつくろう',
+  cutDemo: 'お手本のように、一筆でぐるっと囲もう',
+  nextBout: '次の取組',
+  toMeimei: '四股名をさずかる',
+  shodohyo: '初土俵',
   jungyoNow: 'いま開催中',
   jungyoLeft: (min) => `あと${Math.floor(min / 60) ? Math.floor(min / 60) + '時間' : ''}${min % 60}分`,
   jungyoDraw: (name) => `${name}に決まった`,
@@ -1421,6 +1448,42 @@ function addRec(r, winner, side = 'a') {
 return { SLOT_COUNT, newRikishi, loadState, saveState, addRec };
 })();
 
+__m['src/data/cpu-shapes.js'] = (function () {
+// CPU の力士（紙の座標 300×420・y 下向き・右が正面）。形の点検に通ること（tools/test.mjs で確かめる）。
+// 戦い方の型ではなく、ただの「切った形」。強さの補正はない。
+const CPU_SHAPES = [
+  {
+    id: 'kane', name: '釣鐘',
+    pts: [[150, 22], [178, 26], [200, 38], [212, 60], [216, 100], [214, 180], [216, 260], [224, 320], [234, 372], [238, 410],
+      [62, 410], [66, 372], [76, 320], [84, 260], [86, 180], [84, 100], [88, 60], [100, 38], [122, 26]],
+  },
+  {
+    id: 'tako', name: 'タコ',
+    pts: [[150, 15], [200, 22], [240, 45], [262, 85], [266, 130], [255, 170], [240, 205], [240, 300], [236, 410], [210, 410],
+      [208, 320], [204, 248], [196, 248], [192, 320], [190, 410], [164, 410], [162, 320], [156, 252], [144, 252], [138, 320],
+      [136, 410], [110, 410], [108, 320], [104, 248], [96, 248], [92, 320], [90, 410], [64, 410], [60, 300], [60, 205],
+      [45, 170], [34, 130], [38, 85], [60, 45], [100, 22]],
+  },
+  {
+    id: 'kusabi', name: 'くさび',
+    pts: [[40, 30], [150, 30], [158, 300], [220, 402], [220, 410], [40, 410]],
+  },
+  {
+    id: 'hook', name: 'フック',
+    pts: [[50, 20], [150, 20], [150, 100], [280, 100], [280, 200], [256, 200], [256, 140], [150, 140], [150, 410], [50, 410]],
+  },
+  {
+    id: 'furiko', name: '振り子',
+    // 頭が大きく、足の裏がゆるい弧（ゆりかごのように揺れる）
+    pts: [[64, 136], [58, 112], [60, 87], [68, 63], [83, 42], [102, 26], [125, 16], [150, 13], [175, 16], [198, 26], [217, 42],
+      [232, 63], [240, 87], [242, 112], [236, 136], [214, 190], [196, 232], [200, 280], [226, 360], [236, 392], [214, 401],
+      [190, 407], [165, 410], [150, 411], [135, 410], [110, 407], [86, 401], [64, 392], [74, 360], [100, 280], [104, 232], [86, 190]],
+  },
+];
+
+return { CPU_SHAPES };
+})();
+
 __m['src/game/rating.js'] = (function () {
 // 本場所のレートと番付（数字は data/banzuke.js）。勝敗の物理にはさわらない
 const { RATE, BANZUKE } = __m['src/data/banzuke.js'];
@@ -1476,42 +1539,6 @@ function drawStage(ms, rng) {
 }
 
 return { slotIndex, slotLeftMin, stagesOf, schedule, drawStage };
-})();
-
-__m['src/data/cpu-shapes.js'] = (function () {
-// CPU の力士（紙の座標 300×420・y 下向き・右が正面）。形の点検に通ること（tools/test.mjs で確かめる）。
-// 戦い方の型ではなく、ただの「切った形」。強さの補正はない。
-const CPU_SHAPES = [
-  {
-    id: 'kane', name: '釣鐘',
-    pts: [[150, 22], [178, 26], [200, 38], [212, 60], [216, 100], [214, 180], [216, 260], [224, 320], [234, 372], [238, 410],
-      [62, 410], [66, 372], [76, 320], [84, 260], [86, 180], [84, 100], [88, 60], [100, 38], [122, 26]],
-  },
-  {
-    id: 'tako', name: 'タコ',
-    pts: [[150, 15], [200, 22], [240, 45], [262, 85], [266, 130], [255, 170], [240, 205], [240, 300], [236, 410], [210, 410],
-      [208, 320], [204, 248], [196, 248], [192, 320], [190, 410], [164, 410], [162, 320], [156, 252], [144, 252], [138, 320],
-      [136, 410], [110, 410], [108, 320], [104, 248], [96, 248], [92, 320], [90, 410], [64, 410], [60, 300], [60, 205],
-      [45, 170], [34, 130], [38, 85], [60, 45], [100, 22]],
-  },
-  {
-    id: 'kusabi', name: 'くさび',
-    pts: [[40, 30], [150, 30], [158, 300], [220, 402], [220, 410], [40, 410]],
-  },
-  {
-    id: 'hook', name: 'フック',
-    pts: [[50, 20], [150, 20], [150, 100], [280, 100], [280, 200], [256, 200], [256, 140], [150, 140], [150, 410], [50, 410]],
-  },
-  {
-    id: 'furiko', name: '振り子',
-    // 頭が大きく、足の裏がゆるい弧（ゆりかごのように揺れる）
-    pts: [[64, 136], [58, 112], [60, 87], [68, 63], [83, 42], [102, 26], [125, 16], [150, 13], [175, 16], [198, 26], [217, 42],
-      [232, 63], [240, 87], [242, 112], [236, 136], [214, 190], [196, 232], [200, 280], [226, 360], [236, 392], [214, 401],
-      [190, 407], [165, 410], [150, 411], [135, 410], [110, 407], [86, 401], [64, 392], [74, 360], [100, 280], [104, 232], [86, 190]],
-  },
-];
-
-return { CPU_SHAPES };
 })();
 
 __m['src/game/foe.js'] = (function () {
@@ -1873,6 +1900,7 @@ const { PAPER, CHECK } = __m['src/data/config.js'];
 const { T } = __m['src/data/text.js'];
 const { strokeToOutline, isNearStart } = __m['src/geom/stroke.js'];
 const { checkShape } = __m['src/geom/check.js'];
+const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
 const { COL, setupCanvas, tornRect, fiberPattern, polyPath, paperPiece, inkStroke } = __m['src/ui/ink.js'];
 const { playSfx } = __m['src/ui/sound.js'];
 
@@ -1888,6 +1916,42 @@ function initCut({ onDecide }) {
   let outline = null, check = null, fallT = -1;
   let lay = null;
   let pred = [], rafId = 0;   // pred＝指の少し先（ブラウザの予測・描くだけで形には入れない）
+  // はじめての人へのお手本：釣鐘の形を、筆がすっと一筆でなぞる（指を置いたら消える）
+  let demo = null;
+  const DEMO_SEC = 2.2, DEMO_HOLD = 0.9;
+  function demoPath() {
+    const pts = CPU_SHAPES[0].pts.concat([CPU_SHAPES[0].pts[0]]);
+    const len = [0];
+    for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    return { pts, len, total: len[len.length - 1] };
+  }
+  function demoTick() {
+    if (!demo) return;
+    if (!drawing && !outline && !raw.length) draw();
+    requestAnimationFrame(demoTick);
+  }
+  function drawDemo(ctx, dpr) {
+    const t = (performance.now() - demo.t0) / 1000 % (DEMO_SEC + DEMO_HOLD + 0.5);
+    const u = Math.min(1, t / DEMO_SEC), fade = t > DEMO_SEC + DEMO_HOLD ? 1 - (t - DEMO_SEC - DEMO_HOLD) / 0.5 : 1;
+    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;   // はじめと終わりをゆっくり
+    const want = e * demo.path.total, out = [];
+    const { pts, len } = demo.path;
+    for (let i = 0; i < pts.length; i++) {
+      if (len[i] <= want) { out.push(pts[i]); continue; }
+      const k = (want - len[i - 1]) / (len[i] - len[i - 1]);
+      out.push([pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k]);
+      break;
+    }
+    ctx.save();
+    ctx.globalAlpha = 0.5 * Math.max(0, fade);
+    inkStroke(ctx, out, tx, 3 * dpr);
+    const p0 = tx(pts[0]), pe = tx(out[out.length - 1]);
+    ctx.globalAlpha = Math.max(0, fade);
+    ctx.fillStyle = COL.shu;
+    ctx.beginPath(); ctx.arc(p0[0], p0[1], 5 * dpr, 0, Math.PI * 2); ctx.fill();
+    if (u < 1) { ctx.fillStyle = COL.sumi; ctx.beginPath(); ctx.arc(pe[0], pe[1], 7 * dpr, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
 
   function layout() {
     const c = setupCanvas(cv, 2);   // 描く画面は2倍まで（スマホで1こまが重くならないように）
@@ -2016,6 +2080,7 @@ function initCut({ onDecide }) {
         }
       }
     }
+    if (demo && !cut && !raw.length) drawDemo(ctx, dpr);
     // 描いている線
     if (!cut && raw.length) {
       inkStroke(ctx, drawing && pred.length ? raw.concat(pred) : raw, tx, 3.4 * dpr);
@@ -2080,6 +2145,7 @@ function initCut({ onDecide }) {
     if (!lay) layout();
     e.preventDefault();
     cv.setPointerCapture(e.pointerId);
+    demo = null;
     raw = [toPaper(e)]; pred = []; outline = null; check = null; fallT = -1;
     drawing = true; near = false;
     playSfx('fude', { vol: 0.45 });
@@ -2111,11 +2177,15 @@ function initCut({ onDecide }) {
   window.addEventListener('resize', () => { lay = null; draw(); });
 
   return {
-    show(pts) {
+    // opt.demo：はじめての人にお手本を見せる
+    show(pts, opt = {}) {
       lay = null;
+      demo = null;
       if (pts) setOutline(pts, false); else clear();
+      if (!pts && opt.demo) { demo = { t0: performance.now(), path: demoPath() }; setHint(T.cutDemo); requestAnimationFrame(demoTick); }
       draw();
     },
+    stopDemo() { demo = null; },
     clear,
   };
 }
@@ -2910,9 +2980,12 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
-    const match = opt.mode === 'jungyo' || opt.mode === 'honbasho';
-    btn('b-again').hidden = match; btn('b-foe').hidden = match; btn('b-recut').hidden = match;
-    btn('b-next').hidden = !match;
+    // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
+    const keiko = !opt.mode || opt.mode === 'keiko';
+    btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
+    btn('b-next').hidden = keiko;
+    btn('b-next').textContent = opt.nextLabel || T.nextBout;
+    btn('b-home').hidden = opt.mode === 'shodohyo';
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
     stage.setFighters(la, lb);
     const short = !!getShort();
@@ -3408,12 +3481,13 @@ function initHeya(cb) {
     // 部屋：いま選んでいる力士（称号・四股名・番付）
     home(st) {
       const s = st.slots[st.active];
+      document.getElementById('s-home').classList.toggle('fresh', !s);   // まだ力士がいない：「力士をつくる」だけ朱で
       const el = document.getElementById('home-mine');
       const cv = el.querySelector('canvas');
       cv.hidden = !s;
       el.querySelector('small').textContent = s ? titleText(s.title) : '';
       fitText(el.querySelector('b'), s ? shikonaText(s.shikona) : T.needRikishi);
-      el.querySelector('em').textContent = T.rateLine(rankOf(st.rate).name, st.rate);
+      el.querySelector('em').textContent = s ? T.rateLine(rankOf(st.rate).name, st.rate) : '';
       if (s) drawShapeThumb(cv, s.shape);
     },
     mode(st) {
@@ -3606,16 +3680,17 @@ const { T } = __m['src/data/text.js'];
 const { STAGES, HONBASHO_STAGE } = __m['src/data/stages.js'];
 const { setRapier } = __m['src/sim/battle.js'];
 const { loadState, saveState, newRikishi, addRec } = __m['src/game/save.js'];
-const { shikonaText, titleText } = __m['src/game/names.js'];
+const { shikonaText, titleText, randomShikona } = __m['src/game/names.js'];
+const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
 const { rankOf, eloDelta } = __m['src/game/rating.js'];
 const { drawStage } = __m['src/game/jungyo.js'];
 const { makeFoe } = __m['src/game/foe.js'];
 const { initCut } = __m['src/ui/cut.js'];
-const { initPick } = __m['src/ui/pick.js'];
+const { initPick, drawShapeThumb } = __m['src/ui/pick.js'];
 const { initBout } = __m['src/ui/bout.js'];
 const { initTools } = __m['src/ui/tools.js'];
 const { initHeya } = __m['src/ui/heya.js'];
-const { renderSlots, initEdit } = __m['src/ui/roster.js'];
+const { renderSlots, initEdit, fitText } = __m['src/ui/roster.js'];
 const { initJungyo, initBanzuke, initSelect } = __m['src/ui/match.js'];
 const { unlockAudio, setMuted, playSfx, sfxReady } = __m['src/ui/sound.js'];
 const { applyButtonArt } = __m['src/ui/btnart.js'];
@@ -3695,11 +3770,11 @@ function boot() {
   let editSlot = 0, bzTitle = '番付', stamping = false;
   // 切る：どの枠を切るか・切ったあとどこへ行くか
   let cutSlot = 0, afterCut = null;
-  function cutFor(i, then) {
+  function cutFor(i, then, opt) {
     cutSlot = i;
     afterCut = then;
     go('s-cut');
-    cut.show(state.slots[i] ? state.slots[i].shape : null);
+    cut.show(state.slots[i] ? state.slots[i].shape : null, opt);
   }
   const cut = initCut({
     onDecide(pts) {
@@ -3736,7 +3811,7 @@ function boot() {
     getShort: () => state.short,
     onFoe() { show('s-pick'); },
     onRecut() { cutFor(state.active, () => { pick.resetMarks(); show('s-pick'); }); },
-    onNext(mode) { openSelect(mode); },
+    onNext(mode) { if (mode === 'shodohyo') show('s-meimei'); else openSelect(mode); },
     onHome: home,
   });
 
@@ -3791,17 +3866,9 @@ function boot() {
 
   // 部屋・勝負
   const heya = initHeya({
-    onStart() {
-      if (hasRikishi()) { home(); return; }
-      // はじめて：紙を切って、そのまま CPU と稽古（要件 16）
-      nav.length = 0; nav.push('s-home');
-      cutFor(0, () => { pick.resetMarks(); show('s-pick'); });
-    },
-    onRoster() { go('s-roster'); },
-    onShobu() {
-      if (!hasRikishi()) { cutFor(state.slots.findIndex((s) => !s), () => show('s-mode')); return; }
-      go('s-mode');
-    },
+    onStart: home,
+    onRoster() { if (hasRikishi()) go('s-roster'); else startIntro(); },
+    onShobu() { if (hasRikishi()) go('s-mode'); else startIntro(); },
     onBanzuke() { bzTitle = '番付'; go('s-banzuke'); },
     onJungyo() { go('s-jungyo'); },
     onJungyoMatch() { go('s-jungyo'); },
@@ -3809,6 +3876,35 @@ function boot() {
     onKeiko() { pick.resetMarks(); go('s-pick'); },
   });
   onShow['s-home'] = () => heya.home(state);
+
+  // はじめての流れ（11/25 しょーくん「BからのA」）：空の相撲部屋 →「力士をつくる」→ お手本つきで切る
+  //   → 初土俵（CPU の釣鐘と1番・戦績には数えない）→ 四股名をさずかる → 相撲部屋
+  function startIntro() {
+    const i = Math.max(0, state.slots.findIndex((s) => !s));
+    cutFor(i, () => shodohyo(i), { demo: true });
+  }
+  function shodohyo(i) {
+    const me = state.slots[i];
+    const foe = CPU_SHAPES[0];
+    meimeiSlot = i;
+    show('s-bout');
+    bout.start(me.shape, foe, state.seed++, { mode: 'shodohyo', a: { name: T.you, sub: T.shodohyo }, b: { name: foe.name }, nextLabel: T.toMeimei });
+  }
+  let meimeiSlot = 0;
+  onShow['s-meimei'] = () => {
+    const s = state.slots[meimeiSlot];
+    document.getElementById('mm-title').textContent = titleText(s.title);
+    fitText(document.getElementById('mm-name'), shikonaText(s.shikona));
+    drawShapeThumb(document.getElementById('mm-cv'), s.shape);
+    setTimeout(() => playSfx('sumi', { vol: 0.45 }), 380);
+    setTimeout(() => playSfx('ton', { vol: 0.75 }), 1150);
+  };
+  document.getElementById('mm-again').addEventListener('click', () => {
+    state.slots[meimeiSlot].shikona = randomShikona();
+    save();
+    show('s-meimei');
+  });
+  document.getElementById('mm-ok').addEventListener('click', home);
   onShow['s-mode'] = () => heya.mode(state);
 
   // 部屋の力士（3枠）と編集

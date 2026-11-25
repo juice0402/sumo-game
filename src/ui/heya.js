@@ -23,12 +23,13 @@ export function initHeya(cb) {
     // 部屋：いま選んでいる力士（称号・四股名・番付）
     home(st) {
       const s = st.slots[st.active];
+      document.getElementById('s-home').classList.toggle('fresh', !s);   // まだ力士がいない：「力士をつくる」だけ朱で
       const el = document.getElementById('home-mine');
       const cv = el.querySelector('canvas');
       cv.hidden = !s;
       el.querySelector('small').textContent = s ? titleText(s.title) : '';
       fitText(el.querySelector('b'), s ? shikonaText(s.shikona) : T.needRikishi);
-      el.querySelector('em').textContent = T.rateLine(rankOf(st.rate).name, st.rate);
+      el.querySelector('em').textContent = s ? T.rateLine(rankOf(st.rate).name, st.rate) : '';
       if (s) drawShapeThumb(cv, s.shape);
     },
     mode(st) {
