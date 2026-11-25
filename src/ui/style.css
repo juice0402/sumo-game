@@ -175,7 +175,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:18px 0 14px}
 .modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(44px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 50px) / 1.1))}
 .modecard span{white-space:nowrap;letter-spacing:.08em;line-height:1.3;color:var(--washi2);font-size:min(13px,calc((100cqh - 32px) / (var(--n,12) * 1.08 + .1)))}
-.modecard small{white-space:nowrap;line-height:1.3;font-size:13px;color:var(--kin)}
+.modecard small{white-space:nowrap;line-height:1.3;font-size:12px;color:var(--kin)}   /* 力士の札の称号と同じ：右に金の小さい字 */
 .modecard.main{flex-grow:1.9}
 /* 力士の列（部屋の力士・選出） */
 .slots{overflow:hidden}
@@ -243,8 +243,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .foe .marks{writing-mode:horizontal-tb;flex-wrap:wrap;justify-content:center;width:44px}
 .drive{padding-bottom:10px}
 /* 取組の結果：番付・戦績のひとこと */
-.result .gain{margin-top:auto;margin-bottom:10px;text-align:center;font-size:15px;color:var(--kin);font-variant-numeric:tabular-nums;text-shadow:1px 1px 0 var(--sumi)}
-.result .gain[hidden]+.row{margin-top:auto}
+.result .gain{position:absolute;transform:translate(-50%,3px);width:max-content;margin:0;text-align:center;font-size:14px;line-height:1.3;color:var(--sumi);font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;animation:kindin .45s .7s forwards}
+.result.has-gain .kind{transform:translate(-50%,-100%)}   /* 決まりの文の下が横の面のまん中 → その下にひとこと */
+.result .gain+.row{margin-top:auto}
 
 /* ===== 動き（11/25 しょーくん「右から、しししシュッ」・できるだけカッコよく）=====
    ひとつの流れにまとめる：見出しが筆で上から書かれる → 主役が入る → 表の列が右から順に飛びこむ（少し行きすぎて戻る）→ ボタン */

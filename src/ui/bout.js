@@ -67,6 +67,10 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     kindEl.style.top = c[1] + 'px';
     kindEl.style.maxWidth = Math.max(120, (r[0] - l[0]) * 0.86) + 'px';
     kindEl.style.color = stage.look().side.text || '';
+    // 番付・戦績のひとことは、決まりの文のすぐ下に（同じ土俵の横の面・同じ色。11/26 しょーくん「土俵の線とかぶって見づらい」）
+    gainEl.style.left = c[0] + 'px';
+    gainEl.style.top = c[1] + 'px';
+    gainEl.style.color = kindEl.style.color;
   }
 
   // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと }
@@ -243,6 +247,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     if (s.opt.onResult) s.opt.gain = s.opt.onResult(r) || '';
     gainEl.textContent = s.opt.gain || '';
     gainEl.hidden = !s.opt.gain;
+    resEl.classList.toggle('has-gain', !gainEl.hidden);   // ひとことがあるときは、決まりの文を少し上へ（2行で横の面のまん中に）
     resEl.hidden = false;
   }
 
