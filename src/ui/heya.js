@@ -6,17 +6,37 @@ import { rankOf } from '../game/rating.js';
 import { shikonaText, titleText } from '../game/names.js';
 import { drawShapeThumb } from './pick.js';
 import { fitText } from './roster.js';
+import { choose } from './choose.js';
 
 export function initHeya(cb) {
   const on = (id, f) => document.getElementById(id).addEventListener('click', f);
   on('b-start', cb.onStart);
   on('home-mine', cb.onRoster);
-  on('m-shobu', cb.onShobu);
-  on('m-rikishi', cb.onRoster);
-  on('m-banzuke', cb.onBanzuke);
-  on('mc-jungyo', cb.onJungyoMatch);
-  on('mc-honbasho', cb.onHonbasho);
-  on('mc-keiko', cb.onKeiko);
+  // メニューは、えらんだ列に朱の帯をベタッと＋太鼓「ドドン」→ ほかは消える → 次へ（choose.js）。
+  // 番付は本場所の中で見るので、部屋のメニューには置かない（11/26 しょーくん）
+  const pickOn = (id, f) => { const b = document.getElementById(id); b.addEventListener('click', () => choose(b, f, cb.getShort && cb.getShort())); };
+  pickOn('m-shobu', cb.onShobu);
+  pickOn('m-rikishi', cb.onRoster);
+  pickOn('mc-jungyo', cb.onJungyoMatch);
+  pickOn('mc-honbasho', cb.onHonbasho);
+  pickOn('mc-keiko', cb.onKeiko);
+
+  // 部屋の自作力士は、ときどきぴょこっと跳ねる（たまに2回）。部屋を開いている間だけ
+  const homeEl = document.getElementById('s-home'), mineCv = document.querySelector('#home-mine canvas');
+  let hopT = 0;
+  const hopLater = (ms) => {
+    clearTimeout(hopT);
+    hopT = setTimeout(() => {
+      if (homeEl.hidden) return;
+      if (!mineCv.hidden && !document.hidden) {
+        mineCv.classList.remove('hop', 'hop2');
+        void mineCv.offsetWidth;   // 動きを最初から
+        mineCv.classList.add(Math.random() < 0.25 ? 'hop2' : 'hop');
+      }
+      hopLater(2400 + Math.random() * 2800);
+    }, ms);
+  };
+  mineCv.addEventListener('animationend', () => mineCv.classList.remove('hop', 'hop2'));
 
   return {
     // 部屋：いま選んでいる力士（称号・四股名・番付）
@@ -30,6 +50,7 @@ export function initHeya(cb) {
       fitText(el.querySelector('b'), s ? shikonaText(s.shikona) : T.needRikishi);
       el.querySelector('em').textContent = s ? T.rateLine(rankOf(st.rate).name, st.rate) : '';
       if (s) drawShapeThumb(cv, s.shape);
+      hopLater(1300);   // 画面が入りきったころに最初の1回
     },
     mode(st) {
       document.getElementById('mc-jungyo-now').textContent = stagesOf(slotIndex(Date.now())).map((id) => STAGES[id].name).join('・');

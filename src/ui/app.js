@@ -16,6 +16,7 @@ import { initPick, drawShapeThumb } from './pick.js';
 import { initBout } from './bout.js';
 import { initTools } from './tools.js';
 import { initHeya } from './heya.js';
+import { reset as resetChoose } from './choose.js';
 import { renderSlots, initEdit, fitText } from './roster.js';
 import { initJungyo, initBanzuke, initSelect } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
@@ -42,6 +43,7 @@ const onShow = {};
 // 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
 const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .actions > *, .note, .drive';
 function enter(el) {
+  resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
   el.classList.remove('enter');
   void el.offsetWidth;   // 動きを最初から
   const items = el.querySelectorAll(ENTER);
@@ -197,9 +199,9 @@ function boot() {
   // 部屋・勝負
   const heya = initHeya({
     onStart: home,
+    getShort: () => state.short,
     onRoster() { if (hasRikishi()) go('s-roster'); else startIntro(); },
     onShobu() { if (hasRikishi()) go('s-mode'); else startIntro(); },
-    onBanzuke() { bzTitle = '番付'; go('s-banzuke'); },
     onJungyoMatch() { go('s-jungyo'); },   // 土俵巡業の予定は、巡業をえらんだ人だけが見る（11/25 部屋のメニューから外した）
     onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
     onKeiko() { pick.resetMarks(); go('s-pick'); },

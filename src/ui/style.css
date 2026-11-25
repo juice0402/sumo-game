@@ -136,8 +136,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cols b,.fit{font-size:min(var(--max,32px),calc(var(--room,230px) / var(--n,4) * .9));letter-spacing:.06em;line-height:1.1;white-space:nowrap}
 .cols small,.cols span,.cols em{flex:none}
 /* いまの・主のもの＝縦の朱の帯 */
-.cols>.on,.cols>.main,.menu #m-shobu,.ladder li.on{background:var(--b-shuv) center/88% 100% no-repeat;border-left-color:transparent}
-.cols>.on+*,.cols>.main+*{border-left-color:var(--line)}
+.cols>.on,.ladder li.on{background:var(--b-shuv) center/88% 100% no-repeat;border-left-color:transparent}
+.cols>.on+*{border-left-color:var(--line)}
 .who{display:flex;flex-direction:column;min-width:0;gap:4px}
 .who small{font-size:12px;color:var(--kin);line-height:1.3}
 .who em{font-style:normal;font-size:13px;color:var(--dim)}
@@ -155,8 +155,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .menu #m-shobu{font-size:38px;letter-spacing:.24em;flex-grow:1.5}
 /* まだ力士がいない部屋：「力士をつくる」だけ朱の帯・ほかは暗く */
 #s-home.fresh .menu>*:not(#m-rikishi){opacity:.36}
-#s-home.fresh .menu #m-shobu{background:none;font-size:23px;letter-spacing:.32em;flex-grow:1}
-#s-home.fresh .menu #m-rikishi{background:var(--b-shuv) center/88% 100% no-repeat;font-size:27px;letter-spacing:.14em;flex-grow:1.5}
+#s-home.fresh .menu #m-shobu{font-size:23px;letter-spacing:.32em;flex-grow:1}
+#s-home.fresh .menu #m-rikishi{font-size:27px;letter-spacing:.14em;flex-grow:1.5}
 #s-home.fresh .mine .who b{color:var(--washi2)}
 /* 四股名をさずかる */
 .meimei{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;position:relative}
@@ -174,7 +174,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .modecard span{font-size:13px;letter-spacing:.08em;color:var(--washi2)}
 .modecard small{font-size:13px;color:var(--kin)}
 .modecard.main{flex-grow:1.9;padding:22px 0 14px}
-.modecard.main span,.modecard.main small{color:var(--washi)}
 /* 力士の列（部屋の力士・選出） */
 .slots{overflow:hidden}
 .slot{position:relative}
@@ -274,6 +273,30 @@ button{font:inherit;color:inherit;cursor:pointer}
 #s-title.enter .tate{animation:inkdown .5s .75s both}
 #s-title.enter .catch{animation:rise .6s 1s both}
 #s-title.enter .actions>*{animation:whip .44s 1.25s cubic-bezier(.2,.9,.25,1) both}
-.screen .body,.cols,.sched{overflow-x:hidden}
+.screen .body,.sched{overflow-x:hidden}
+.cols{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.screen.enter *{animation-duration:.01s!important;animation-delay:0s!important}}
 @media (min-width:700px){.screen.v>.bar h1{font-size:48px}.cols b{--max:40px}}
+
+/* ===== えらんだ瞬間（11/26 しょーくん）：相撲部屋と勝負のメニュー（ui/choose.js）=====
+   はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は右や下へすべって消える */
+.screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
+.screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
+.cols>.chosen::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--b-shuv) center/88% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
+.cols>.chosen :is(span,small){color:var(--washi)}
+.screen .cols>.leave-r{animation:leaveR .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
+.screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
+.cols.leaving{animation:jolt .2s .12s both}
+@keyframes slam{0%{clip-path:inset(0 0 100% 0);transform:translateY(-8%) scale(1.5,1.12) rotate(-5deg);opacity:.7}55%{clip-path:inset(0 0 0 0);transform:scale(.96,1.03) rotate(1deg);opacity:1}100%{clip-path:inset(0 0 -2% 0);transform:none;opacity:1}}
+@keyframes punch{0%{transform:scale(1.14)}100%{transform:none}}
+@keyframes punch2{0%{transform:scale(.93,1.07)}55%{transform:scale(1.04,.98)}100%{transform:none}}
+@keyframes jolt{30%{transform:translateY(3px)}100%{transform:none}}
+@keyframes leaveR{to{transform:translateX(110%) skewX(-14deg);opacity:0}}
+@keyframes leaveD{to{transform:translateY(105%);opacity:0}}
+
+/* 部屋の自作力士：ときどきぴょこっと（たまに2回・ui/heya.js） */
+.mine canvas{transform-origin:50% 100%}
+.mine canvas.hop{animation:hop .58s cubic-bezier(.3,.6,.3,1)}
+.mine canvas.hop2{animation:hop .5s cubic-bezier(.3,.6,.3,1) 2}
+@keyframes hop{0%{transform:none}14%{transform:scale(1.1,.86)}40%{transform:translateY(-20px) scale(.94,1.08) rotate(-3deg)}64%{transform:translateY(0) scale(1.12,.85)}80%{transform:scale(.97,1.04)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.mine canvas.hop,.mine canvas.hop2,.cols.leaving{animation:none}}
