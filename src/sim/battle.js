@@ -83,7 +83,7 @@ export function createBout(opts) {
       cols.push(c);
       if (pc.isBody) bodyCols.push(c);
     }
-    return { body, cols, bodyCols, dir: side, fallCount: 0, touchCount: 0, lost: null, at: null };
+    return { body, cols, bodyCols, dir: side, fallCount: 0, touchCount: 0, lost: null, lostAt: 0, at: null };
   };
   // 左（a）は右向き、右（b）は左右反転して左向き
   const A = makeFighter(opts.a, 1);
@@ -101,7 +101,7 @@ export function createBout(opts) {
   let step = 0;
   let tapStart = -1, tapAmp = 0;
   const result = { winner: null, kind: null, time: 0, steps: 0, hash: 0, loser: null };
-  const rec = opts.record ? { n: 0, f: new Float32Array((maxSteps + 1) * 8), settleSteps, dt } : null;
+  const rec = opts.record ? { n: 0, f: new Float32Array((maxSteps + touchSteps + 1) * 8), settleSteps, dt } : null;
   let touching = false;
 
   // 押す点：重心の真下で、足もとから重心までの driveHeight の高さ（回転は考えない＝四則演算だけ）
@@ -156,7 +156,7 @@ export function createBout(opts) {
   function judge(f) {
     if (f.lost) return;
     const com = f.body.worldCom();
-    if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; return; }
+    if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; f.lostAt = step; return; }
     if (phys.touchLose) {
       // 体が土俵に touchHold 秒ついたら負け（はねて一瞬かすっただけは負けにしない）
       let hit = null;
@@ -170,7 +170,7 @@ export function createBout(opts) {
       }
       if (hit) {
         f.touchCount++;
-        if (f.touchCount >= touchSteps) { f.lost = 'touch'; f.at = hit; return; }
+        if (f.touchCount >= touchSteps) { f.lost = 'touch'; f.lostAt = step - f.touchCount + 1; f.at = hit; return; }
       } else {
         f.touchCount = 0;
       }
@@ -178,7 +178,7 @@ export function createBout(opts) {
     const ang = f.body.rotation();
     if (ang > phys.fallAngle || ang < -phys.fallAngle) {
       f.fallCount++;
-      if (f.fallCount >= fallSteps) f.lost = 'fall';
+      if (f.fallCount >= fallSteps) { f.lost = 'fall'; f.lostAt = step - f.fallCount + 1; }
     } else {
       f.fallCount = 0;
     }
@@ -224,9 +224,18 @@ export function createBout(opts) {
     if (step > settleSteps) {
       judge(A); judge(B);
       if (A.lost || B.lost) {
-        if (A.lost && B.lost) { result.kind = 'both'; }
-        else { result.winner = A.lost ? 'b' : 'a'; result.loser = A.lost ? 'a' : 'b'; result.kind = A.lost || B.lost; }
-        result.at = (A.lost && A.at) || (B.lost && B.at) || null;
+        // 負けは「始まった時」でくらべる（体は、ついたはじめの時）。相手が負けた時より前から体がついていて、
+        // まだ touchHold に届いていない方がいたら、届くか離れるまで待つ（先に体がついた方の負け）
+        const first = A.lost && B.lost ? null : (A.lost ? A : B);
+        const other = first === A ? B : A;
+        const waiting = first && !other.lost && other.touchCount > 0 && step - other.touchCount + 1 < first.lostAt;
+        if (!waiting) {
+          let la = !!A.lost, lb = !!B.lost;
+          if (la && lb && A.lostAt !== B.lostAt) { if (A.lostAt < B.lostAt) lb = false; else la = false; }
+          if (la && lb) { result.kind = 'both'; }
+          else { result.winner = la ? 'b' : 'a'; result.loser = la ? 'a' : 'b'; result.kind = la ? A.lost : B.lost; }
+          result.at = (la && A.at) || (lb && B.at) || null;
+        }
       } else if (step >= maxSteps) {
         result.kind = 'time';
       }

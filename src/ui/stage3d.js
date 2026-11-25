@@ -1,0 +1,221 @@
+// 取組の 2.5D（Three.js）。物理は2Dのまま。z=0 の面に、紙の力士を立てて描くだけ。
+// カメラは土俵にくっつける：描くときの y は「物理の y − 土俵の上の面の y」＝土俵のトンで画面がゆれない。
+import { COL, rand, fiberPattern, polyPath, inkStroke } from './ink.js';
+import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
+import { LOOK } from '../data/look.js';
+import { PAPER } from '../data/config.js';
+
+const D2R = Math.PI / 180;
+
+function makeTex(THREE, c) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+// 土俵の上の面：和紙 → すじ → 墨の輪 → 仕切り線
+function topCanvas(d, P) {
+  const N = 1024, c = document.createElement('canvas');
+  c.width = c.height = N;
+  const g = c.getContext('2d');
+  const k = N / (2 * P.ringHalf);
+  g.fillStyle = d.top.paper;
+  g.fillRect(0, 0, N, N);
+  g.globalAlpha = d.top.fiber;
+  g.fillStyle = fiberPattern(g);
+  g.fillRect(0, 0, N, N);
+  g.globalAlpha = 1;
+  const rr = rand(5), r = (0.5 - d.top.ringInset - d.top.ringW / 2) * N, pts = [];
+  for (let i = 0; i <= 120; i++) {
+    const a = (i / 120) * Math.PI * 2 + 0.4, j = 1 + (rr() - 0.5) * 0.008;
+    pts.push([N / 2 + Math.cos(a) * r * j, N / 2 + Math.sin(a) * r * j]);
+  }
+  inkStroke(g, pts, (p) => p, d.top.ringW * N * 0.6);
+  if (d.top.shikiri) {
+    for (const s of [-1, 1]) {
+      const x = N / 2 + s * d.top.shikiri * k, h = (d.top.shikiriLen * k) / 2;
+      inkStroke(g, [[x, N / 2 - h], [x, N / 2 + h]], (p) => p, 0.022 * k);
+    }
+  }
+  return c;
+}
+
+// 土俵の横の面：厚紙 → すじ → 断面の線 → ふちどり
+function sideCanvas(d, P) {
+  const w = 1024, h = Math.round((w * P.ringDepth) / (2 * P.ringHalf));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const k = w / (2 * P.ringHalf);
+  g.fillStyle = d.side.paper;
+  g.fillRect(0, 0, w, h);
+  g.globalAlpha = 0.8;
+  g.fillStyle = fiberPattern(g);
+  g.fillRect(0, 0, w, h);
+  g.globalAlpha = 1;
+  g.strokeStyle = d.side.layer;
+  g.lineWidth = 1.5;
+  for (const y of [5, 9, 13]) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  const m = d.side.inset * k;
+  g.strokeStyle = d.side.line;
+  g.lineWidth = 4;
+  g.strokeRect(m, m + 10, w - 2 * m, h - 2 * m - 10);
+  return c;
+}
+
+// 力士の紙の表：和紙 → すじ → 体と足のさかい（点線）→ 墨のふち
+function paperCanvas(ol, dark, P, box) {
+  const k = 520 / box.sx;
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(box.sx * k); c.height = Math.ceil(box.sy * k);
+  const g = c.getContext('2d');
+  const tx = (p) => [(p[0] - box.x0) * k, (box.y1 - p[1]) * k];
+  polyPath(g, ol.outline, tx);
+  g.fillStyle = dark ? COL.washi2 : COL.washi;
+  g.fill();
+  g.save();
+  g.clip();
+  g.fillStyle = fiberPattern(g);
+  g.fillRect(0, 0, c.width, c.height);
+  const yl = P.footH * PAPER.h * ol.s;
+  g.setLineDash([0.035 * k, 0.035 * k]);
+  g.strokeStyle = 'rgba(32,30,27,0.38)';
+  g.lineWidth = 0.008 * k;
+  g.beginPath(); g.moveTo(0, tx([0, yl])[1]); g.lineTo(c.width, tx([0, yl])[1]); g.stroke();
+  g.restore();
+  g.setLineDash([]);
+  polyPath(g, ol.outline, tx);
+  g.lineJoin = 'round';
+  g.strokeStyle = COL.sumi;
+  g.lineWidth = 0.05 * k; // 半分は形の外なので、見えるのは 0.025m
+  g.stroke();
+  return c;
+}
+
+export function createStage(cv, P) {
+  const THREE = window.THREE;
+  if (!THREE) return null;
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+  } catch (e) {
+    return null;
+  }
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(LOOK.fov, 1, 0.1, 90);
+  const sun = new THREE.DirectionalLight(0xfff6e8, 2.1);
+  sun.position.set(-2.6, 6, 4.2);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(LOOK.shadowMap, LOOK.shadowMap);
+  const sc = sun.shadow.camera;
+  sc.left = -3; sc.right = 3; sc.top = 3; sc.bottom = -3; sc.near = 1; sc.far = 16;
+  sun.shadow.bias = -0.0008;
+  scene.add(sun, sun.target, new THREE.HemisphereLight(0xf4efe4, 0x3a3631, 1.8));
+
+  let dohyo = null, fighters = [], base = 10, cssW = 1, cssH = 1;
+  const disposables = [];
+  const keep = (o) => { disposables.push(o); return o; };
+
+  // 土俵（項目を読むだけ。見た目の項目を足せば別の土俵になる）
+  function setDohyo(id) {
+    if (dohyo) { scene.remove(dohyo); }
+    const d = DOHYO[id] || DOHYO[DOHYO_DEFAULT];
+    scene.background = new THREE.Color(d.bg);
+    scene.fog = new THREE.Fog(d.bg, base * 0.9, base * 2.2);
+    const W = 2 * P.ringHalf, H = P.ringDepth;
+    const side = keep(new THREE.MeshLambertMaterial({ map: keep(makeTex(THREE, sideCanvas(d, P))) }));
+    const topMap = keep(makeTex(THREE, topCanvas(d, P)));
+    const top = keep(new THREE.MeshLambertMaterial({ map: topMap, emissive: 0xffffff, emissiveMap: topMap, emissiveIntensity: LOOK.paperGlow * 0.4 }));
+    const under = keep(new THREE.MeshLambertMaterial({ color: d.floor }));
+    const geo = keep(new THREE.BoxGeometry(W, H, W));
+    const box = new THREE.Mesh(geo, [side, side, top, under, side, side]);
+    box.position.y = -H / 2;
+    box.castShadow = true;
+    box.receiveShadow = true;
+    const edges = new THREE.LineSegments(keep(new THREE.EdgesGeometry(geo)), keep(new THREE.LineBasicMaterial({ color: d.edge })));
+    box.add(edges);
+    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(60, 60)), keep(new THREE.MeshLambertMaterial({ color: d.floor })));
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    dohyo = new THREE.Group();
+    dohyo.add(box);
+    dohyo.userData = { floor, look: d };
+    scene.add(dohyo, floor);
+  }
+
+  function makeFighter(ol, dark) {
+    const pts = ol.outline, pad = 0.03;
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+    const box = { x0: x0 - pad, y1: y1 + pad, sx: x1 - x0 + 2 * pad, sy: y1 - y0 + 2 * pad };
+    const map = makeTex(THREE, paperCanvas(ol, dark, P, box));
+    const shape = new THREE.Shape(pts.map((p) => new THREE.Vector2(p[0], p[1])));
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: LOOK.paperT, bevelEnabled: false, curveSegments: 1 });
+    geo.translate(0, 0, -LOOK.paperT / 2);
+    const pos = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) - box.x0) / box.sx, 1 - (box.y1 - pos.getY(i)) / box.sy);
+    uv.needsUpdate = true;
+    // 紙は光で暗くなりすぎないよう、同じ絵を少し自分で光らせる（和紙の白さを保つ）
+    const mats = [new THREE.MeshLambertMaterial({ map, emissive: 0xffffff, emissiveMap: map, emissiveIntensity: LOOK.paperGlow }), new THREE.MeshLambertMaterial({ color: dark ? '#7d7466' : '#958b79' })];
+    const mesh = new THREE.Mesh(geo, mats);
+    mesh.castShadow = true;
+    mesh.userData.free = () => { geo.dispose(); map.dispose(); mats.forEach((m) => m.dispose()); };
+    return mesh;
+  }
+
+  function setFighters(la, lb) {
+    for (const m of fighters) { scene.remove(m); m.userData.free(); }
+    fighters = [makeFighter(la, false), makeFighter(lb, true)];
+    scene.add(...fighters);
+  }
+
+  // 記録の1こま（a の x・y・回転, b の x・y・回転, 土俵の上の面の y, ふれているか）
+  let ry = 0;
+  function setFrame(f, o) {
+    ry = f[o + 6];
+    for (let i = 0; i < 2; i++) {
+      const m = fighters[i];
+      m.position.set(f[o + i * 3], f[o + i * 3 + 1] - ry, 0);
+      m.rotation.z = f[o + i * 3 + 2];
+    }
+    dohyo.userData.floor.position.y = -P.ringDepth - ry; // 床は動かない（土俵だけがトンと上がる）
+  }
+
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOOK.maxDpr));
+    renderer.setSize(cssW, cssH, false);
+    camera.aspect = cssW / cssH;
+    const tv = Math.tan((LOOK.fov * D2R) / 2), th = tv * camera.aspect;
+    base = Math.max(LOOK.viewHalfW / th, LOOK.viewHalfH / tv);
+    camera.updateProjectionMatrix();
+    if (scene.fog) { scene.fog.near = base * 0.9; scene.fog.far = base * 2.2; }
+  }
+
+  // カメラ：az＝まわりの角度（0＝真横の正面）・elev＝見下ろす角度（度）・far＝遠さの倍率
+  function view(az, elev, far) {
+    const e = elev * D2R, r = base * far;
+    camera.position.set(Math.sin(az) * Math.cos(e) * r, LOOK.lookY + Math.sin(e) * r, Math.cos(az) * Math.cos(e) * r);
+    camera.lookAt(0, LOOK.lookY, 0);
+  }
+
+  const v3 = new THREE.Vector3();
+  // 描く座標（土俵の上の面が y=0）→ 画面の CSS ピクセル
+  function project(x, y, z = 0) {
+    v3.set(x, y, z).project(camera);
+    return [((v3.x + 1) / 2) * cssW, ((1 - v3.y) / 2) * cssH, v3.z < 1];
+  }
+
+  function render() { renderer.render(scene, camera); }
+
+  setDohyo(DOHYO_DEFAULT);
+  return {
+    setDohyo, setFighters, setFrame, resize, view, project, render,
+    get ry() { return ry; },
+    look: () => dohyo.userData.look,
+  };
+}

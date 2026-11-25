@@ -2,7 +2,8 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<!-- 字の読みこみを待たずに画面を出す（media=print で読んで、届いたら all に） -->
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet" media="print" id="webfont" onload="this.media='all'">
 <style>/*STYLE*/</style>
 <div id="app">
   <section id="s-cut" class="screen">
@@ -13,8 +14,8 @@
     <div class="stage" id="cut-stage"><canvas id="cut-cv"></canvas></div>
     <p class="hint" id="cut-hint">一筆で、力士の形を描こう</p>
     <div class="checks" id="cut-checks" hidden></div>
-    <footer class="actions">
-      <button id="b-redo" class="round" type="button" aria-label="切り直す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg></button>
+    <footer class="actions pair">
+      <button id="b-redo" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg>切り直す</button>
       <button id="b-ok" class="seal" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>決定</button>
     </footer>
   </section>
@@ -31,11 +32,12 @@
   </section>
 
   <section id="s-bout" class="screen" hidden>
+    <canvas id="bout-gl"></canvas>
     <canvas id="bout-cv"></canvas>
-    <div class="names"><span id="n-a"></span><span id="n-b"></span></div>
+    <div class="names" id="names"><span id="n-a"></span><span id="n-b"></span></div>
     <div class="cutin" id="cutin"><div class="band"></div><div class="word brush">勝負<small>FIGHT</small></div></div>
     <div class="result" id="result" hidden>
-      <div class="big brush" id="r-big"></div>
+      <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
       <div class="kind" id="r-kind"></div>
       <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-replay" class="ghost" type="button">もう一度見る</button></div>
       <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button></div>
@@ -60,7 +62,10 @@
       <p id="tbl-sum"></p>
       <h2>動き</h2>
       <div class="seg" id="drive-seg2" style="align-self:flex-start"><button type="button" data-d="hop">ぴょこぴょこ</button><button type="button" data-d="push">ずっと押す</button></div>
+      <h2>音と演出</h2>
+      <div class="toggles"><button id="b-mute" class="ghost" type="button" aria-pressed="false">音を消す</button><button id="b-short" class="ghost" type="button" aria-pressed="false">演出を短く</button></div>
       <p id="ver"></p>
+      <p id="credits"></p>
     </div>
   </section>
   <p class="err" id="err" hidden></p>

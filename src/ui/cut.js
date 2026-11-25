@@ -4,6 +4,7 @@ import { T } from '../data/text.js';
 import { strokeToOutline, isNearStart } from '../geom/stroke.js';
 import { checkShape } from '../geom/check.js';
 import { COL, setupCanvas, tornRect, fiberPattern, polyPath, paperPiece, inkStroke } from './ink.js';
+import { playSfx } from './sound.js';
 
 const OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 const NG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -16,12 +17,51 @@ export function initCut({ onDecide }) {
   let raw = [], drawing = false, near = false;
   let outline = null, check = null, fallT = -1;
   let lay = null;
+  let pred = [], rafId = 0;   // pred＝指の少し先（ブラウザの予測・描くだけで形には入れない）
 
   function layout() {
-    const c = setupCanvas(cv);
+    const c = setupCanvas(cv, 2);   // 描く画面は2倍まで（スマホで1こまが重くならないように）
     const m = 16 * c.dpr;
     const s = Math.min((c.W - 2 * m) / PAPER.w, (c.H - 2 * m) / PAPER.h);
     lay = { ...c, s, ox: (c.W - PAPER.w * s) / 2, oy: (c.H - PAPER.h * s) / 2 };
+    lay.bg = paperBg();
+  }
+
+  // 上・中・下の点線
+  function zoneLines(g, color) {
+    const { s, dpr } = lay, pw = PAPER.w * s, ph = PAPER.h * s;
+    g.save();
+    g.setLineDash([6 * dpr, 6 * dpr]);
+    g.lineWidth = 1.2 * dpr;
+    g.strokeStyle = color;
+    for (const z of CHECK.zones.slice(1)) {
+      const y = lay.oy + z.from * ph;
+      g.beginPath(); g.moveTo(lay.ox, y); g.lineTo(lay.ox + pw, y); g.stroke();
+    }
+    g.restore();
+  }
+
+  // 切る前の紙（和紙・繊維・点線）は1枚の絵にしておく（指を動かすたびに描き直さない）
+  function paperBg() {
+    const { W, H, s, dpr } = lay, pw = PAPER.w * s, ph = PAPER.h * s;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.save();
+    tornRect(g, lay.ox, lay.oy, pw, ph, 7, 2.2 * dpr);
+    g.fillStyle = COL.washi;
+    g.fill();
+    g.clip();
+    g.fillStyle = fiberPattern(g);
+    g.fillRect(lay.ox, lay.oy, pw, ph);
+    g.restore();
+    zoneLines(g, 'rgba(32,30,27,0.35)');
+    return c;
+  }
+
+  // 指を動かしている間は1こまに1回だけ描く
+  function requestDraw() {
+    if (!rafId) rafId = requestAnimationFrame(() => { rafId = 0; draw(); });
   }
   const tx = (p) => [lay.ox + p[0] * lay.s, lay.oy + p[1] * lay.s];
 
@@ -45,14 +85,7 @@ export function initCut({ onDecide }) {
     const cut = outline && fallT >= 0;
     // 紙（切る前）／余りの紙が落ちていく（切ったあと）
     if (!cut) {
-      ctx.save();
-      tornRect(ctx, lay.ox, lay.oy, pw, ph, 7, 2.2 * dpr);
-      ctx.fillStyle = COL.washi;
-      ctx.fill();
-      ctx.clip();
-      ctx.fillStyle = fiberPattern(ctx);
-      ctx.fillRect(lay.ox, lay.oy, pw, ph);
-      ctx.restore();
+      ctx.drawImage(lay.bg, 0, 0);
     } else if (fallT < 1) {
       const k = fallT;
       ctx.save();
@@ -66,16 +99,8 @@ export function initCut({ onDecide }) {
       ctx.fill('evenodd');
       ctx.restore();
     }
-    // 上・中・下の点線
-    ctx.save();
-    ctx.setLineDash([6 * dpr, 6 * dpr]);
-    ctx.lineWidth = 1.2 * dpr;
-    ctx.strokeStyle = cut ? 'rgba(238,233,222,0.28)' : 'rgba(32,30,27,0.35)';
-    for (const z of CHECK.zones.slice(1)) {
-      const y = lay.oy + z.from * ph;
-      ctx.beginPath(); ctx.moveTo(lay.ox, y); ctx.lineTo(lay.ox + pw, y); ctx.stroke();
-    }
-    ctx.restore();
+    // 上・中・下の点線（切る前は紙の絵に入っている）
+    if (cut) zoneLines(ctx, 'rgba(238,233,222,0.28)');
     // 点検でだめなエリアは朱をうすく
     if (cut && check) {
       for (const z of check.zones) {
@@ -123,7 +148,7 @@ export function initCut({ onDecide }) {
     }
     // 描いている線
     if (!cut && raw.length) {
-      inkStroke(ctx, raw, tx, 3.4 * dpr);
+      inkStroke(ctx, drawing && pred.length ? raw.concat(pred) : raw, tx, 3.4 * dpr);
       const p0 = tx(raw[0]);
       ctx.fillStyle = COL.shu;
       ctx.beginPath(); ctx.arc(p0[0], p0[1], 5 * dpr, 0, Math.PI * 2); ctx.fill();
@@ -137,8 +162,7 @@ export function initCut({ onDecide }) {
     }
   }
 
-  function toPaper(e) {
-    const r = cv.getBoundingClientRect();
+  function toPaper(e, r = cv.getBoundingClientRect()) {
     const x = ((e.clientX - r.left) * lay.dpr - lay.ox) / lay.s;
     const y = ((e.clientY - r.top) * lay.dpr - lay.oy) / lay.s;
     return [Math.max(0, Math.min(PAPER.w, x)), Math.max(0, Math.min(PAPER.h, y))];
@@ -154,6 +178,7 @@ export function initCut({ onDecide }) {
 
   function finish() {
     drawing = false;
+    pred = [];
     const res = strokeToOutline(raw);
     if (!res.ok) {
       setHint(T.problem[res.reason] || T.cutHint, true);
@@ -185,8 +210,9 @@ export function initCut({ onDecide }) {
     if (!lay) layout();
     e.preventDefault();
     cv.setPointerCapture(e.pointerId);
-    raw = [toPaper(e)]; outline = null; check = null; fallT = -1;
+    raw = [toPaper(e)]; pred = []; outline = null; check = null; fallT = -1;
     drawing = true; near = false;
+    playSfx('fude', { vol: 0.45 });
     okBtn.disabled = true;
     checks.hidden = true;
     setHint(T.cutDrawing);
@@ -194,15 +220,18 @@ export function initCut({ onDecide }) {
   });
   cv.addEventListener('pointermove', (e) => {
     if (!drawing) return;
-    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-    for (const ev of evs) {
-      const p = toPaper(ev), q = raw[raw.length - 1];
+    const r = cv.getBoundingClientRect();
+    const co = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    for (const ev of co.length ? co : [e]) {
+      const p = toPaper(ev, r), q = raw[raw.length - 1];
       if (Math.hypot(p[0] - q[0], p[1] - q[1]) >= 1.5) raw.push(p);
     }
+    // 指の少し先まで線をのばして見せる（遅れて見えないように）
+    pred = e.getPredictedEvents ? e.getPredictedEvents().slice(0, 3).map((ev) => toPaper(ev, r)) : [];
     const wasNear = near;
     near = isNearStart(raw, raw[raw.length - 1]);
     if (near && !wasNear) { try { navigator.vibrate && navigator.vibrate(6); } catch (err) { /* */ } }
-    draw();
+    requestDraw();
   });
   const up = () => { if (drawing) finish(); };
   cv.addEventListener('pointerup', up);

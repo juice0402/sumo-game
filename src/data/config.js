@@ -1,5 +1,5 @@
 // すべての「まだ決まっていない数字」はここ。変えたら CONFIG_VERSION を上げる（リプレイ・対戦の再現に使う）。
-export const CONFIG_VERSION = 3;
+export const CONFIG_VERSION = 4; // v4（11/25）：負けは始まった時でくらべる（体は、ついたはじめの時）
 
 // 紙（切り出しの座標）。整数の座標で、y は下向き。右が力士の正面。
 export const PAPER = {

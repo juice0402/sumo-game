@@ -9,6 +9,7 @@
     "table": "node tools/sim-table.mjs"
   },
   "dependencies": {
-    "@dimforge/rapier2d-deterministic-compat": "0.21.0"
+    "@dimforge/rapier2d-deterministic-compat": "0.21.0",
+    "three": "0.160.1"
   }
 }

@@ -15,30 +15,36 @@ button{font:inherit;color:inherit;cursor:pointer}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
 .bar{display:flex;align-items:center;gap:12px;min-height:56px}
 .bar h1{flex:1;margin:0;font-size:26px;line-height:1.1;letter-spacing:.04em}
-.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:15px;min-height:44px}
-.ghost:active{background:var(--sumi3)}
-.round{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--sumi2);display:grid;place-items:center;flex:none}
-.round:active{background:var(--sumi3)}
+/* ボタン：ピルの形にしない（絵は ui/btnart.js）。主＝朱の筆の帯／ほか＝字の下に筆の線（押す・選んだ＝朱）／丸＝筆の輪（11/25 しょーくんが案B） */
+.ghost{background:var(--b-line) center bottom 5px/100% 7px no-repeat;border:0;border-radius:0;padding:8px 10px 14px;font-size:15px;min-height:44px;color:var(--washi)}
+.ghost:active,.ghost[aria-pressed=true]{background-image:var(--b-lineshu)}
+.round{width:48px;height:48px;border-radius:50%;border:0;background:var(--b-ring) center/100% 100% no-repeat;display:grid;place-items:center;flex:none}
+.round:active{background-color:var(--sumi3)}
 .round svg{width:22px;height:22px}
-.seal{background:var(--shu);border:0;border-radius:999px;padding:0 28px;min-height:52px;font-size:19px;letter-spacing:.12em;display:inline-flex;align-items:center;gap:8px;color:var(--washi)}
-.seal:active{background:var(--shu2)}
-.seal:disabled{background:var(--sumi3);color:var(--dim)}
+.seal{background:var(--b-shu) center/100% 100% no-repeat;border:0;border-radius:0;padding:0 36px;min-height:54px;font-size:19px;letter-spacing:.12em;display:inline-flex;align-items:center;gap:8px;color:var(--washi)}
+.seal:active{background-image:var(--b-shu2)}
+.seal:disabled{background-image:var(--b-off);color:var(--dim)}
 .seal svg{width:20px;height:20px}
+/* 和紙の筆の帯（朱の帯のとなりに並べる、もう1つの帯）。並べるときは同じ幅（11/25 しょーくん） */
+.seal.sub{background-image:var(--b-paper);color:var(--sumi)}
+.seal.sub:active{background-image:var(--b-paper2)}
+.actions.pair{gap:14px}
+.actions.pair .seal{flex:1 1 0;max-width:180px;justify-content:center;padding:0 8px;font-size:17px;letter-spacing:.06em;white-space:nowrap}
 .stage{position:relative;flex:1;min-height:0}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .hint{margin:8px 0 0;text-align:center;font-size:15px;color:var(--washi2);min-height:24px}
 .hint.ng{color:#e9a097}
 .checks{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px 4px 8px;border-radius:999px;background:var(--sumi2);font-size:14px;color:var(--washi2)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 7px;border-radius:2px;border:1px solid var(--line);font-size:14px;color:var(--washi2)}
 .chip svg{width:16px;height:16px}
-.chip.ng{background:rgba(171,57,47,.28);color:var(--washi)}
+.chip.ng{background:rgba(171,57,47,.28);border-color:var(--shu);color:var(--washi)}
 .actions{display:flex;align-items:center;justify-content:center;gap:20px;padding:12px 0 16px}
 /* 相手をえらぶ */
 .me{display:flex;align-items:center;gap:12px;padding:4px 0 12px;border-bottom:1px solid var(--line)}
 .me canvas{width:64px;height:84px;flex:none}
 .me p{flex:1;margin:0;font-size:14px;color:var(--washi2)}
 .foes{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding:12px 0;align-content:start}
-.foe{background:var(--sumi2);border:1px solid var(--line);border-radius:14px;padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.foe{background:var(--sumi2);border:1px solid var(--line);border-radius:4px;padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .foe:active{background:var(--sumi3)}
 .foe canvas{width:72px;height:96px}
 .foe b{font-family:"Yuji Syuku",serif;font-weight:400;font-size:20px}
@@ -46,14 +52,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .marks i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--washi2);display:inline-block}
 .marks i.w{background:var(--shu);border-color:var(--shu)}
 .marks i.d{border-radius:2px;height:4px;margin-top:4px;background:var(--washi2);border:0}
-.seg{display:flex;align-self:center;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;margin:4px 0 14px}
-.seg button{border:0;background:none;border-radius:999px;padding:6px 14px;font-size:14px;color:var(--washi2);min-height:36px}
-.seg button[aria-pressed=true]{background:var(--washi);color:var(--sumi)}
+.seg{display:flex;align-self:center;gap:6px;margin:4px 0 14px}
+.seg button{border:0;background:none;border-radius:0;padding:6px 16px;font-size:14px;color:var(--dim);min-height:38px}
+.seg button[aria-pressed=true]{background:var(--b-shu) center/100% 100% no-repeat;color:var(--washi)}
 .seglabel{text-align:center;font-size:13px;color:var(--dim)}
 /* 取組 */
 #s-bout{padding:0}
-#s-bout canvas{position:absolute;inset:0;width:100%;height:100%}
+#s-bout canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .names{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:space-between;padding:0 max(16px,env(safe-area-inset-left,0px));font-family:"Yuji Syuku",serif;font-size:24px;pointer-events:none}
+.names span{opacity:0;transform:translateX(-14px);transition:opacity .45s,transform .45s cubic-bezier(.2,.9,.2,1)}
+.names span:last-child{transform:translateX(14px)}
+.names.in span{opacity:1;transform:none}
+.names.in span:last-child{transition-delay:.18s}
 .names span:last-child{text-align:right}
 .names small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--dim)}
 .cutin{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;overflow:hidden}
@@ -66,17 +76,23 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes word{0%{opacity:0;transform:scale(1.6)}25%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
 .result{position:absolute;inset:0;padding:calc(env(safe-area-inset-top,0px) + 9vh) 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;align-items:center;gap:10px}
 .result .kind+.row{margin-top:auto}
-.result .big{font-size:clamp(88px,26vw,150px);line-height:1}
-.result .big.win{color:var(--washi);text-shadow:6px 6px 0 var(--shu)}
-.result .big.lose{color:var(--washi2)}
-.result .kind{font-size:15px;color:var(--washi2);margin-top:-4px}
+.verdict{display:flex;align-items:flex-start;gap:14px}
+.stamp{width:56px;height:56px;display:grid;place-items:center;font-size:34px;line-height:1;border-radius:6px;margin-top:6px;opacity:0;animation:stamp .35s .38s cubic-bezier(.2,.9,.2,1) forwards}
+.stamp.win{background:var(--shu);color:var(--washi)}
+.stamp.lose{border:2px solid var(--washi2);color:var(--washi2)}
+.stamp.draw{border:2px solid var(--kin);color:var(--kin)}
+.kimarite{writing-mode:vertical-rl;font-size:clamp(58px,16vw,100px);line-height:1.04;color:var(--washi);text-shadow:4px 4px 0 var(--sumi),-1px -1px 0 var(--sumi);clip-path:inset(0 0 100% 0);animation:brush .5s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes brush{to{clip-path:inset(0 0 -2% 0)}}
+@keyframes stamp{0%{opacity:0;transform:scale(1.8) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-4deg)}}
+.result .kind{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%);width:max-content;margin:0;text-align:center;font-family:"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",serif;font-size:18px;line-height:1.3;color:var(--sumi);pointer-events:none;opacity:0;animation:kindin .45s .5s forwards}
+@keyframes kindin{to{opacity:.9}}
 .result .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 /* 道具 */
 .sheet{position:absolute;inset:0;background:var(--sumi);z-index:5;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
 .sheet .body{flex:1;overflow-y:auto;padding-bottom:24px}
 .sheet h2{font-size:18px;margin:18px 0 6px}
 .sheet p{margin:4px 0;font-size:14px;color:var(--washi2)}
-.fp{font:700 20px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.06em}
+.toggles{display:flex;gap:10px;flex-wrap:wrap}.fp{font:700 20px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.06em}
 .fp.same{color:#b9d4a3}.fp.diff{color:#e9a097}
 .scroll{overflow-x:auto}
 .tbl{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-top:8px}
@@ -88,4 +104,4 @@ button{font:inherit;color:inherit;cursor:pointer}
 .bar2 i{display:block;height:100%;width:0;background:var(--kin)}
 .err{position:absolute;inset:auto 16px 30% 16px;text-align:center;color:#e9a097}
 @media (min-width:700px){.bar h1{font-size:30px}}
-@media (prefers-reduced-motion:reduce){.cutin.go .band,.cutin.go .word{animation-duration:.01s}}
+@media (prefers-reduced-motion:reduce){.cutin.go .band,.cutin.go .word,.kimarite,.stamp{animation-duration:.01s}}
