@@ -4,7 +4,7 @@
 
 ## ビルドと点検
 - はじめに `npm ci`（物理 @dimforge/rapier2d-deterministic-compat 0.21.0 と 3D の three 0.160.1。three は UMD の build/three.min.js をそのまま入れて window.THREE）
-- `node tools/build.mjs [--artifact 出力.html]` → index.html（約4.3MB。物理3.4MB・three 0.67MB・効果音）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。`--artifact` は試しのページ用（head なし）
+- `node tools/build.mjs [--artifact 出力.html]` → index.html（約1.75MB。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。`--artifact` は試しのページ用（head なし）
 - `node tools/test.mjs` → だめな所だけ出して最後に「OK（指紋 ……）」
 - `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--write]` → 相性表（`--write` で docs/balance.md）
 - `node tools/bout-sheet.mjs <左id> <右id> [シード] [出力.svg] [--set key=value]` → 1番をこま割りの絵に（物理の調整用。`rsvg-convert` で png に）
@@ -46,6 +46,7 @@
 | ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減） |
 | ui/stage3d.js | 2.5D（Three.js）：紙の箱の土俵（setDohyo で切りかえ・前の床と絵は外す）・紙の力士（厚み・影）・カメラ（旋回と真横）・project（描く座標→画面） |
 | ui/fx.js | 上にのせる2Dの演出：はじまりの墨の筆・墨のしぶき・集中線・トンの合図・体がついた所 |
+| ui/unpack.js | 重いもの（lib-rapier・lib-wasm・lib-three）を base64 → gzip からもどす。unpackLib(id)・gunzip（古いブラウザ用・tools/test.mjs で zlib とくらべる） |
 | ui/sound.js | 効果音（Web Audio）。unlockAudio（最初のタップ）・playSfx・setMuted |
 | ui/tools.js | 道具（指紋・相性表・動きの切りかえ）。音と演出の切りかえと「はじめての流れを見る／前の保存にもどす」は app.js |
 | ui/ink.js | 墨・和紙の描きかた |

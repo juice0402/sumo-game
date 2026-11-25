@@ -113,5 +113,16 @@ ok(rankOf(1500).id === BANZUKE[0].id && rankOf(2400).id === 'yokozuna', '番付�
 ok(eloDelta(1500, 1500, 1) > 0 && eloDelta(1500, 1500, 0) < 0 && eloDelta(1500, 1500, 0.5) === 0, 'レートの増減がおかしい');
 console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Object.keys(STAGES).length}`);
 
+// gzip をほどく（古いブラウザ用の unpack.js の gunzip）が Node の zlib と同じになる
+{
+  const { gzipSync } = await import('node:zlib');
+  const { gunzip } = await import('../src/ui/unpack.js');
+  const samples = [Buffer.alloc(0), Buffer.from('a'), Buffer.from('紙相撲'.repeat(3000)),
+    Buffer.from(Array.from({ length: 50000 }, (_, k) => (k * 2654435761 >>> 24) & 255))];
+  for (const lvl of [0, 1, 9]) for (const buf of samples) {
+    const out = Buffer.from(gunzip(new Uint8Array(gzipSync(buf, { level: lvl }))));
+    if (Buffer.compare(out, buf) !== 0) { fails++; console.log(`NG gunzip（level ${lvl}・${buf.length}バイト）`); }
+  }
+}
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);

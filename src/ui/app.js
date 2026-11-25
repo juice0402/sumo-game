@@ -11,6 +11,7 @@ import { rankOf, eloDelta } from '../game/rating.js';
 import { drawStage } from '../game/jungyo.js';
 import { makeFoe } from '../game/foe.js';
 import { initCut } from './cut.js';
+import { unpackLib } from './unpack.js';
 import { initPick, drawShapeThumb } from './pick.js';
 import { initBout } from './bout.js';
 import { initTools } from './tools.js';
@@ -65,11 +66,14 @@ function home() { nav.length = 0; show('s-home'); }
 let ready = null;
 function loadLibs() {
   if (ready) return ready;
-  const run = (id) => new Promise((ok) => setTimeout(() => {
-    const el = document.getElementById(id);
-    if (el) { const s = document.createElement('script'); s.text = el.textContent; document.head.appendChild(s); el.remove(); }
-    ok();
-  }, 30));
+  // 重いものは gzip して入れてある（unpack.js）。1つずつ、画面に息つぎさせながら（30ms あけて）ほどく
+  const pause = () => new Promise((ok) => setTimeout(ok, 30));
+  const run = (id) => pause().then(() => unpackLib(id)).then((bytes) => {
+    if (!bytes) return;
+    const s = document.createElement('script');
+    s.text = new TextDecoder().decode(bytes);
+    document.head.appendChild(s);
+  });
   const domReady = new Promise((ok) => {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ok, { once: true }); else ok();
   });
@@ -81,8 +85,9 @@ function loadLibs() {
       } catch (e) { /* 音なしで続ける */ }
     })
     .then(() => run('lib-rapier'))
-    .then(() => window.RAPIER.init())
-    .then(() => { setRapier(window.RAPIER); return run('lib-three'); });
+    .then(() => pause().then(() => unpackLib('lib-wasm')))
+    .then((wasm) => { window.__SUMO_WASM = wasm.buffer; return window.RAPIER.init(); })
+    .then(() => { delete window.__SUMO_WASM; setRapier(window.RAPIER); return run('lib-three'); });
   ready.catch(() => {
     const el = document.getElementById('err');
     el.textContent = T.noWasm;
