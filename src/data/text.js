@@ -62,7 +62,6 @@ export const T = {
   toNext: (rank, n) => `${rank}まで あと${n}`,
   top: '最高位',
   worldLater: '世界の番付は、オンラインになってから',
-  foeHidden: '相手は取組で',
   stageLine: (name, note) => `${name}・${note}`,
   fpSame: 'パソコンと同じ',
   fpDiff: 'パソコンとちがう',

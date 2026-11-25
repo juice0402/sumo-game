@@ -27,6 +27,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   const cv = document.getElementById('bout-cv');
   const names = document.getElementById('names');
   const cutin = document.getElementById('cutin');
+  const sname = document.getElementById('stagename');
   const resEl = document.getElementById('result');
   const stamp = document.getElementById('r-big');
   const kimaEl = document.getElementById('r-kima');
@@ -48,6 +49,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     st = null;
     cutin.classList.remove('go');
     names.classList.remove('in');
+    sname.classList.remove('in', 'out');
     fx.clear();
   }
 
@@ -98,7 +100,15 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
     const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
     const goAt = orbitEnd + (short ? 0.1 : LOOK.hush);
+    // 巡業：旋回のあいだに、どの土俵かを右に縦書きで（11/26 しょーくん）。演出を短くでは、立ち合いのあと少しだけ
+    const sn = opt.mode === 'jungyo';
+    if (sn) {
+      document.getElementById('sn-mode').textContent = T.mode.jungyo;
+      document.getElementById('sn-name').textContent = S.name;
+      document.getElementById('sn-note').textContent = S.note;
+    }
     st = {
+      sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
       t: 0, last: performance.now(), play: false, idx: 0, hold: 0, endHold: 0,
@@ -146,6 +156,15 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const lastIdx = s.rec.n - 1;
     // 立ち合いまで
     if (!s.went && s.t >= s.orbitStart) names.classList.add('in');
+    if (s.sn && !s.snIn && s.t >= s.snAt) {
+      s.snIn = true;
+      if (s.t < s.snOutAt) {   // タップで旋回を飛ばしたあとなら出さない
+        sname.classList.add('in');
+        playSfx('taiko', { vol: 0.5, rate: 0.8 });
+        playSfx('fude', { vol: 0.35, rate: 1.0 });
+      } else s.snOut = true;
+    }
+    if (s.sn && !s.snOut && s.t >= s.snOutAt) { s.snOut = true; sname.classList.add('out'); }
     if (!s.went && s.t >= s.goAt) {
       s.went = true;
       cutin.classList.add('go');

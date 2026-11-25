@@ -232,7 +232,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sw::before{content:"";position:absolute;left:0;right:0;bottom:0;height:15px;background:var(--side);border:1.5px solid var(--sumi)}
 .sw i{position:absolute;left:0;right:0;top:0;height:29px;background:var(--top);border:1.5px solid var(--sumi);clip-path:polygon(14% 0,86% 0,100% 100%,0 100%)}
 .sw i::after{content:"";position:absolute;left:28%;right:28%;top:22%;bottom:22%;border:2.5px solid var(--ring);border-radius:50%}
-.sched{max-height:26vh;overflow-y:auto}
+.sched{overflow:hidden}
 .srow{display:grid;grid-template-columns:62px 1fr 1fr;gap:8px;padding:7px 2px;border-bottom:1px solid var(--line);font-size:14px}
 .srow:last-child{border-bottom:0}
 .srow em{font-style:normal;color:var(--kin);font-variant-numeric:tabular-nums}
@@ -253,8 +253,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
 .selhead b{font-size:clamp(44px,13vw,58px);letter-spacing:.14em;line-height:1}
 .selhead span{font-size:13px;color:var(--washi2)}
-.foecard{writing-mode:vertical-rl;display:flex;align-items:center;gap:10px;padding:0 10px;border-left:1px dashed var(--line);border-right:1px dashed var(--line);color:var(--dim);font-size:13px}
-.foecard .q{font-size:46px;color:var(--washi2)}
 /* 稽古 */
 .me{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:18px;position:relative;border:0;padding:0}
 .me p{writing-mode:vertical-rl;margin:0;font-size:clamp(30px,9vw,44px);letter-spacing:.08em;color:var(--washi);flex:none;max-height:100%}
@@ -291,19 +289,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (min-width:700px){.screen.v>.bar h1{font-size:48px}.cols b{--max:40px}}
 
 /* ===== えらんだ瞬間（11/26 しょーくん）：相撲部屋と勝負のメニュー（ui/choose.js）=====
-   はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は右や下へすべって消える */
+   はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は下へ抜けて消える */
 .screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
 .screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
 .cols>.chosen::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--b-shuv) center/88% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
 .cols>.chosen :is(span,small){color:var(--washi)}
-.screen .cols>.leave-r{animation:leaveR .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
 .screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
 .cols.leaving{animation:jolt .2s .12s both}
 @keyframes slam{0%{clip-path:inset(0 0 100% 0);transform:translateY(-8%) scale(1.5,1.12) rotate(-5deg);opacity:.7}55%{clip-path:inset(0 0 0 0);transform:scale(.96,1.03) rotate(1deg);opacity:1}100%{clip-path:inset(0 0 -2% 0);transform:none;opacity:1}}
 @keyframes punch{0%{transform:scale(1.14)}100%{transform:none}}
 @keyframes punch2{0%{transform:scale(.93,1.07)}55%{transform:scale(1.04,.98)}100%{transform:none}}
 @keyframes jolt{30%{transform:translateY(3px)}100%{transform:none}}
-@keyframes leaveR{to{transform:translateX(110%) skewX(-14deg);opacity:0}}
 @keyframes leaveD{to{transform:translateY(105%);opacity:0}}
 
 /* 部屋の自作力士：ときどきぴょこっと（たまに2回・ui/heya.js） */
@@ -312,6 +308,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mine canvas.hop2{animation:hop .5s cubic-bezier(.3,.6,.3,1) 2}
 @keyframes hop{0%{transform:none}14%{transform:scale(1.1,.86)}40%{transform:translateY(-20px) scale(.94,1.08) rotate(-3deg)}64%{transform:translateY(0) scale(1.12,.85)}80%{transform:scale(.97,1.04)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.mine canvas.hop,.mine canvas.hop2,.cols.leaving{animation:none}}
+
+/* 巡業の取組：旋回のあいだに土俵の名前（11/26 しょーくん「どの土俵かわからない・かっこよく」）。
+   番付表の見出しと同じく、右に縦書き＋金の罫。罫が上から引かれ → 名前を筆で上から → 「巡業」と土俵のくせ → 右へ抜けて消える */
+.stagename{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 86px);writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:12px;pointer-events:none;text-shadow:3px 3px 0 var(--sumi)}
+.stagename:not(.in){display:none}
+.stagename::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1px solid var(--kin);transform-origin:top;animation:snrule .45s cubic-bezier(.3,.7,.3,1) both}
+.stagename small{font-size:13px;letter-spacing:.4em;color:var(--kin);animation:rise .4s .45s both}
+.stagename b{font-size:clamp(40px,11vw,56px);letter-spacing:.16em;line-height:1.05;color:var(--washi);animation:inkdown .6s .12s cubic-bezier(.3,.7,.3,1) both}
+.stagename span{font-size:14px;letter-spacing:.2em;color:var(--washi2);animation:rise .4s .7s both}
+.stagename.out{animation:snout .36s cubic-bezier(.55,0,.85,.35) both}
+@keyframes snrule{from{transform:scaleY(0)}to{transform:none}}
+@keyframes snout{to{opacity:0;transform:translateX(40%) skewX(-10deg)}}
 </style>
 </head>
 <body>
@@ -384,7 +392,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
   <section id="s-select" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">力士選出</h1></header>
-    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><span id="sel-stage"></span></div><div class="foecard"><span class="q brush">？</span><span id="sel-foe"></span></div></div>
+    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><span id="sel-stage"></span></div></div>
     <div class="slots frame2 cols" id="sel-slots"></div>
     <p class="note">出す力士をえらぶ</p>
   </section>
@@ -425,6 +433,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <canvas id="bout-gl"></canvas>
     <canvas id="bout-cv"></canvas>
     <div class="names" id="names"><span id="n-a"></span><span id="n-b"></span></div>
+    <div class="stagename" id="stagename"><small id="sn-mode"></small><b class="brush" id="sn-name"></b><span id="sn-note"></span></div>
     <div class="cutin" id="cutin"><div class="band"></div><div class="word brush">勝負<small>FIGHT</small></div></div>
     <div class="result" id="result" hidden>
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
@@ -539,7 +548,6 @@ const T = {
   toNext: (rank, n) => `${rank}まで あと${n}`,
   top: '最高位',
   worldLater: '世界の番付は、オンラインになってから',
-  foeHidden: '相手は取組で',
   stageLine: (name, note) => `${name}・${note}`,
   fpSame: 'パソコンと同じ',
   fpDiff: 'パソコンとちがう',
@@ -566,7 +574,7 @@ const HONBASHO_STAGE = 'hyojun';
 const JUNGYO = {
   hours: 2,                                // 何時間ごとに変わるか
   pool: ['hyojun', 'kori', 'gekishin'],    // 出る土俵（2つずつ）
-  ahead: 12,                               // 予定を何枠先まで見せるか（12×2時間＝24時間）
+  ahead: 5,                                // 予定を何枠先まで見せるか（いま開催中＋この先4つ＝8時間・11/26 スクロールなしに）
 };
 
 return { STAGES, HONBASHO_STAGE, JUNGYO };
@@ -3163,6 +3171,7 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
   const cv = document.getElementById('bout-cv');
   const names = document.getElementById('names');
   const cutin = document.getElementById('cutin');
+  const sname = document.getElementById('stagename');
   const resEl = document.getElementById('result');
   const stamp = document.getElementById('r-big');
   const kimaEl = document.getElementById('r-kima');
@@ -3184,6 +3193,7 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     st = null;
     cutin.classList.remove('go');
     names.classList.remove('in');
+    sname.classList.remove('in', 'out');
     fx.clear();
   }
 
@@ -3234,7 +3244,15 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
     const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
     const goAt = orbitEnd + (short ? 0.1 : LOOK.hush);
+    // 巡業：旋回のあいだに、どの土俵かを右に縦書きで（11/26 しょーくん）。演出を短くでは、立ち合いのあと少しだけ
+    const sn = opt.mode === 'jungyo';
+    if (sn) {
+      document.getElementById('sn-mode').textContent = T.mode.jungyo;
+      document.getElementById('sn-name').textContent = S.name;
+      document.getElementById('sn-note').textContent = S.note;
+    }
     st = {
+      sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
       t: 0, last: performance.now(), play: false, idx: 0, hold: 0, endHold: 0,
@@ -3282,6 +3300,15 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const lastIdx = s.rec.n - 1;
     // 立ち合いまで
     if (!s.went && s.t >= s.orbitStart) names.classList.add('in');
+    if (s.sn && !s.snIn && s.t >= s.snAt) {
+      s.snIn = true;
+      if (s.t < s.snOutAt) {   // タップで旋回を飛ばしたあとなら出さない
+        sname.classList.add('in');
+        playSfx('taiko', { vol: 0.5, rate: 0.8 });
+        playSfx('fude', { vol: 0.35, rate: 1.0 });
+      } else s.snOut = true;
+    }
+    if (s.sn && !s.snOut && s.t >= s.snOutAt) { s.snOut = true; sname.classList.add('out'); }
     if (!s.went && s.t >= s.goAt) {
       s.went = true;
       cutin.classList.add('go');
@@ -3706,7 +3733,7 @@ return { fitText, renderSlots, initEdit };
 
 __m['src/ui/choose.js'] = (function () {
 // えらんだ瞬間の動き（11/26 しょーくん）：相撲部屋と勝負のメニュー。
-// えらんだ列に朱の筆の帯をベタッと（ド）→ もう一度ぐっと（ドン）→ ほかの列は右や下へすべって消える → 次の画面へ。
+// えらんだ列に朱の筆の帯をベタッと（ド）→ もう一度ぐっと（ドン）→ ほかの列は下へ抜けて消える（11/26 ぜんぶ下へ）→ 次の画面へ。
 // 見た目は style.css の「えらんだ瞬間」。もとにもどすのは、画面を開くとき（app.js の enter が reset をよぶ）
 const { playSfx } = __m['src/ui/sound.js'];
 
@@ -3734,12 +3761,12 @@ function choose(btn, then, short) {
   playSfx('taiko', { vol: 0.55, rate: 1.18 });
   if (short || reduced()) { setTimeout(done, 170); return; }
   setTimeout(() => { btn.classList.add('chosen2'); playSfx('taiko', { vol: 0.95, rate: 0.92 }); }, HIT2);
-  // 右にある列（並びの前のほう）は右へ、左にある列は下へ。えらんだ列に近いものから
+  // ほかの列は下へ抜ける。えらんだ列に近いものから
   let n = 0;
   items.forEach((c, i) => {
     if (i === k) return;
     c.style.setProperty('--d', `${Math.abs(i - k) * STAGGER - STAGGER}ms`);
-    c.classList.add(i < k ? 'leave-r' : 'leave-d');
+    c.classList.add('leave-d');
     n = Math.max(n, Math.abs(i - k));
   });
   list.classList.add('leaving');
@@ -3747,8 +3774,8 @@ function choose(btn, then, short) {
 }
 
 function reset(root) {
-  for (const c of root.querySelectorAll('.chosen, .leave-r, .leave-d, .leaving')) {
-    c.classList.remove('chosen', 'chosen2', 'leave-r', 'leave-d', 'leaving');
+  for (const c of root.querySelectorAll('.chosen, .leave-d, .leaving')) {
+    c.classList.remove('chosen', 'chosen2', 'leave-d', 'leaving');
     c.style.removeProperty('--d');
   }
 }
@@ -3907,7 +3934,6 @@ function initSelect() {
       document.getElementById('sel-mode').textContent = T.mode[o.mode];
       const S = STAGES[o.stage];
       document.getElementById('sel-stage').textContent = o.drawn ? T.jungyoDraw(S.name) + '・' + S.note : T.stageLine(S.name, S.note);
-      document.getElementById('sel-foe').textContent = T.foeHidden;
       renderSlots(document.getElementById('sel-slots'), o.slots, { active: o.active, onPick: o.onPick, emptyOk: false });
     },
   };

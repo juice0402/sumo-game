@@ -83,7 +83,6 @@ export function initSelect() {
       document.getElementById('sel-mode').textContent = T.mode[o.mode];
       const S = STAGES[o.stage];
       document.getElementById('sel-stage').textContent = o.drawn ? T.jungyoDraw(S.name) + '・' + S.note : T.stageLine(S.name, S.note);
-      document.getElementById('sel-foe').textContent = T.foeHidden;
       renderSlots(document.getElementById('sel-slots'), o.slots, { active: o.active, onPick: o.onPick, emptyOk: false });
     },
   };

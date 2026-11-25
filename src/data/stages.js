@@ -14,5 +14,5 @@ export const HONBASHO_STAGE = 'hyojun';
 export const JUNGYO = {
   hours: 2,                                // 何時間ごとに変わるか
   pool: ['hyojun', 'kori', 'gekishin'],    // 出る土俵（2つずつ）
-  ahead: 12,                               // 予定を何枠先まで見せるか（12×2時間＝24時間）
+  ahead: 5,                                // 予定を何枠先まで見せるか（いま開催中＋この先4つ＝8時間・11/26 スクロールなしに）
 };
