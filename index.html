@@ -207,19 +207,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .profile .who small{font-size:14px}
 .profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
 #ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
-.edit4{height:clamp(170px,27vh,230px)}
-.edit4 .word small{font-size:12px;color:var(--kin);letter-spacing:.1em}
-.edit4 .word b{--max:34px;--room:min(120px,calc(clamp(170px,27vh,230px) - 85px))}   /* 4字（これから など）も列に収まる */
-.edit4 .word.ti{flex-grow:1.3;border-left:0}
-.edit4 .word.ti b{--max:26px;--room:140px}
-.edit4 .word:nth-child(3){border-left:3px double var(--line)}
 #s-edit .actions{padding-top:0}
-/* 語をえらぶシート */
-#s-words .body{border-top:5px double var(--washi2);margin-top:6px}
-#s-words h2{font-size:13px;color:var(--kin);margin:16px 0 4px;font-weight:500;letter-spacing:.2em}
-.words{display:flex;flex-wrap:wrap;gap:2px 8px}
-.words .ghost{font-family:"Yuji Syuku",serif;font-size:22px;min-width:52px}
-#s-words .locked{margin:22px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--dim);letter-spacing:.04em}
 /* 土俵巡業 */
 .jghero{display:flex;flex-direction:column;min-height:0}
 .nowhead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px;font-size:13px;color:var(--washi2)}
@@ -277,7 +265,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes sunin{0%{opacity:0;transform:scale(1.5) rotate(-20deg)}70%{opacity:.92;transform:scale(.96) rotate(2deg)}100%{opacity:.92;transform:none}}
 .screen.enter.v>.bar h1{animation:inkdown .5s cubic-bezier(.3,.7,.3,1) both}
-.screen.enter :is(.hero,.cols>*,.stagecards>*,.sched>*,.actions>*,.note,.drive){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 90ms)}
+.screen.enter :is(.hero,.cols>*,.stagecards>*,.sched>*,.rl-col,.actions>*,.note,.drive){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 90ms)}
 .screen.enter .hero{animation-name:rise;animation-duration:.4s}
 #s-title.enter .sun{animation:sunin .55s .05s cubic-bezier(.2,.9,.2,1) both}
 #s-title.enter .word{animation:inkin .55s .35s cubic-bezier(.3,.7,.3,1) both}
@@ -321,6 +309,27 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stagename.out{animation:snout .36s cubic-bezier(.55,0,.85,.35) both}
 @keyframes snrule{from{transform:scaleY(0)}to{transform:none}}
 @keyframes snout{to{opacity:0;transform:translateX(40%) skewX(-10deg)}}
+
+/* ===== くるくる（力士の編集・ui/roller.js。11/26 しょーくん「スプラの二つ名みたいにロールして選べる」）=====
+   横に 称号｜上の句・つなぎ・下の句 のドラム。指で上下にまわすと真ん中の行に止まり、そこに横いっぱいの朱の筆の帯。
+   真ん中は和紙の字で大きく、上下は遠いほどうすく */
+.roller{--row:34px;margin:10px 0 12px}
+.rl-heads,.rl-body{display:flex}
+.rl-heads span,.rl-col{flex:1.25 1 0;min-width:0}
+.rl-heads .ti,.rl-col.ti{flex-grow:1.5}
+.rl-heads .tn,.rl-col.tn{flex-grow:.6}
+.rl-heads span{padding:8px 0 4px;text-align:center;font-size:11px;letter-spacing:.2em;color:var(--kin)}
+.rl-body{position:relative;height:calc(var(--row) * 5)}
+.rl-band{position:absolute;left:-6px;right:-6px;top:calc(var(--row) * 2);height:var(--row);background:var(--b-shu) center/100% 100% no-repeat;pointer-events:none}
+.rl-col{position:relative}
+.rl-col.ti+.rl-col{border-left:3px double var(--line)}
+.rl-list{height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;padding:calc(var(--row) * 2) 0;scrollbar-width:none;touch-action:pan-y}
+.rl-list::-webkit-scrollbar{display:none}
+.rl-item{height:var(--row);display:flex;align-items:center;justify-content:center;scroll-snap-align:center;white-space:nowrap;font-size:min(16px,var(--fit,16px));color:var(--washi2);opacity:.14;cursor:pointer;transition:opacity .12s,font-size .12s}
+.rl-item.n2{opacity:.3}
+.rl-item.n1{opacity:.6}
+.rl-item.sel{opacity:1;color:var(--washi);font-size:min(20px,var(--fit,20px));text-shadow:1px 1px 0 rgba(32,30,27,.5)}
+.rl-lock{margin:8px 0 0;text-align:center;font-size:12px;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -365,11 +374,17 @@ button{font:inherit;color:inherit;cursor:pointer}
   <section id="s-edit" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><button id="ed-retire" class="ghost" type="button">引退</button><h1 class="brush">力士の編集</h1></header>
     <div class="profile hero"><canvas id="ed-cv"></canvas><div class="who"><small id="ed-title"></small><b class="brush" id="ed-name"></b><em id="ed-rec"></em></div><button id="ed-rand" class="ghost" type="button">おまかせ</button></div>
-    <div class="edit4 frame2 cols">
-      <button class="word" data-g="kami" type="button"><small>上の句</small><b class="brush"></b></button>
-      <button class="word" data-g="tsunagi" type="button"><small>つなぎ</small><b class="brush"></b></button>
-      <button class="word" data-g="shimo" type="button"><small>下の句</small><b class="brush"></b></button>
-      <button class="word ti" data-g="title" type="button"><small>称号</small><b class="brush"></b></button>
+    <!-- 称号と四股名は、くるくる回して選ぶ（ui/roller.js）。真ん中の行が朱の帯 -->
+    <div class="roller frame2" id="ed-roller">
+      <div class="rl-heads"><span class="ti">称号</span><span>上の句</span><span class="tn">つなぎ</span><span>下の句</span></div>
+      <div class="rl-body">
+        <div class="rl-band"></div>
+        <div class="rl-col ti" data-g="title"><div class="rl-list brush"></div></div>
+        <div class="rl-col" data-g="kami"><div class="rl-list brush"></div></div>
+        <div class="rl-col tn" data-g="tsunagi"><div class="rl-list brush"></div></div>
+        <div class="rl-col" data-g="shimo"><div class="rl-list brush"></div></div>
+      </div>
+      <p class="rl-lock" id="ed-locked"></p>
     </div>
     <footer class="actions pair">
       <button id="ed-recut" class="seal sub" type="button">切り直す</button>
@@ -445,10 +460,6 @@ button{font:inherit;color:inherit;cursor:pointer}
     </div>
   </section>
 
-  <section id="s-words" class="sheet" hidden>
-    <header class="bar"><button id="w-close" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h1 class="brush" id="w-title"></h1></header>
-    <div class="body" id="w-list"></div>
-  </section>
 
   <section id="s-tools" class="sheet" hidden>
     <header class="bar">
@@ -528,9 +539,8 @@ const T = {
   slotEmpty: '空き',
   slotCut: '紙を切って力士をつくる',
   rec: (r) => (r && (r.w || r.l || r.d) ? `${r.w}勝${r.l}敗${r.d ? r.d + '分' : ''}` : 'まだ取っていない'),
-  pick: { kami: '上の句', tsunagi: 'つなぎ', shimo: '下の句', title: '称号' },
-  pickTitle: (what) => `${what}をえらぶ`,
-  lockedWords: (n) => `まだ持っていない語が、あと${n}。取組で相手の四股名を見てみよう`,
+  rollNone: 'なし',   // つなぎの「なし」（くるくるの中）
+  lockedWords: (n) => `まだ持っていない語 あと${n}・相手の四股名で見つけよう`,
   linkNone: '（なし）',
   retire: '引退',
   retireAgain: 'もう一度で引退',
@@ -3645,13 +3655,96 @@ function initTools({ getShape, getDrive }) {
 return { initTools };
 })();
 
+__m['src/ui/roller.js'] = (function () {
+// くるくる回して選ぶドラム（力士の編集の 称号・上の句・つなぎ・下の句。11/26 しょーくん「スプラの二つ名みたいにロールして選べる」）。
+// 1列＝たての一覧。指でまわすと真ん中の行に止まる（CSS の scroll-snap）。まわしている間も、真ん中の語がそのまま名前に入る。
+// 上下の行をタップすると、その語が真ん中へ。見た目は style.css の「くるくる」
+const { playSfx } = __m['src/ui/sound.js'];
+
+// col：.rl-col（中に .rl-list）。onPick(id)：真ん中の語が変わった（指でまわしたときだけ）
+function createRoller(col, onPick) {
+  const list = col.querySelector('.rl-list');
+  let items = [], idx = 0, silent = false, quietT = 0;
+  const row = () => list.firstElementChild ? list.firstElementChild.offsetHeight : 34;
+
+  function paint() {
+    const kids = list.children;
+    for (let i = 0; i < kids.length; i++) {
+      const d = i - idx < 0 ? idx - i : i - idx;
+      kids[i].className = 'rl-item' + (d === 0 ? ' sel' : d === 1 ? ' n1' : d === 2 ? ' n2' : '');
+    }
+  }
+  // 字の多い語（称号の8字 など）は、列の幅に収まる大きさに
+  function fit() {
+    const w = list.clientWidth;
+    for (const el of list.children) {
+      const n = Array.from(el.textContent).length;
+      el.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / Math.max(1, n)))}px`);
+    }
+  }
+  function settleLater() {   // 動きが止まったら、プログラムでまわした分の「だまって」を解く
+    clearTimeout(quietT);
+    quietT = setTimeout(() => { silent = false; }, 160);
+  }
+  list.addEventListener('scroll', () => {
+    const r = row();
+    let i = Math.round(list.scrollTop / r);
+    if (i < 0) i = 0;
+    if (i > items.length - 1) i = items.length - 1;
+    if (i !== idx) {
+      idx = i;
+      paint();
+      playSfx('ton', { vol: 0.1, rate: 2.3 });   // カチッ
+      if (!silent) onPick(items[i].id);
+    }
+    if (silent) settleLater();
+  }, { passive: true });
+  list.addEventListener('click', (e) => {
+    const el = e.target.closest('.rl-item');
+    if (!el) return;
+    const i = Array.prototype.indexOf.call(list.children, el);
+    list.scrollTo({ top: i * row(), behavior: 'smooth' });
+  });
+
+  return {
+    // items：[{ id, label }]・cur：いまの id・roll：true ならスロットのようにまわって止まる（おまかせ）
+    set(newItems, cur) {
+      items = newItems;
+      list.textContent = '';
+      for (const it of items) {
+        const el = document.createElement('div');
+        el.className = 'rl-item';
+        el.textContent = it.label;
+        list.appendChild(el);
+      }
+      idx = Math.max(0, items.findIndex((x) => x.id === cur));
+      paint();
+      fit();
+      silent = true;
+      list.scrollTop = idx * row();
+      settleLater();
+    },
+    roll(cur) {
+      const i = items.findIndex((x) => x.id === cur);
+      if (i < 0) return;
+      silent = true;
+      list.scrollTo({ top: i * row(), behavior: 'smooth' });
+      settleLater();
+    },
+  };
+}
+
+return { createRoller };
+})();
+
 __m['src/ui/roster.js'] = (function () {
-// 部屋の力士（3枠）・力士の編集（四股名・称号・切り直す・引退）・語をえらぶシート
+// 部屋の力士（3枠）・力士の編集（四股名・称号はくるくる回して選ぶ・切り直す・引退）
 const { T } = __m['src/data/text.js'];
-const { SHIKONA, SHIKONA_CATS } = __m['src/data/shikona.js'];
+const { SHIKONA } = __m['src/data/shikona.js'];
 const { TITLES } = __m['src/data/titles.js'];
-const { shikonaText, titleText, wordLabel, randomShikona } = __m['src/game/names.js'];
+const { shikonaText, titleText, wordText, randomShikona } = __m['src/game/names.js'];
 const { drawShapeThumb } = __m['src/ui/pick.js'];
+const { createRoller } = __m['src/ui/roller.js'];
 
 // 縦書きの名前：字の数を --n に入れて、列の高さに収まる大きさにする（CSS の font-size が --n を使う）
 function fitText(el, text) {
@@ -3685,94 +3778,58 @@ function renderSlots(el, slots, opt) {
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape); });
 }
 
-// 語をえらぶシート：groups＝[{ title, items:[{id, label}] }]・note：いちばん下のひとこと
-function initWordSheet() {
-  const sheet = document.getElementById('s-words');
-  const list = document.getElementById('w-list');
-  let onPick = null;
-  document.getElementById('w-close').addEventListener('click', () => { sheet.hidden = true; });
-  list.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-id]');
-    if (!b || !onPick) return;
-    sheet.hidden = true;
-    onPick(b.dataset.id);
-  });
-  return {
-    open(title, groups, current, pick, note = '') {
-      onPick = pick;
-      document.getElementById('w-title').textContent = title;
-      list.textContent = '';
-      for (const g of groups) {
-        if (g.title) { const h = document.createElement('h2'); h.textContent = g.title; list.appendChild(h); }
-        const grid = document.createElement('div');
-        grid.className = 'words';
-        for (const it of g.items) {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'ghost';
-          b.dataset.id = it.id;
-          b.textContent = it.label;
-          b.setAttribute('aria-pressed', String(it.id === current));
-          grid.appendChild(b);
-        }
-        list.appendChild(grid);
-      }
-      if (note) { const p = document.createElement('p'); p.className = 'locked'; p.textContent = note; list.appendChild(p); }
-      sheet.hidden = false;
-      list.scrollTop = 0;
-    },
-  };
-}
-
-// has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
-function groupsOf(g, has) {
-  if (g === 'title') return [{ title: '', items: TITLES.map((t) => ({ id: t.id, label: t.t })) }];
-  const by = {};
-  for (const w of SHIKONA[g]) if (has.has(w.id)) (by[w.cat] = by[w.cat] || []).push({ id: w.id, label: wordLabel(w.id) });
-  return Object.keys(by).map((c) => ({ title: g === 'tsunagi' ? '' : SHIKONA_CATS[c], items: by[c] }));
+// ドラムに並べる語。has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
+function itemsOf(g, has) {
+  if (g === 'title') return TITLES.map((t) => ({ id: t.id, label: t.t }));
+  return SHIKONA[g].filter((w) => has.has(w.id)).map((w) => ({ id: w.id, label: wordText(w.id) || T.rollNone }));
 }
 
 // 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, onChange(i), onRecut(i), onRetire(i), onDone() }
 function initEdit(cb) {
-  const words = initWordSheet();
   const cv = document.getElementById('ed-cv');
-  let idx = 0;
+  let idx = 0, saveT = 0;
   const G = { kami: 0, tsunagi: 1, shimo: 2 };
 
-  function paint() {
+  function paintName() {
     const s = cb.getSlot(idx);
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
     fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
     document.getElementById('ed-rec').textContent = T.rec(s.rec);
-    for (const b of document.querySelectorAll('#s-edit .word')) {
-      const g = b.dataset.g;
-      fitText(b.querySelector('b'), g === 'title' ? titleText(s.title) : wordLabel(s.shikona[G[g]]));
-    }
-    drawShapeThumb(cv, s.shape);
   }
+  // まわしている間は名前だけ描きなおし、保存は止まってから
+  const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
 
-  for (const b of document.querySelectorAll('#s-edit .word')) {
-    b.addEventListener('click', () => {
-      const s = cb.getSlot(idx), g = b.dataset.g;
-      const cur = g === 'title' ? s.title : s.shikona[G[g]];
-      const has = cb.getOwned();
-      const locked = g === 'title' ? 0 : SHIKONA[g].filter((w) => !has.has(w.id)).length;
-      words.open(T.pickTitle(T.pick[g]), groupsOf(g, has), cur, (id) => {
-        if (g === 'title') s.title = id; else s.shikona[G[g]] = id;
-        cb.onChange(idx);
-        paint();
-      }, locked ? T.lockedWords(locked) : '');
+  const rollers = {};
+  for (const col of document.querySelectorAll('#ed-roller .rl-col')) {
+    const g = col.dataset.g;
+    rollers[g] = createRoller(col, (id) => {
+      const s = cb.getSlot(idx);
+      if (!s) return;
+      if (g === 'title') s.title = id; else s.shikona[G[g]] = id;
+      paintName();
+      saveLater();
     });
   }
+  function setRollers() {
+    const s = cb.getSlot(idx), has = cb.getOwned();
+    for (const g in rollers) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
+    const locked = SHIKONA.kami.filter((w) => !has.has(w.id)).length + SHIKONA.shimo.filter((w) => !has.has(w.id)).length;
+    document.getElementById('ed-locked').textContent = locked ? T.lockedWords(locked) : '';
+  }
+
+  // おまかせ：3つのドラムがスロットのようにまわって止まる
   document.getElementById('ed-rand').addEventListener('click', () => {
     const s = cb.getSlot(idx);
     s.shikona = randomShikona(Math.random, cb.getOwned());
+    rollers.kami.roll(s.shikona[0]);
+    rollers.tsunagi.roll(s.shikona[1]);
+    rollers.shimo.roll(s.shikona[2]);
+    paintName();
     cb.onChange(idx);
-    paint();
   });
   document.getElementById('ed-recut').addEventListener('click', () => cb.onRecut(idx));
-  document.getElementById('ed-done').addEventListener('click', () => cb.onDone());
+  document.getElementById('ed-done').addEventListener('click', () => { clearTimeout(saveT); cb.onChange(idx); cb.onDone(); });
   // 引退は2回押す（確かめの窓は、試しのページの中では出せないことがあるため）
   const retire = document.getElementById('ed-retire');
   let armed = 0;
@@ -3784,7 +3841,15 @@ function initEdit(cb) {
     retire.setAttribute('aria-pressed', 'true');
   });
 
-  return { show(i) { idx = i; disarm(); paint(); } };
+  return {
+    show(i) {
+      idx = i;
+      disarm();
+      paintName();
+      drawShapeThumb(cv, cb.getSlot(i).shape);
+      setRollers();
+    },
+  };
 }
 
 return { fitText, renderSlots, initEdit };
@@ -4122,7 +4187,7 @@ let cur = null;
 const nav = [];
 const onShow = {};
 // 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
-const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .actions > *, .note, .drive';
+const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .rl-col, .actions > *, .note, .drive';
 function enter(el) {
   resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
   el.classList.remove('enter');

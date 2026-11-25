@@ -195,19 +195,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .profile .who small{font-size:14px}
 .profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
 #ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
-.edit4{height:clamp(170px,27vh,230px)}
-.edit4 .word small{font-size:12px;color:var(--kin);letter-spacing:.1em}
-.edit4 .word b{--max:34px;--room:min(120px,calc(clamp(170px,27vh,230px) - 85px))}   /* 4字（これから など）も列に収まる */
-.edit4 .word.ti{flex-grow:1.3;border-left:0}
-.edit4 .word.ti b{--max:26px;--room:140px}
-.edit4 .word:nth-child(3){border-left:3px double var(--line)}
 #s-edit .actions{padding-top:0}
-/* 語をえらぶシート */
-#s-words .body{border-top:5px double var(--washi2);margin-top:6px}
-#s-words h2{font-size:13px;color:var(--kin);margin:16px 0 4px;font-weight:500;letter-spacing:.2em}
-.words{display:flex;flex-wrap:wrap;gap:2px 8px}
-.words .ghost{font-family:"Yuji Syuku",serif;font-size:22px;min-width:52px}
-#s-words .locked{margin:22px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--dim);letter-spacing:.04em}
 /* 土俵巡業 */
 .jghero{display:flex;flex-direction:column;min-height:0}
 .nowhead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px;font-size:13px;color:var(--washi2)}
@@ -265,7 +253,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes sunin{0%{opacity:0;transform:scale(1.5) rotate(-20deg)}70%{opacity:.92;transform:scale(.96) rotate(2deg)}100%{opacity:.92;transform:none}}
 .screen.enter.v>.bar h1{animation:inkdown .5s cubic-bezier(.3,.7,.3,1) both}
-.screen.enter :is(.hero,.cols>*,.stagecards>*,.sched>*,.actions>*,.note,.drive){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 90ms)}
+.screen.enter :is(.hero,.cols>*,.stagecards>*,.sched>*,.rl-col,.actions>*,.note,.drive){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 90ms)}
 .screen.enter .hero{animation-name:rise;animation-duration:.4s}
 #s-title.enter .sun{animation:sunin .55s .05s cubic-bezier(.2,.9,.2,1) both}
 #s-title.enter .word{animation:inkin .55s .35s cubic-bezier(.3,.7,.3,1) both}
@@ -309,3 +297,24 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stagename.out{animation:snout .36s cubic-bezier(.55,0,.85,.35) both}
 @keyframes snrule{from{transform:scaleY(0)}to{transform:none}}
 @keyframes snout{to{opacity:0;transform:translateX(40%) skewX(-10deg)}}
+
+/* ===== くるくる（力士の編集・ui/roller.js。11/26 しょーくん「スプラの二つ名みたいにロールして選べる」）=====
+   横に 称号｜上の句・つなぎ・下の句 のドラム。指で上下にまわすと真ん中の行に止まり、そこに横いっぱいの朱の筆の帯。
+   真ん中は和紙の字で大きく、上下は遠いほどうすく */
+.roller{--row:34px;margin:10px 0 12px}
+.rl-heads,.rl-body{display:flex}
+.rl-heads span,.rl-col{flex:1.25 1 0;min-width:0}
+.rl-heads .ti,.rl-col.ti{flex-grow:1.5}
+.rl-heads .tn,.rl-col.tn{flex-grow:.6}
+.rl-heads span{padding:8px 0 4px;text-align:center;font-size:11px;letter-spacing:.2em;color:var(--kin)}
+.rl-body{position:relative;height:calc(var(--row) * 5)}
+.rl-band{position:absolute;left:-6px;right:-6px;top:calc(var(--row) * 2);height:var(--row);background:var(--b-shu) center/100% 100% no-repeat;pointer-events:none}
+.rl-col{position:relative}
+.rl-col.ti+.rl-col{border-left:3px double var(--line)}
+.rl-list{height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;padding:calc(var(--row) * 2) 0;scrollbar-width:none;touch-action:pan-y}
+.rl-list::-webkit-scrollbar{display:none}
+.rl-item{height:var(--row);display:flex;align-items:center;justify-content:center;scroll-snap-align:center;white-space:nowrap;font-size:min(16px,var(--fit,16px));color:var(--washi2);opacity:.14;cursor:pointer;transition:opacity .12s,font-size .12s}
+.rl-item.n2{opacity:.3}
+.rl-item.n1{opacity:.6}
+.rl-item.sel{opacity:1;color:var(--washi);font-size:min(20px,var(--fit,20px));text-shadow:1px 1px 0 rgba(32,30,27,.5)}
+.rl-lock{margin:8px 0 0;text-align:center;font-size:12px;color:var(--dim)}

@@ -41,9 +41,8 @@ export const T = {
   slotEmpty: '空き',
   slotCut: '紙を切って力士をつくる',
   rec: (r) => (r && (r.w || r.l || r.d) ? `${r.w}勝${r.l}敗${r.d ? r.d + '分' : ''}` : 'まだ取っていない'),
-  pick: { kami: '上の句', tsunagi: 'つなぎ', shimo: '下の句', title: '称号' },
-  pickTitle: (what) => `${what}をえらぶ`,
-  lockedWords: (n) => `まだ持っていない語が、あと${n}。取組で相手の四股名を見てみよう`,
+  rollNone: 'なし',   // つなぎの「なし」（くるくるの中）
+  lockedWords: (n) => `まだ持っていない語 あと${n}・相手の四股名で見つけよう`,
   linkNone: '（なし）',
   retire: '引退',
   retireAgain: 'もう一度で引退',

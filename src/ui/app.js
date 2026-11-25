@@ -41,7 +41,7 @@ let cur = null;
 const nav = [];
 const onShow = {};
 // 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
-const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .actions > *, .note, .drive';
+const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .rl-col, .actions > *, .note, .drive';
 function enter(el) {
   resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
   el.classList.remove('enter');

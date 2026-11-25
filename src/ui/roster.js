@@ -1,9 +1,10 @@
-// 部屋の力士（3枠）・力士の編集（四股名・称号・切り直す・引退）・語をえらぶシート
+// 部屋の力士（3枠）・力士の編集（四股名・称号はくるくる回して選ぶ・切り直す・引退）
 import { T } from '../data/text.js';
-import { SHIKONA, SHIKONA_CATS } from '../data/shikona.js';
+import { SHIKONA } from '../data/shikona.js';
 import { TITLES } from '../data/titles.js';
-import { shikonaText, titleText, wordLabel, randomShikona } from '../game/names.js';
+import { shikonaText, titleText, wordText, randomShikona } from '../game/names.js';
 import { drawShapeThumb } from './pick.js';
+import { createRoller } from './roller.js';
 
 // 縦書きの名前：字の数を --n に入れて、列の高さに収まる大きさにする（CSS の font-size が --n を使う）
 export function fitText(el, text) {
@@ -37,94 +38,58 @@ export function renderSlots(el, slots, opt) {
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape); });
 }
 
-// 語をえらぶシート：groups＝[{ title, items:[{id, label}] }]・note：いちばん下のひとこと
-function initWordSheet() {
-  const sheet = document.getElementById('s-words');
-  const list = document.getElementById('w-list');
-  let onPick = null;
-  document.getElementById('w-close').addEventListener('click', () => { sheet.hidden = true; });
-  list.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-id]');
-    if (!b || !onPick) return;
-    sheet.hidden = true;
-    onPick(b.dataset.id);
-  });
-  return {
-    open(title, groups, current, pick, note = '') {
-      onPick = pick;
-      document.getElementById('w-title').textContent = title;
-      list.textContent = '';
-      for (const g of groups) {
-        if (g.title) { const h = document.createElement('h2'); h.textContent = g.title; list.appendChild(h); }
-        const grid = document.createElement('div');
-        grid.className = 'words';
-        for (const it of g.items) {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'ghost';
-          b.dataset.id = it.id;
-          b.textContent = it.label;
-          b.setAttribute('aria-pressed', String(it.id === current));
-          grid.appendChild(b);
-        }
-        list.appendChild(grid);
-      }
-      if (note) { const p = document.createElement('p'); p.className = 'locked'; p.textContent = note; list.appendChild(p); }
-      sheet.hidden = false;
-      list.scrollTop = 0;
-    },
-  };
-}
-
-// has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
-function groupsOf(g, has) {
-  if (g === 'title') return [{ title: '', items: TITLES.map((t) => ({ id: t.id, label: t.t })) }];
-  const by = {};
-  for (const w of SHIKONA[g]) if (has.has(w.id)) (by[w.cat] = by[w.cat] || []).push({ id: w.id, label: wordLabel(w.id) });
-  return Object.keys(by).map((c) => ({ title: g === 'tsunagi' ? '' : SHIKONA_CATS[c], items: by[c] }));
+// ドラムに並べる語。has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
+function itemsOf(g, has) {
+  if (g === 'title') return TITLES.map((t) => ({ id: t.id, label: t.t }));
+  return SHIKONA[g].filter((w) => has.has(w.id)).map((w) => ({ id: w.id, label: wordText(w.id) || T.rollNone }));
 }
 
 // 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, onChange(i), onRecut(i), onRetire(i), onDone() }
 export function initEdit(cb) {
-  const words = initWordSheet();
   const cv = document.getElementById('ed-cv');
-  let idx = 0;
+  let idx = 0, saveT = 0;
   const G = { kami: 0, tsunagi: 1, shimo: 2 };
 
-  function paint() {
+  function paintName() {
     const s = cb.getSlot(idx);
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
     fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
     document.getElementById('ed-rec').textContent = T.rec(s.rec);
-    for (const b of document.querySelectorAll('#s-edit .word')) {
-      const g = b.dataset.g;
-      fitText(b.querySelector('b'), g === 'title' ? titleText(s.title) : wordLabel(s.shikona[G[g]]));
-    }
-    drawShapeThumb(cv, s.shape);
   }
+  // まわしている間は名前だけ描きなおし、保存は止まってから
+  const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
 
-  for (const b of document.querySelectorAll('#s-edit .word')) {
-    b.addEventListener('click', () => {
-      const s = cb.getSlot(idx), g = b.dataset.g;
-      const cur = g === 'title' ? s.title : s.shikona[G[g]];
-      const has = cb.getOwned();
-      const locked = g === 'title' ? 0 : SHIKONA[g].filter((w) => !has.has(w.id)).length;
-      words.open(T.pickTitle(T.pick[g]), groupsOf(g, has), cur, (id) => {
-        if (g === 'title') s.title = id; else s.shikona[G[g]] = id;
-        cb.onChange(idx);
-        paint();
-      }, locked ? T.lockedWords(locked) : '');
+  const rollers = {};
+  for (const col of document.querySelectorAll('#ed-roller .rl-col')) {
+    const g = col.dataset.g;
+    rollers[g] = createRoller(col, (id) => {
+      const s = cb.getSlot(idx);
+      if (!s) return;
+      if (g === 'title') s.title = id; else s.shikona[G[g]] = id;
+      paintName();
+      saveLater();
     });
   }
+  function setRollers() {
+    const s = cb.getSlot(idx), has = cb.getOwned();
+    for (const g in rollers) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
+    const locked = SHIKONA.kami.filter((w) => !has.has(w.id)).length + SHIKONA.shimo.filter((w) => !has.has(w.id)).length;
+    document.getElementById('ed-locked').textContent = locked ? T.lockedWords(locked) : '';
+  }
+
+  // おまかせ：3つのドラムがスロットのようにまわって止まる
   document.getElementById('ed-rand').addEventListener('click', () => {
     const s = cb.getSlot(idx);
     s.shikona = randomShikona(Math.random, cb.getOwned());
+    rollers.kami.roll(s.shikona[0]);
+    rollers.tsunagi.roll(s.shikona[1]);
+    rollers.shimo.roll(s.shikona[2]);
+    paintName();
     cb.onChange(idx);
-    paint();
   });
   document.getElementById('ed-recut').addEventListener('click', () => cb.onRecut(idx));
-  document.getElementById('ed-done').addEventListener('click', () => cb.onDone());
+  document.getElementById('ed-done').addEventListener('click', () => { clearTimeout(saveT); cb.onChange(idx); cb.onDone(); });
   // 引退は2回押す（確かめの窓は、試しのページの中では出せないことがあるため）
   const retire = document.getElementById('ed-retire');
   let armed = 0;
@@ -136,5 +101,13 @@ export function initEdit(cb) {
     retire.setAttribute('aria-pressed', 'true');
   });
 
-  return { show(i) { idx = i; disarm(); paint(); } };
+  return {
+    show(i) {
+      idx = i;
+      disarm();
+      paintName();
+      drawShapeThumb(cv, cb.getSlot(i).shape);
+      setRollers();
+    },
+  };
 }
