@@ -1,0 +1,68 @@
+<title>紙相撲 試作</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>/*STYLE*/</style>
+<div id="app">
+  <section id="s-cut" class="screen">
+    <header class="bar">
+      <h1 class="brush">力士をつくる</h1>
+      <button id="b-tools" class="ghost" type="button">道具</button>
+    </header>
+    <div class="stage" id="cut-stage"><canvas id="cut-cv"></canvas></div>
+    <p class="hint" id="cut-hint">一筆で、力士の形を描こう</p>
+    <div class="checks" id="cut-checks" hidden></div>
+    <footer class="actions">
+      <button id="b-redo" class="round" type="button" aria-label="切り直す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg></button>
+      <button id="b-ok" class="seal" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>決定</button>
+    </footer>
+  </section>
+
+  <section id="s-pick" class="screen" hidden>
+    <header class="bar">
+      <button id="b-back" class="round" type="button" aria-label="切り直す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h1 class="brush">相手をえらぶ</h1>
+    </header>
+    <div class="me"><canvas id="me-cv"></canvas><p id="me-text">あなたの力士</p><button id="b-all" class="ghost" type="button">全員と取る</button></div>
+    <div class="foes" id="foes"></div>
+    <div class="seglabel">動き</div>
+    <div class="seg" id="drive-seg"><button type="button" data-d="hop">ぴょこぴょこ</button><button type="button" data-d="push">ずっと押す</button></div>
+  </section>
+
+  <section id="s-bout" class="screen" hidden>
+    <canvas id="bout-cv"></canvas>
+    <div class="names"><span id="n-a"></span><span id="n-b"></span></div>
+    <div class="cutin" id="cutin"><div class="band"></div><div class="word brush">勝負<small>FIGHT</small></div></div>
+    <div class="result" id="result" hidden>
+      <div class="big brush" id="r-big"></div>
+      <div class="kind" id="r-kind"></div>
+      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-replay" class="ghost" type="button">もう一度見る</button></div>
+      <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button></div>
+    </div>
+  </section>
+
+  <section id="s-tools" class="sheet" hidden>
+    <header class="bar">
+      <button id="b-tclose" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h1 class="brush">道具</h1>
+    </header>
+    <div class="body">
+      <h2>指紋</h2>
+      <p>決まった3番の結果。スマホと iPad で同じなら、どの端末でも同じ取組になる。</p>
+      <div class="fp" id="fp-me">はかっています…</div>
+      <p id="fp-ref"></p>
+      <h2>相性表</h2>
+      <p>CPU 5体（切った形があれば、それも）を、左右を入れかえて何度も取らせる。行の形から見た勝ち点。</p>
+      <button id="b-table" class="ghost" type="button">作る</button>
+      <div class="bar2"><i id="tbl-bar"></i></div>
+      <div class="scroll" id="tbl-out"></div>
+      <p id="tbl-sum"></p>
+      <h2>動き</h2>
+      <div class="seg" id="drive-seg2" style="align-self:flex-start"><button type="button" data-d="hop">ぴょこぴょこ</button><button type="button" data-d="push">ずっと押す</button></div>
+      <p id="ver"></p>
+    </div>
+  </section>
+  <p class="err" id="err" hidden></p>
+</div>
+<!--SCRIPTS-->

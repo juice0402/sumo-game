@@ -1,0 +1,14 @@
+{
+  "name": "sumo-game",
+  "private": true,
+  "type": "module",
+  "description": "紙を切った形が力士になる、物理の対戦ゲーム（試作）",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node tools/test.mjs",
+    "table": "node tools/sim-table.mjs"
+  },
+  "dependencies": {
+    "@dimforge/rapier2d-deterministic-compat": "0.21.0"
+  }
+}

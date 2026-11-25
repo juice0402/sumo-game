@@ -1,0 +1,91 @@
+/* VOICE 遊び（試作①）。静かな墨の場に、紙と朱だけが目立つ
+   IDEA 和紙を一枚わたされて、はさみで切る → 土俵で取る
+   PICTURE 切る画面＝紙そのもの／取組＝真横の土俵と2枚の紙
+   COLOUR 墨 #201E1B の地・和紙 #EEE9DE・朱 #AB392F（決定と勝ち）・金 #B79A53（土俵のふちだけ）
+   TYPE Yuji Syuku（筆の見出し・勝負）＋ Zen Kaku Gothic New（ふだんの字）
+   LAYOUT スマホ縦1画面：見出し → 紙（いちばん大きく）→ ひとこと → ボタン。iPad は中央に寄せる */
+:root{color-scheme:dark;--sumi:#201E1B;--sumi2:#2b2824;--sumi3:#3a3631;--washi:#EEE9DE;--washi2:#cfc8b8;--dim:#9c9587;--shu:#AB392F;--shu2:#c4493d;--kin:#B79A53;--line:rgba(238,233,222,.16)}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--sumi);color:var(--washi);font:500 16px/1.5 "Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+.brush{font-family:"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:400}
+#app{position:relative;height:100%;max-width:720px;margin:0 auto}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+.bar{display:flex;align-items:center;gap:12px;min-height:56px}
+.bar h1{flex:1;margin:0;font-size:26px;line-height:1.1;letter-spacing:.04em}
+.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:15px;min-height:44px}
+.ghost:active{background:var(--sumi3)}
+.round{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--sumi2);display:grid;place-items:center;flex:none}
+.round:active{background:var(--sumi3)}
+.round svg{width:22px;height:22px}
+.seal{background:var(--shu);border:0;border-radius:999px;padding:0 28px;min-height:52px;font-size:19px;letter-spacing:.12em;display:inline-flex;align-items:center;gap:8px;color:var(--washi)}
+.seal:active{background:var(--shu2)}
+.seal:disabled{background:var(--sumi3);color:var(--dim)}
+.seal svg{width:20px;height:20px}
+.stage{position:relative;flex:1;min-height:0}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.hint{margin:8px 0 0;text-align:center;font-size:15px;color:var(--washi2);min-height:24px}
+.hint.ng{color:#e9a097}
+.checks{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px 4px 8px;border-radius:999px;background:var(--sumi2);font-size:14px;color:var(--washi2)}
+.chip svg{width:16px;height:16px}
+.chip.ng{background:rgba(171,57,47,.28);color:var(--washi)}
+.actions{display:flex;align-items:center;justify-content:center;gap:20px;padding:12px 0 16px}
+/* 相手をえらぶ */
+.me{display:flex;align-items:center;gap:12px;padding:4px 0 12px;border-bottom:1px solid var(--line)}
+.me canvas{width:64px;height:84px;flex:none}
+.me p{flex:1;margin:0;font-size:14px;color:var(--washi2)}
+.foes{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding:12px 0;align-content:start}
+.foe{background:var(--sumi2);border:1px solid var(--line);border-radius:14px;padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.foe:active{background:var(--sumi3)}
+.foe canvas{width:72px;height:96px}
+.foe b{font-family:"Yuji Syuku",serif;font-weight:400;font-size:20px}
+.marks{display:flex;gap:4px;min-height:16px;font-size:13px;color:var(--dim)}
+.marks i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--washi2);display:inline-block}
+.marks i.w{background:var(--shu);border-color:var(--shu)}
+.marks i.d{border-radius:2px;height:4px;margin-top:4px;background:var(--washi2);border:0}
+.seg{display:flex;align-self:center;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;margin:4px 0 14px}
+.seg button{border:0;background:none;border-radius:999px;padding:6px 14px;font-size:14px;color:var(--washi2);min-height:36px}
+.seg button[aria-pressed=true]{background:var(--washi);color:var(--sumi)}
+.seglabel{text-align:center;font-size:13px;color:var(--dim)}
+/* 取組 */
+#s-bout{padding:0}
+#s-bout canvas{position:absolute;inset:0;width:100%;height:100%}
+.names{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:space-between;padding:0 max(16px,env(safe-area-inset-left,0px));font-family:"Yuji Syuku",serif;font-size:24px;pointer-events:none}
+.names span:last-child{text-align:right}
+.names small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:var(--dim)}
+.cutin{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;overflow:hidden}
+.cutin .band{position:absolute;left:-20%;right:-20%;top:38%;height:22%;background:var(--shu);transform:rotate(-8deg) scaleX(0);transform-origin:left center}
+.cutin .word{position:relative;font-size:clamp(96px,30vw,190px);line-height:1;color:var(--washi);text-shadow:5px 5px 0 var(--sumi);opacity:0;transform:scale(1.6)}
+.cutin .word small{display:block;text-align:center;font:700 13px/1 "Zen Kaku Gothic New",sans-serif;letter-spacing:.5em;margin-top:6px;color:var(--washi2)}
+.cutin.go .band{animation:band .8s cubic-bezier(.2,.9,.2,1) forwards}
+.cutin.go .word{animation:word .8s cubic-bezier(.2,.9,.2,1) forwards}
+@keyframes band{0%{transform:rotate(-8deg) scaleX(0)}25%{transform:rotate(-8deg) scaleX(1)}80%{transform:rotate(-8deg) scaleX(1);opacity:1}100%{transform:rotate(-8deg) scaleX(1);opacity:0}}
+@keyframes word{0%{opacity:0;transform:scale(1.6)}25%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
+.result{position:absolute;inset:0;padding:calc(env(safe-area-inset-top,0px) + 9vh) 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;align-items:center;gap:10px}
+.result .kind+.row{margin-top:auto}
+.result .big{font-size:clamp(88px,26vw,150px);line-height:1}
+.result .big.win{color:var(--washi);text-shadow:6px 6px 0 var(--shu)}
+.result .big.lose{color:var(--washi2)}
+.result .kind{font-size:15px;color:var(--washi2);margin-top:-4px}
+.result .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+/* 道具 */
+.sheet{position:absolute;inset:0;background:var(--sumi);z-index:5;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+.sheet .body{flex:1;overflow-y:auto;padding-bottom:24px}
+.sheet h2{font-size:18px;margin:18px 0 6px}
+.sheet p{margin:4px 0;font-size:14px;color:var(--washi2)}
+.fp{font:700 20px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.06em}
+.fp.same{color:#b9d4a3}.fp.diff{color:#e9a097}
+.scroll{overflow-x:auto}
+.tbl{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-top:8px}
+.tbl th,.tbl td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td.hi{color:var(--washi);background:rgba(171,57,47,.35)}
+.tbl td.lo{color:var(--dim)}
+.bar2{height:4px;background:var(--sumi3);border-radius:2px;margin:8px 0;overflow:hidden}
+.bar2 i{display:block;height:100%;width:0;background:var(--kin)}
+.err{position:absolute;inset:auto 16px 30% 16px;text-align:center;color:#e9a097}
+@media (min-width:700px){.bar h1{font-size:30px}}
+@media (prefers-reduced-motion:reduce){.cutin.go .band,.cutin.go .word{animation-duration:.01s}}

@@ -1,0 +1,237 @@
+// 取組の物理（Rapier 2D 決定論版）。描画・演出とは切りはなす（ここは結果だけ）。
+// 同じ形・同じシード・同じ設定なら、どの端末でも同じ結果（指紋も同じ）。
+// 決まり：時間きざみ固定・作る順番固定・四則演算だけ（Math.sin などを使わない）。
+import { PAPER, PHYS } from '../data/config.js';
+import { bbox } from '../geom/poly.js';
+import { decompose } from '../geom/decompose.js';
+import { makeRng, fnv1a } from './rng.js';
+
+let R = null;
+export function setRapier(rapier) { R = rapier; }
+
+// 紙の座標の形 → 体の中の座標（メートル・y 上向き）。side=-1 は左右反転（右側の力士）
+export function toLocal(pts, side, phys = PHYS) {
+  const s = phys.paperM / PAPER.w;
+  const bb = bbox(pts);
+  const cx = (bb.x0 + bb.x1) / 2;
+  const map = (p) => [side * (p[0] - cx) * s, (bb.y1 - p[1]) * s];
+  const outline = pts.map(map);
+  if (side < 0) outline.reverse();
+  return { outline, s, cx, bottom: bb.y1 };
+}
+
+function localPieces(pts, side, phys) {
+  const pieces = decompose(pts);
+  if (!pieces) return null;
+  const s = phys.paperM / PAPER.w;
+  const bb = bbox(pts);
+  const cx = (bb.x0 + bb.x1) / 2;
+  return pieces.map((pc) => {
+    const arr = new Float32Array(pc.length * 2);
+    for (let i = 0; i < pc.length; i++) {
+      arr[i * 2] = side * (pc[i][0] - cx) * s;
+      arr[i * 2 + 1] = (bb.y1 - pc[i][1]) * s;
+    }
+    return arr;
+  });
+}
+
+function pulse(u) {
+  // 0→1→0 のなめらかな山（u は 0〜1）
+  const v = u * (1 - u);
+  return 16 * v * v;
+}
+
+// opts: { a, b（紙の座標の形）, seed, phys（上書き）, record }
+export function createBout(opts) {
+  if (!R) throw new Error('Rapier not set');
+  const phys = Object.assign({}, PHYS, opts.phys || {});
+  const rng = makeRng((opts.seed >>> 0) || 1);
+  const dt = phys.dt;
+  const world = new R.World({ x: 0, y: -phys.gravity });
+  world.timestep = dt;
+
+  const Max = R.CoefficientCombineRule.Max;
+  // 土俵（上の面が y=0。トンと突き上げる）
+  const ringBody = world.createRigidBody(R.RigidBodyDesc.kinematicPositionBased().setTranslation(0, -phys.ringDepth / 2));
+  const ringCol = world.createCollider(
+    R.ColliderDesc.cuboid(phys.ringHalf, phys.ringDepth / 2).setFriction(phys.friction).setFrictionCombineRule(Max)
+      .setRestitution(phys.restitution), ringBody);
+  // 土俵の下の地面
+  const floorBody = world.createRigidBody(R.RigidBodyDesc.fixed().setTranslation(0, -phys.ringDepth - 0.5));
+  const floorCol = world.createCollider(R.ColliderDesc.cuboid(phys.ringHalf * 4, 0.5).setFriction(phys.friction), floorBody);
+
+  const makeFighter = (pts, side) => {
+    const pieces = localPieces(pts, side, phys);
+    if (!pieces) throw new Error('bad shape');
+    const x0 = -side * phys.startX;
+    const body = world.createRigidBody(
+      R.RigidBodyDesc.dynamic().setTranslation(x0, 0.002)
+        .setLinearDamping(phys.linearDamping).setAngularDamping(phys.angularDamping).setCcdEnabled(true));
+    const cols = pieces.map((arr) => world.createCollider(
+      R.ColliderDesc.convexHull(arr).setDensity(phys.density).setFriction(phys.frictionBody).setFrictionCombineRule(Max)
+        .setRestitution(phys.restitution), body));
+    return { body, cols, dir: side, fallCount: 0, lost: null };
+  };
+  // 左（a）は右向き、右（b）は左右反転して左向き
+  const A = makeFighter(opts.a, 1);
+  const B = makeFighter(opts.b, -1);
+  const fighters = [A, B];
+
+  const settleSteps = Math.round(phys.settle / dt);
+  const maxSteps = settleSteps + Math.round(phys.maxTime / dt);
+  const fallSteps = Math.round(phys.fallHold / dt);
+  const tapSteps = Math.round(phys.tapPeriod / dt);
+  const tapLenSteps = Math.max(1, Math.round(phys.tapLen / dt));
+  const firstTap = settleSteps + Math.round(rng() * tapSteps * 0.5);
+
+  let step = 0;
+  let tapStart = -1, tapAmp = 0;
+  const result = { winner: null, kind: null, time: 0, steps: 0, hash: 0, loser: null };
+  const rec = opts.record ? { n: 0, f: new Float32Array((maxSteps + 1) * 8), settleSteps, dt } : null;
+  let touching = false;
+
+  // 押す点：重心の真下で、足もとから重心までの driveHeight の高さ（回転は考えない＝四則演算だけ）
+  const drivePoint = (f) => {
+    const c = f.body.worldCom();
+    const h = f.body.localCom().y;
+    return { x: c.x, y: c.y - (1 - phys.driveHeight) * h };
+  };
+  // 足の踏ん張り：土俵から受けた力（前のこま）÷ 自分の重さ。持ち上げられると 0 に近づく
+  const grip = (f) => {
+    let imp = 0;
+    for (const c of f.cols) {
+      world.contactPair(ringCol, c, (m) => {
+        const k = m.numContacts();
+        for (let i = 0; i < k; i++) imp += m.contactImpulse(i);
+      });
+    }
+    const g = imp / dt / (f.body.mass() * phys.gravity);
+    return g > phys.gripMax ? phys.gripMax : g;
+  };
+  const touches = (f, col) => {
+    let hit = false;
+    for (const c of f.cols) {
+      world.contactPair(col, c, (m) => { if (m.numContacts() > 0) hit = true; });
+      if (hit) return true;
+    }
+    return false;
+  };
+  const fightersTouch = () => {
+    for (const c of A.cols) {
+      let hit = false;
+      for (const d of B.cols) {
+        world.contactPair(c, d, (m) => { if (m.numContacts() > 0) hit = true; });
+        if (hit) return true;
+      }
+    }
+    return false;
+  };
+
+  function record() {
+    if (!rec) return;
+    const o = rec.n * 8, f = rec.f;
+    const ta = A.body.translation(), tb = B.body.translation();
+    f[o] = ta.x; f[o + 1] = ta.y; f[o + 2] = A.body.rotation();
+    f[o + 3] = tb.x; f[o + 4] = tb.y; f[o + 5] = B.body.rotation();
+    f[o + 6] = ringBody.translation().y + phys.ringDepth / 2;
+    f[o + 7] = touching ? 1 : 0;
+    rec.n++;
+  }
+  record();
+
+  function judge(f) {
+    if (f.lost) return;
+    const com = f.body.worldCom();
+    if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; return; }
+    const ang = f.body.rotation();
+    if (ang > phys.fallAngle || ang < -phys.fallAngle) {
+      f.fallCount++;
+      if (f.fallCount >= fallSteps) f.lost = 'fall';
+    } else {
+      f.fallCount = 0;
+    }
+  }
+
+  function stepOnce() {
+    if (result.kind) return true;
+    const live = step >= settleSteps;
+    // ゆれ
+    if (live && step >= firstTap && (step - firstTap) % tapSteps === 0) {
+      const tsec = (step - settleSteps) * dt;
+      let mult = 1;
+      if (tsec > phys.stallStart) mult = 1 + phys.stallGrow * (tsec - phys.stallStart);
+      if (mult > phys.stallMax) mult = phys.stallMax;
+      tapAmp = phys.tapAmp * mult * (1 + phys.tapJitter * (2 * rng() - 1));
+      tapStart = step;
+      if (phys.drive === 'hop') {
+        for (const f of fighters) {
+          if (touches(f, ringCol)) f.body.applyImpulseAtPoint({ x: f.dir * phys.hopImpulse, y: phys.hopLift }, drivePoint(f), true);
+        }
+      }
+    }
+    let yOff = 0;
+    if (tapStart >= 0 && step - tapStart < tapLenSteps) yOff = tapAmp * pulse((step - tapStart) / tapLenSteps);
+    ringBody.setNextKinematicTranslation({ x: 0, y: -phys.ringDepth / 2 + yOff });
+    // 突進
+    if (live) {
+      if (step === settleSteps) {
+        for (const f of fighters) f.body.applyImpulseAtPoint({ x: f.dir * phys.openImpulse, y: 0 }, drivePoint(f), true);
+      }
+      if (phys.drive === 'push') {
+        for (const f of fighters) {
+          const g = phys.gripDrive ? grip(f) : (touches(f, ringCol) ? 1 : 0);
+          if (g <= 0) continue;
+          f.body.applyImpulseAtPoint({ x: f.dir * phys.pushForce * g * dt, y: 0 }, drivePoint(f), true);
+        }
+      }
+    }
+    world.step();
+    step++;
+    touching = fightersTouch();
+    record();
+    if (step > settleSteps) {
+      judge(A); judge(B);
+      if (A.lost || B.lost) {
+        if (A.lost && B.lost) { result.kind = 'both'; }
+        else { result.winner = A.lost ? 'b' : 'a'; result.loser = A.lost ? 'a' : 'b'; result.kind = A.lost || B.lost; }
+      } else if (step >= maxSteps) {
+        result.kind = 'time';
+      }
+      if (result.kind) finish();
+    }
+    return !!result.kind;
+  }
+
+  function finish() {
+    result.steps = step - settleSteps;
+    result.time = result.steps * dt;
+    const ta = A.body.translation(), tb = B.body.translation();
+    const v = new Float32Array([ta.x, ta.y, A.body.rotation(), tb.x, tb.y, B.body.rotation()]);
+    const code = result.winner === 'a' ? 1 : result.winner === 'b' ? 2 : 3;
+    const words = Array.from(new Uint32Array(v.buffer));
+    words.push(step, code);
+    result.hash = fnv1a(words);
+  }
+
+  return {
+    phys, rec, result,
+    get step() { return step; },
+    settleSteps, maxSteps,
+    stepOnce,
+    free() { world.free(); },
+  };
+}
+
+// 描画なしで最後まで（相性表・研究用）
+export function runBout(opts) {
+  const bout = createBout(opts);
+  while (!bout.stepOnce()) { /* 進める */ }
+  const r = Object.assign({}, bout.result);
+  bout.free();
+  return r;
+}
+
+export function hashText(h) {
+  return (h >>> 0).toString(16).padStart(8, '0').toUpperCase();
+}
