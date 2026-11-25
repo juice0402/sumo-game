@@ -26,12 +26,13 @@ function topCanvas(d, P) {
   g.fillStyle = fiberPattern(g);
   g.fillRect(0, 0, N, N);
   g.globalAlpha = 1;
-  const rr = rand(5), r = (0.5 - d.top.ringInset - d.top.ringW / 2) * N, pts = [];
+  // 輪（俵）の外がわを、物理の俵の線（P.tawara）にぴったり合わせる＝見えている輪の外にふれたら負け
+  const sw = d.top.ringW * N * 0.6, rr = rand(5), r = P.tawara * k - sw / 2, pts = [];
   for (let i = 0; i <= 120; i++) {
     const a = (i / 120) * Math.PI * 2 + 0.4, j = 1 + (rr() - 0.5) * 0.008;
     pts.push([N / 2 + Math.cos(a) * r * j, N / 2 + Math.sin(a) * r * j]);
   }
-  inkStroke(g, pts, (p) => p, d.top.ringW * N * 0.6);
+  inkStroke(g, pts, (p) => p, sw);
   if (d.top.shikiri) {
     for (const s of [-1, 1]) {
       const x = N / 2 + s * d.top.shikiri * k, h = (d.top.shikiriLen * k) / 2;

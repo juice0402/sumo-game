@@ -69,7 +69,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     kindEl.style.color = stage.look().side.text || '';
   }
 
-  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと, replay }
+  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと }
   function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
@@ -205,7 +205,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     fx.step(fdt);
     stage.render();
     const r = s.bout.result;
-    const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
+    // 朱の丸：体がついた所・俵の外にふれた所（どこで負けたかが見えるように）
+    const mark = s.ended && (r.kind === 'touch' || r.kind === 'out') && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
     fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
     // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
     // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
@@ -238,8 +239,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     kimaEl.textContent = (s.kima && T.kimarite[s.kima]) || '';
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
     placeKind();
-    // 巡業・本場所：番付や戦績のひとこと（もう一度見るときは、はじめの結果のまま・数えなおさない）
-    if (s.opt.onResult && !s.opt.replay) s.opt.gain = s.opt.onResult(r) || '';
+    // 巡業・本場所：番付や戦績のひとこと
+    if (s.opt.onResult) s.opt.gain = s.opt.onResult(r) || '';
     gainEl.textContent = s.opt.gain || '';
     gainEl.hidden = !s.opt.gain;
     resEl.hidden = false;
@@ -248,7 +249,6 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   gl.addEventListener('pointerdown', skip);
   cv.addEventListener('pointerdown', skip);
   document.getElementById('b-again').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed + 1, st.opt); });
-  document.getElementById('b-replay').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed, Object.assign({}, st.opt, { replay: true })); });
   document.getElementById('b-next').addEventListener('click', () => { const m = st && st.opt.mode; stop(); if (onNext) onNext(m); });
   document.getElementById('b-home').addEventListener('click', () => { stop(); if (onHome) onHome(); });
   document.getElementById('b-foe').addEventListener('click', () => { stop(); onFoe(); });

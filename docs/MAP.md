@@ -27,7 +27,7 @@
 | geom/check.js | 形の点検（自己交差・小ささ・上中下の面積・足もとの幅・凸に分けられるか） |
 | geom/decompose.js | くぼんだ形 → 凸の形（耳切り＋Hertel–Mehlhorn） |
 | geom/random.js | ランダムな形（道具用） |
-| sim/battle.js | 取組の物理。createBout（1こまずつ・記録あり）・runBout（最後まで）・toLocal・hashText |
+| sim/battle.js | 取組の物理。createBout（1こまずつ・記録あり）・runBout（最後まで）・toLocal・hashText。場外＝重心が土俵の上の面より下・下の地面にふれた・俵（phys.tawara）より外で土俵にふれた（outside・ふれた所を at に） |
 | sim/runner.js | たくさんの取組を少しずつ進める（画面を止めない） |
 | sim/table.js | 相性表の集計 |
 | sim/bench.js | 指紋用の決まった3番 |

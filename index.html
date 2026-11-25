@@ -439,7 +439,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
       <div class="kind" id="r-kind"></div>
       <div class="gain" id="r-gain" hidden></div>
-      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button><button id="b-replay" class="ghost" type="button">もう一度見る</button></div>
+      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button></div>
       <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button><button id="b-home" class="ghost" type="button">部屋へ</button></div>
     </div>
   </section>
@@ -478,7 +478,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   </section>
   <p class="err" id="err" hidden></p>
 </div>
-<script>window.SUMO_BUILD = {"fp":"2D7E C10C 3887","rapier":"0.21.0","three":"0.160.1","config":5};</script>
+<script>window.SUMO_BUILD = {"fp":"4A79 C10C 3887","rapier":"0.21.0","three":"0.160.1","config":6};</script>
 <script>
 (function () {
 'use strict';
@@ -582,7 +582,7 @@ return { STAGES, HONBASHO_STAGE, JUNGYO };
 
 __m['src/data/config.js'] = (function () {
 // すべての「まだ決まっていない数字」はここ。変えたら CONFIG_VERSION を上げる（リプレイ・対戦の再現に使う）。
-const CONFIG_VERSION = 5; // v5（11/25）：体は本当にふれたらすぐ負け（頭から落ちてはねても負け）。v4：負けは始まった時でくらべる
+const CONFIG_VERSION = 6; // v6（11/26）：俵の外の土俵にふれたら負け。v5：体は本当にふれたらすぐ負け。v4：負けは始まった時でくらべる
 
 // 紙（切り出しの座標）。整数の座標で、y は下向き。右が力士の正面。
 const PAPER = {
@@ -626,6 +626,7 @@ const PHYS = {
   // 土俵
   ringHalf: 1.4,          // 土俵の半分の幅
   ringDepth: 0.7,         // 土俵の高さ（下の地面まで）
+  tawara: 1.29,           // 俵の外がわ（中心から）。ここより外で土俵にふれたら負け（0＝なし）。上の面の輪もここに合わせて描く（ui/stage3d.js）
   startX: 0.68,           // 中心から開始位置（重心の x）までの距離
   // ゆれ（周期的にトンと突き上げる）
   tapPeriod: 0.34,        // 何秒ごとにトン
@@ -1080,6 +1081,24 @@ function createBout(opts) {
     }
     return false;
   };
+  // 俵より外で、本当に土俵にふれている所（足でも体でも）。ふれていれば、その場所（世界の座標）を返す。
+  // 土俵は回らないので、土俵から見た x がそのまま中心からの距離（四則演算とくらべるだけ）
+  const outside = (f) => {
+    let at = null;
+    const ry = ringBody.translation().y;
+    for (const c of f.cols) {
+      world.contactPair(ringCol, c, (m, flipped) => {
+        const k = m.numContacts();
+        for (let i = 0; i < k && !at; i++) {
+          if (!(m.contactDist(i) <= 0 || m.contactImpulse(i) > 0)) continue;
+          const p = flipped ? m.localContactPoint2(i) : m.localContactPoint1(i);
+          if (p && (p.x > phys.tawara || p.x < -phys.tawara)) at = { x: p.x, y: p.y + ry };
+        }
+      });
+      if (at) return at;
+    }
+    return null;
+  };
   const fightersTouch = () => {
     for (const c of A.cols) {
       let hit = false;
@@ -1107,6 +1126,11 @@ function createBout(opts) {
     if (f.lost) return;
     const com = f.body.worldCom();
     if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; f.lostAt = step; return; }
+    // 俵の外の土俵（蛇の目・土俵の横の面）にふれたら負け（踏み出し・勇み足など。11/26 しょーくん「土俵の外に足がついたら負け」）
+    if (phys.tawara > 0) {
+      const at = outside(f);
+      if (at) { f.lost = 'out'; f.lostAt = step; f.at = at; return; }
+    }
     if (phys.touchLose) {
       // 体が土俵についたら負け。touchReal：本当にふれた（めりこんだか、押し返す力が出た）所だけを数える
       // （近いだけの「ふれそう」は数えない）→ 頭から落ちてはねても負け（11/25 しょーくん）。touchHold 秒つづいたら負け
@@ -2688,7 +2712,6 @@ const DOHYO = {
       fiber: 0.55,           // 和紙のすじの濃さ（0〜1）
       ring: '#201E1B',       // 墨の輪
       ringW: 0.055,          // 輪の太さ（土俵の幅に対する割合）
-      ringInset: 0.03,       // 輪をふちから内へ（土俵の幅に対する割合）
       shikiri: 0.2,          // 仕切り線の中心からの距離（m・0＝なし）
       shikiriLen: 0.34,      // 仕切り線の長さ（m）
     },
@@ -2707,14 +2730,14 @@ const DOHYO = {
   // 氷の土俵（data/stages.js の kori）：つめたい白の和紙・青みの厚紙
   kori: {
     name: '氷の箱',
-    top: { paper: '#E4EBEB', fiber: 0.3, ring: '#201E1B', ringW: 0.05, ringInset: 0.03, shikiri: 0.2, shikiriLen: 0.34 },
+    top: { paper: '#E4EBEB', fiber: 0.3, ring: '#201E1B', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34 },
     side: { paper: '#b4c2c4', line: '#201E1B', inset: 0.05, layer: '#7a8d91', text: '#201E1B' },
     edge: '#201E1B', floor: '#242a2d', bg: '#1b2023', tonMark: '#E4EBEB',
   },
   // 激震の土俵（data/stages.js の gekishin）：朱の輪・焼けた色の厚紙
   gekishin: {
     name: '激震の箱',
-    top: { paper: '#E9E0CD', fiber: 0.65, ring: '#AB392F', ringW: 0.07, ringInset: 0.03, shikiri: 0.2, shikiriLen: 0.34 },
+    top: { paper: '#E9E0CD', fiber: 0.65, ring: '#AB392F', ringW: 0.07, shikiri: 0.2, shikiriLen: 0.34 },
     side: { paper: '#bba887', line: '#201E1B', inset: 0.05, layer: '#7c6a4b', text: '#201E1B' },
     edge: '#201E1B', floor: '#2e2620', bg: '#221b17', tonMark: '#EEE9DE',
   },
@@ -2754,12 +2777,13 @@ function topCanvas(d, P) {
   g.fillStyle = fiberPattern(g);
   g.fillRect(0, 0, N, N);
   g.globalAlpha = 1;
-  const rr = rand(5), r = (0.5 - d.top.ringInset - d.top.ringW / 2) * N, pts = [];
+  // 輪（俵）の外がわを、物理の俵の線（P.tawara）にぴったり合わせる＝見えている輪の外にふれたら負け
+  const sw = d.top.ringW * N * 0.6, rr = rand(5), r = P.tawara * k - sw / 2, pts = [];
   for (let i = 0; i <= 120; i++) {
     const a = (i / 120) * Math.PI * 2 + 0.4, j = 1 + (rr() - 0.5) * 0.008;
     pts.push([N / 2 + Math.cos(a) * r * j, N / 2 + Math.sin(a) * r * j]);
   }
-  inkStroke(g, pts, (p) => p, d.top.ringW * N * 0.6);
+  inkStroke(g, pts, (p) => p, sw);
   if (d.top.shikiri) {
     for (const s of [-1, 1]) {
       const x = N / 2 + s * d.top.shikiri * k, h = (d.top.shikiriLen * k) / 2;
@@ -3213,7 +3237,7 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     kindEl.style.color = stage.look().side.text || '';
   }
 
-  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと, replay }
+  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと }
   function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
@@ -3349,7 +3373,8 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     fx.step(fdt);
     stage.render();
     const r = s.bout.result;
-    const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
+    // 朱の丸：体がついた所・俵の外にふれた所（どこで負けたかが見えるように）
+    const mark = s.ended && (r.kind === 'touch' || r.kind === 'out') && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
     fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
     // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
     // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
@@ -3382,8 +3407,8 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     kimaEl.textContent = (s.kima && T.kimarite[s.kima]) || '';
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
     placeKind();
-    // 巡業・本場所：番付や戦績のひとこと（もう一度見るときは、はじめの結果のまま・数えなおさない）
-    if (s.opt.onResult && !s.opt.replay) s.opt.gain = s.opt.onResult(r) || '';
+    // 巡業・本場所：番付や戦績のひとこと
+    if (s.opt.onResult) s.opt.gain = s.opt.onResult(r) || '';
     gainEl.textContent = s.opt.gain || '';
     gainEl.hidden = !s.opt.gain;
     resEl.hidden = false;
@@ -3392,7 +3417,6 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
   gl.addEventListener('pointerdown', skip);
   cv.addEventListener('pointerdown', skip);
   document.getElementById('b-again').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed + 1, st.opt); });
-  document.getElementById('b-replay').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed, Object.assign({}, st.opt, { replay: true })); });
   document.getElementById('b-next').addEventListener('click', () => { const m = st && st.opt.mode; stop(); if (onNext) onNext(m); });
   document.getElementById('b-home').addEventListener('click', () => { stop(); if (onHome) onHome(); });
   document.getElementById('b-foe').addEventListener('click', () => { stop(); onFoe(); });
