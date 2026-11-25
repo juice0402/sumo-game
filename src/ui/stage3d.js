@@ -1,6 +1,7 @@
 // 取組の 2.5D（Three.js）。物理は2Dのまま。z=0 の面に、紙の力士を立てて描くだけ。
 // カメラは土俵にくっつける：描くときの y は「物理の y − 土俵の上の面の y」＝土俵のトンで画面がゆれない。
 import { COL, rand, fiberPattern, polyPath, inkStroke } from './ink.js';
+import { paperFill, patternFill } from './papertex.js';
 import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
 import { LOOK } from '../data/look.js';
 import { PAPER } from '../data/config.js';
@@ -22,6 +23,7 @@ function topCanvas(d, P) {
   const k = N / (2 * P.ringHalf);
   g.fillStyle = d.top.paper;
   g.fillRect(0, 0, N, N);
+  if (d.top.pat) { g.fillStyle = patternFill(g, d.top.pat, d.top.paper, d.top.ink || COL.sumi, k); g.fillRect(0, 0, N, N); }   // 土俵スキンのもよう
   g.globalAlpha = d.top.fiber;
   g.fillStyle = fiberPattern(g);
   g.fillRect(0, 0, N, N);
@@ -32,11 +34,11 @@ function topCanvas(d, P) {
     const a = (i / 120) * Math.PI * 2 + 0.4, j = 1 + (rr() - 0.5) * 0.008;
     pts.push([N / 2 + Math.cos(a) * r * j, N / 2 + Math.sin(a) * r * j]);
   }
-  inkStroke(g, pts, (p) => p, sw);
+  inkStroke(g, pts, (p) => p, sw, d.top.ring);
   if (d.top.shikiri) {
     for (const s of [-1, 1]) {
       const x = N / 2 + s * d.top.shikiri * k, h = (d.top.shikiriLen * k) / 2;
-      inkStroke(g, [[x, N / 2 - h], [x, N / 2 + h]], (p) => p, 0.022 * k);
+      inkStroke(g, [[x, N / 2 - h], [x, N / 2 + h]], (p) => p, 0.022 * k, d.top.shikiriInk || COL.sumi);
     }
   }
   return c;
@@ -66,19 +68,18 @@ function sideCanvas(d, P) {
 }
 
 // 力士の紙の表：和紙 → すじ → 体と足のさかい（点線）→ 墨のふち
-function paperCanvas(ol, dark, P, box) {
+function paperCanvas(ol, dark, P, box, paper) {
   const k = 520 / box.sx;
   const c = document.createElement('canvas');
   c.width = Math.ceil(box.sx * k); c.height = Math.ceil(box.sy * k);
   const g = c.getContext('2d');
   const tx = (p) => [(p[0] - box.x0) * k, (box.y1 - p[1]) * k];
   polyPath(g, ol.outline, tx);
-  g.fillStyle = dark ? COL.washi2 : COL.washi;
+  g.fillStyle = paperFill(g, paper, k * PAPER.w * ol.s);   // 紙質（福箱・見た目だけ）。紙の幅＝PAPER.w × 物理の倍率
   g.fill();
+  if (dark) { g.fillStyle = 'rgba(32,30,27,0.12)'; g.fill(); }
   g.save();
   g.clip();
-  g.fillStyle = fiberPattern(g);
-  g.fillRect(0, 0, c.width, c.height);
   const yl = P.footH * PAPER.h * ol.s;
   g.setLineDash([0.035 * k, 0.035 * k]);
   g.strokeStyle = 'rgba(32,30,27,0.38)';
@@ -154,12 +155,12 @@ export function createStage(cv, P) {
     shadowDirty();
   }
 
-  function makeFighter(ol, dark) {
+  function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
     const box = { x0: x0 - pad, y1: y1 + pad, sx: x1 - x0 + 2 * pad, sy: y1 - y0 + 2 * pad };
-    const map = makeTex(THREE, paperCanvas(ol, dark, P, box));
+    const map = makeTex(THREE, paperCanvas(ol, dark, P, box, paper));
     const shape = new THREE.Shape(pts.map((p) => new THREE.Vector2(p[0], p[1])));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: LOOK.paperT, bevelEnabled: false, curveSegments: 1 });
     geo.translate(0, 0, -LOOK.paperT / 2);
@@ -174,9 +175,10 @@ export function createStage(cv, P) {
     return mesh;
   }
 
-  function setFighters(la, lb) {
+  // papers：[a の紙質, b の紙質]（data/papers.js の id・見た目だけ）
+  function setFighters(la, lb, papers = []) {
     for (const m of fighters) { scene.remove(m); m.userData.free(); }
-    fighters = [makeFighter(la, false), makeFighter(lb, true)];
+    fighters = [makeFighter(la, false, papers[0]), makeFighter(lb, true, papers[1])];
     scene.add(...fighters);
     shadowDirty();
   }

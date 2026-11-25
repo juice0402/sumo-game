@@ -42,7 +42,22 @@ export const T = {
   slotCut: '紙を切って力士をつくる',
   rec: (r) => `${(r && r.w) | 0}勝${(r && r.l) | 0}敗${r && r.d ? r.d + '分' : ''}`,   // まだ取っていなくても 0勝0敗
   rollNone: 'なし',   // つなぎの「なし」（くるくるの中）
-  lockedWords: (n) => `まだ持っていない語 あと${n}・相手の四股名で見つけよう`,
+  // 小判・福箱（11/26）
+  kobanGain: (n, first) => `小判 +${n}${first ? '（初勝利）' : ''}`,
+  koban: (n) => `小判 ${n}`,
+  fukuOpen: (price) => `開ける　${price}`,
+  fukuShort: '小判が足りない',
+  fukuDone: 'ぜんぶ持っている',
+  fukuOdds: '出る物と確率',
+  fukuNote: '中身は見た目だけ・強さは変わらない。持っている物は出ない',
+  fukuOddsNote: 'まず段が決まり、その段の、まだ持っていない物からひとしく1つ。そろった段は出ないので、ほかの段で割りなおす',
+  fukuAgain: 'もう一つ',
+  fukuClose: 'とじる',
+  fukuNew: '手に入れた',
+  dohyoPick: (name) => `土俵：${name}`,
+  lockedLook: (n) => `まだ持っていない見た目 あと${n}・福箱から出る`,
+  look: { name: '名前', mise: '見た目' },
+  lockedWords: (n) => `まだ持っていない語 あと${n}・福箱から出る`,
   linkNone: '（なし）',
   retire: '引退',
   retireAgain: 'もう一度で引退',

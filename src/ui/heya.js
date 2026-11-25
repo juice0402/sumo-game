@@ -4,7 +4,8 @@ import { STAGES } from '../data/stages.js';
 import { stagesOf, slotIndex } from '../game/jungyo.js';
 import { rankOf } from '../game/rating.js';
 import { shikonaText, titleText } from '../game/names.js';
-import { drawShapeThumb } from './pick.js';
+import { drawShapeThumb, thumbAuraBox } from './pick.js';
+import { auraPreview } from './aura.js';
 import { fitText } from './roster.js';
 import { choose } from './choose.js';
 
@@ -17,12 +18,13 @@ export function initHeya(cb) {
   const pickOn = (id, f) => { const b = document.getElementById(id); b.addEventListener('click', () => choose(b, f, cb.getShort && cb.getShort())); };
   pickOn('m-shobu', cb.onShobu);
   pickOn('m-rikishi', cb.onRoster);
+  pickOn('m-fuku', cb.onFuku);   // 福箱（11/26）
   pickOn('mc-jungyo', cb.onJungyoMatch);
   pickOn('mc-honbasho', cb.onHonbasho);
   pickOn('mc-keiko', cb.onKeiko);
 
   // 部屋の自作力士は、ときどきぴょこっと跳ねる（たまに2回）。部屋を開いている間だけ
-  const homeEl = document.getElementById('s-home'), mineCv = document.querySelector('#home-mine canvas');
+  const homeEl = document.getElementById('s-home'), mineCv = document.querySelector('#home-mine canvas:not(.aura-cv)');
   let hopT = 0;
   const hopLater = (ms) => {
     clearTimeout(hopT);
@@ -38,18 +40,25 @@ export function initHeya(cb) {
   };
   mineCv.addEventListener('animationend', () => mineCv.classList.remove('hop', 'hop2'));
 
+  // 部屋の力士のまわりの気（福箱で手に入れたもの）。部屋を開いている間だけまわす
+  const auraCv = document.querySelector('#home-mine .aura-cv');
+  let aura = null;
+
   return {
     // 部屋：いま選んでいる力士（称号・四股名・番付）
     home(st) {
       const s = st.slots[st.active];
       document.getElementById('s-home').classList.toggle('fresh', !s);   // まだ力士がいない：「力士をつくる」だけ朱で
       const el = document.getElementById('home-mine');
-      const cv = el.querySelector('canvas');
+      const cv = mineCv;
+      document.getElementById('home-koban').textContent = T.koban(st.koban);
       cv.hidden = !s;
       el.querySelector('small').textContent = s ? titleText(s.title) : '';
       fitText(el.querySelector('b'), s ? shikonaText(s.shikona) : T.needRikishi);
       el.querySelector('em').textContent = s ? T.rateLine(rankOf(st.rate).name, st.rate) : '';
-      if (s) drawShapeThumb(cv, s.shape);
+      if (s) drawShapeThumb(cv, s.shape, false, s.paper);
+      if (aura) aura.stop();
+      aura = s ? auraPreview(auraCv, s.aura, thumbAuraBox(auraCv, cv, s.shape)) : null;
       hopLater(1300);   // 画面が入りきったころに最初の1回
     },
     mode(st) {

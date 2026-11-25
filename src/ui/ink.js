@@ -1,4 +1,5 @@
 // 墨・和紙の描きかた（見た目だけ。勝敗の計算にはさわらない）
+import { paperFill } from './papertex.js';
 export const COL = {
   sumi: '#201E1B', sumi2: '#2b2824', washi: '#EEE9DE', washi2: '#cfc8b8', washiShade: '#b9b1a0',
   shu: '#AB392F', kin: '#B79A53', clay: '#d8ccb0', clayFace: '#8f7d5d', clayDark: '#6e5f45',
@@ -74,8 +75,8 @@ export function polyPath(ctx, pts, tx) {
   ctx.closePath();
 }
 
-// 紙の力士：うすい影（紙の厚み）→ 和紙 → すじ → 太い墨のふち
-export function paperPiece(ctx, pts, tx, { fill = COL.washi, line = 3, shade = 3, dark = false } = {}) {
+// 紙の力士：うすい影（紙の厚み）→ 紙（paper＝紙質の id があればそのもよう・unit＝紙の幅の px）→ 太い墨のふち
+export function paperPiece(ctx, pts, tx, { fill = COL.washi, line = 3, shade = 3, dark = false, paper = null, unit = 0 } = {}) {
   ctx.save();
   ctx.lineJoin = 'round';
   ctx.translate(shade, shade);
@@ -84,13 +85,19 @@ export function paperPiece(ctx, pts, tx, { fill = COL.washi, line = 3, shade = 3
   ctx.fill();
   ctx.restore();
   polyPath(ctx, pts, tx);
-  ctx.fillStyle = dark ? COL.washi2 : fill;
-  ctx.fill();
-  ctx.save();
-  ctx.clip();
-  ctx.fillStyle = fiberPattern(ctx);
-  ctx.fillRect(-1e4, -1e4, 2e4, 2e4);
-  ctx.restore();
+  if (paper && unit) {
+    ctx.fillStyle = paperFill(ctx, paper, unit);
+    ctx.fill();
+    if (dark) { ctx.fillStyle = 'rgba(32,30,27,0.12)'; ctx.fill(); }
+  } else {
+    ctx.fillStyle = dark ? COL.washi2 : fill;
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = fiberPattern(ctx);
+    ctx.fillRect(-1e4, -1e4, 2e4, 2e4);
+    ctx.restore();
+  }
   polyPath(ctx, pts, tx);
   ctx.lineJoin = 'round';
   ctx.strokeStyle = COL.sumi;
@@ -99,7 +106,8 @@ export function paperPiece(ctx, pts, tx, { fill = COL.washi, line = 3, shade = 3
 }
 
 // 筆のかすれ風の線：太い半とうめい → 細い本線
-export function inkStroke(ctx, pts, tx, width) {
+// color：線の色（土俵の輪の朱など・なければ墨）
+export function inkStroke(ctx, pts, tx, width, color = COL.sumi) {
   if (pts.length < 2) return;
   ctx.save();
   ctx.lineCap = 'round';
@@ -109,11 +117,13 @@ export function inkStroke(ctx, pts, tx, width) {
     pts.forEach((p, i) => { const q = tx(p); if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
   };
   path();
-  ctx.strokeStyle = 'rgba(32,30,27,0.25)';
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = 0.25;
   ctx.lineWidth = width * 2.2;
   ctx.stroke();
+  ctx.globalAlpha = 1;
   path();
-  ctx.strokeStyle = COL.sumi;
+  ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.stroke();
   ctx.restore();

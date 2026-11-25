@@ -19,6 +19,9 @@ import { initHeya } from './heya.js';
 import { reset as resetChoose } from './choose.js';
 import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
 import { choose } from './choose.js';
+import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo } from '../game/fukubako.js';
+import { DOHYO } from '../data/dohyo.js';
+import { initFuku } from './fuku.js';
 import { initJungyo, initBanzuke, initSelect } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
@@ -136,7 +139,8 @@ function boot() {
     setDrive(d) { state.drive = d; save(); },
     onFight(foe) {
       show('s-bout');
-      bout.start(activeSlot().shape, foe, state.seed++, { mode: 'keiko', a: who(activeSlot()), b: { name: foe.name } });
+      const me = activeSlot();
+      bout.start(me.shape, foe, state.seed++, { mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura] });
     },
     onBack: back,
   });
@@ -183,8 +187,13 @@ function boot() {
     show('s-bout');
     bout.start(me.shape, foe, state.seed++, {
       mode: m.mode, stage: m.stage, a: who(me), b: who(foe),
+      papers: [me.paper, foe.paper], auras: [me.aura, foe.aura],
+      look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
       onResult(r) {
         addRec(me.rec, r.winner);
+        // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
+        const kb = kobanFor(state, r.winner, todayKey());
+        const kbText = '・' + T.kobanGain(kb.n, kb.first);
         if (m.mode === 'honbasho') {
           const before = rankOf(state.rate);
           const d = eloDelta(state.rate, foe.rate, r.winner === 'a' ? 1 : r.winner ? 0 : 0.5);
@@ -193,11 +202,11 @@ function boot() {
           save();
           const after = rankOf(state.rate);
           const move = after.min > before.min ? '　' + T.promote(after.name) : after.min < before.min ? '　' + T.demote(after.name) : '';
-          return T.rateGain(after.name, state.rate, d) + move;
+          return T.rateGain(after.name, state.rate, d) + move + kbText;
         }
         addRec(state.jun, r.winner);
         save();
-        return `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}`;
+        return `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}` + kbText;
       },
     });
   }
@@ -211,8 +220,13 @@ function boot() {
     onJungyoMatch() { go('s-jungyo'); },   // 土俵巡業の予定は、巡業をえらんだ人だけが見る（11/25 部屋のメニューから外した）
     onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
     onKeiko() { pick.resetMarks(); go('s-pick'); },
+    onFuku() { go('s-fuku'); },
   });
   onShow['s-home'] = () => heya.home(state);
+
+  // 福箱（11/26）：小判で開ける。中身は見た目だけ
+  const fuku = initFuku({ getState: () => state, onSave: save, getShort: () => state.short });
+  onShow['s-fuku'] = () => fuku.show();
 
   // はじめての流れ（11/25 しょーくん「BからのA」）：空の相撲部屋 →「力士をつくる」→ お手本つきで切る
   //   → 初土俵（CPU の釣鐘と1番・戦績には数えない）→ 四股名をさずかる → 相撲部屋
@@ -225,14 +239,14 @@ function boot() {
     const foe = CPU_SHAPES[0];
     meimeiSlot = i;
     show('s-bout');
-    bout.start(me.shape, foe, state.seed++, { mode: 'shodohyo', a: { name: T.you, sub: T.shodohyo }, b: { name: foe.name }, nextLabel: T.toMeimei });
+    bout.start(me.shape, foe, state.seed++, { mode: 'shodohyo', a: { name: T.you, sub: T.shodohyo }, b: { name: foe.name }, nextLabel: T.toMeimei, papers: [me.paper] });
   }
   let meimeiSlot = 0;
   onShow['s-meimei'] = () => {
     const s = state.slots[meimeiSlot];
     document.getElementById('mm-title').textContent = titleText(s.title);
     fitText(document.getElementById('mm-name'), shikonaText(s.shikona));
-    drawShapeThumb(document.getElementById('mm-cv'), s.shape);
+    drawShapeThumb(document.getElementById('mm-cv'), s.shape, false, s.paper);
     setTimeout(() => playSfx('sumi', { vol: 0.45 }), 380);
     setTimeout(() => playSfx('ton', { vol: 0.75 }), 1150);
   };
@@ -257,6 +271,7 @@ function boot() {
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
     getOwned: () => ownedWords(state.words),
+    getMise: () => ({ papers: ownedPapers(state), auras: ownedAuras(state) }),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
     onRetire(i) {
@@ -277,7 +292,22 @@ function boot() {
     openSelect('jungyo', true);
   });
   const banzuke = initBanzuke();
-  onShow['s-banzuke'] = () => banzuke.show(state, bzTitle);
+  // 本場所の土俵（福箱の土俵スキン）：押すたびに、持っている土俵を順に。1つだけなら出さない
+  const bzDohyo = document.getElementById('bz-dohyo');
+  const paintDohyo = () => {
+    const own = ownedDohyo(state);
+    if (!own.includes(state.dohyo)) state.dohyo = 'kami';
+    bzDohyo.hidden = own.length < 2;
+    bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
+  };
+  bzDohyo.addEventListener('click', () => {
+    const own = ownedDohyo(state);
+    state.dohyo = own[(own.indexOf(state.dohyo) + 1) % own.length];
+    save();
+    paintDohyo();
+    playSfx('kami', { vol: 0.5 });
+  });
+  onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
   document.getElementById('bz-go').addEventListener('click', () => {
     if (!hasRikishi()) { go('s-roster'); return; }
     openSelect('honbasho', true);
@@ -290,7 +320,7 @@ function boot() {
   // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
   const unstashBtn = document.getElementById('b-unstash');
   const paintStash = () => { unstashBtn.hidden = !hasStash(); };
-  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words'];
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo'];
   document.getElementById('b-intro').addEventListener('click', () => {
     stashSave();
     Object.assign(state, freshProgress());
@@ -303,6 +333,7 @@ function boot() {
     tools.close();
     home();
   });
+  document.getElementById('b-koban').addEventListener('click', () => { state.koban += 1000; save(); heya.home(state); });   // 福箱をためす（試作だけ）
   document.getElementById('b-tools').addEventListener('click', () => { paintStash(); loadLibs().then(() => tools.open()); });
   setMuted(state.mute);
   const toggle = (id, key, after) => {

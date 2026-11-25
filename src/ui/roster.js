@@ -3,8 +3,11 @@ import { T } from '../data/text.js';
 import { SHIKONA } from '../data/shikona.js';
 import { TITLES } from '../data/titles.js';
 import { shikonaText, titleText, wordText, randomShikona } from '../game/names.js';
-import { drawShapeThumb } from './pick.js';
+import { PAPERS } from '../data/papers.js';
+import { AURAS } from '../data/auras.js';
+import { drawShapeThumb, thumbAuraBox } from './pick.js';
 import { createRoller } from './roller.js';
+import { auraPreview } from './aura.js';
 
 // 縦書きの名前：字の数を --n に入れて、列の高さに収まる大きさにする（CSS の font-size が --n を使う）
 export function fitText(el, text) {
@@ -45,7 +48,7 @@ export function renderSlots(el, slots, opt) {
     el.appendChild(b);
   });
   // 描くのはならべてから（canvas の大きさが決まってから）
-  slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape); });
+  slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape, false, s.paper); });
 }
 
 // ドラムに並べる語。has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
@@ -54,7 +57,8 @@ function itemsOf(g, has) {
   return SHIKONA[g].filter((w) => has.has(w.id)).map((w) => ({ id: w.id, label: wordText(w.id) || T.rollNone }));
 }
 
-// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, onChange(i), onRecut(i), onRetire(i), onDone() }
+// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, getMise()＝{ papers, auras }（持っている紙質・気の id）, onChange(i), onRecut(i), onRetire(i), onDone() }
+// 「名前」と「見た目」（紙質・気＝11/26 福箱）の2つのドラムを、上の切りかえで
 export function initEdit(cb) {
   const cv = document.getElementById('ed-cv');
   let idx = 0, saveT = 0;
@@ -70,9 +74,29 @@ export function initEdit(cb) {
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
 
-  const rollers = {};
+  // 力士の絵と、まわりの気
+  const auraCv = document.getElementById('ed-aura');
+  let aura = null;
+  function paintLook() {
+    const s = cb.getSlot(idx);
+    drawShapeThumb(cv, s.shape, false, s.paper);
+    if (aura) aura.stop();
+    aura = auraPreview(auraCv, s.aura, thumbAuraBox(auraCv, cv, s.shape));
+  }
+
+  const rollers = {}, mise = {};
   for (const col of document.querySelectorAll('#ed-roller .rl-col')) {
     const g = col.dataset.g;
+    if (g === 'paper' || g === 'aura') {
+      mise[g] = createRoller(col, (id) => {
+        const s = cb.getSlot(idx);
+        if (!s) return;
+        s[g] = id;
+        paintLook();
+        saveLater();
+      });
+      continue;
+    }
     rollers[g] = createRoller(col, (id) => {
       const s = cb.getSlot(idx);
       if (!s) return;
@@ -80,6 +104,25 @@ export function initEdit(cb) {
       paintName();
       saveLater();
     });
+  }
+  // 名前／見た目の切りかえ（ドラムは見えてから並べる：かくれていると幅と位置がはかれないため）
+  let tab = 'name';
+  const tabs = document.querySelectorAll('#ed-tabs button');
+  function setTab(t) {
+    tab = t;
+    for (const b of tabs) b.setAttribute('aria-pressed', String(b.dataset.t === t));
+    for (const el of document.querySelectorAll('#ed-roller .rl-name')) el.hidden = t !== 'name';
+    for (const el of document.querySelectorAll('#ed-roller .rl-mise')) el.hidden = t !== 'mise';
+    document.getElementById('ed-rand').hidden = t !== 'name';
+    if (t === 'mise') setMise(); else setRollers();
+  }
+  for (const b of tabs) b.addEventListener('click', () => { if (b.dataset.t !== tab) setTab(b.dataset.t); });
+  function setMise() {
+    const s = cb.getSlot(idx), m = cb.getMise();
+    mise.paper.set(m.papers.map((id) => ({ id, label: PAPERS[id].name })), s.paper);
+    mise.aura.set(m.auras.map((id) => ({ id, label: AURAS[id].name })), s.aura);
+    const left = (Object.keys(PAPERS).length - m.papers.length) + (Object.keys(AURAS).length - m.auras.length);
+    document.getElementById('ed-locked').textContent = left ? T.lockedLook(left) : '';
   }
   function setRollers() {
     const s = cb.getSlot(idx), has = cb.getOwned();
@@ -116,8 +159,8 @@ export function initEdit(cb) {
       idx = i;
       disarm();
       paintName();
-      drawShapeThumb(cv, cb.getSlot(i).shape);
-      setRollers();
+      paintLook();
+      setTab('name');
     },
   };
 }

@@ -19,11 +19,12 @@
 
   <!-- 案A「番付表」（11/25 しょーくん）：見出しは右に縦書き・中身は二重の罫の中に、右から縦の列で -->
   <section id="s-home" class="screen v" hidden>
-    <header class="bar"><h1 class="brush">相撲部屋</h1><button id="b-tools" class="ghost" type="button">道具</button></header>
-    <button class="mine hero" id="home-mine" type="button"><canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span></button>
+    <header class="bar"><span class="koban" id="home-koban"></span><h1 class="brush">相撲部屋</h1><button id="b-tools" class="ghost" type="button">道具</button></header>
+    <button class="mine hero" id="home-mine" type="button"><canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span><canvas class="aura-cv"></canvas></button>
     <nav class="menu frame2 cols">
       <button id="m-shobu" class="seal" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 19L19 5M5 5l14 14"/></svg><span class="lbl">勝負</span></button>
       <button id="m-rikishi" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M7.8 16L16 4M16.2 16L8 4"/></svg><span class="lbl">力士をつくる</span></button>
+      <button id="m-fuku" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16v11H4zM3 6h18v3H3zM12 6v14"/><path d="M12 6c-2-3-6-3-6 0M12 6c2-3 6-3 6 0"/></svg><span class="lbl">福箱</span></button>
     </nav>
   </section>
 
@@ -44,16 +45,23 @@
 
   <section id="s-edit" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><button id="ed-retire" class="ghost" type="button">引退</button><h1 class="brush">力士の編集</h1></header>
-    <div class="profile hero"><canvas id="ed-cv"></canvas><div class="who"><small id="ed-title"></small><b class="brush" id="ed-name"></b><em id="ed-rec"></em></div><button id="ed-rand" class="ghost" type="button">おまかせ</button></div>
+    <div class="profile hero"><canvas class="aura-cv" id="ed-aura"></canvas><canvas id="ed-cv"></canvas><div class="who"><small id="ed-title"></small><b class="brush" id="ed-name"></b><em id="ed-rec"></em></div><button id="ed-rand" class="ghost" type="button">おまかせ</button></div>
     <!-- 称号と四股名は、くるくる回して選ぶ（ui/roller.js）。真ん中の行が朱の帯 -->
     <div class="roller frame2" id="ed-roller">
-      <div class="rl-heads"><span class="ti">称号</span><span>上の句</span><span class="tn">つなぎ</span><span>下の句</span></div>
-      <div class="rl-body">
+      <div class="rl-tabs" id="ed-tabs"><button type="button" data-t="name" aria-pressed="true">名前</button><button type="button" data-t="mise" aria-pressed="false">見た目</button></div>
+      <div class="rl-heads rl-name"><span class="ti">称号</span><span>上の句</span><span class="tn">つなぎ</span><span>下の句</span></div>
+      <div class="rl-body rl-name">
         <div class="rl-band"></div>
         <div class="rl-col ti" data-g="title"><div class="rl-list brush"></div></div>
         <div class="rl-col" data-g="kami"><div class="rl-list brush"></div></div>
         <div class="rl-col tn" data-g="tsunagi"><div class="rl-list brush"></div></div>
         <div class="rl-col" data-g="shimo"><div class="rl-list brush"></div></div>
+      </div>
+      <div class="rl-heads rl-mise" hidden><span>紙質</span><span>気</span></div>
+      <div class="rl-body rl-mise" hidden>
+        <div class="rl-band"></div>
+        <div class="rl-col" data-g="paper"><div class="rl-list brush"></div></div>
+        <div class="rl-col" data-g="aura"><div class="rl-list brush"></div></div>
       </div>
       <p class="rl-lock" id="ed-locked"></p>
     </div>
@@ -71,7 +79,7 @@
   </section>
 
   <section id="s-banzuke" class="screen v" hidden>
-    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush" id="bz-h">番付</h1></header>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush" id="bz-h">番付</h1><button id="bz-dohyo" class="ghost" type="button"></button></header>
     <div class="myrank hero"><b class="brush" id="bz-rank"></b><div class="info"><em id="bz-rate"></em><span id="bz-rec"></span><span id="bz-next"></span></div></div>
     <ol class="ladder frame2 cols" id="bz-ladder"></ol>
     <div class="foot"><p class="note" id="bz-world"></p><footer class="actions"><button id="bz-go" class="seal" type="button">本場所の取組へ</button></footer></div>
@@ -132,12 +140,36 @@
   </section>
 
 
+  <!-- 福箱（11/26）：小判で買って開ける。中身は見た目だけ（ui/fuku.js・data/fukubako.js） -->
+  <section id="s-fuku" class="screen v" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span class="koban" id="fk-koban"></span><h1 class="brush">福箱</h1></header>
+    <div class="hero fkhero" id="fk-hero">
+      <canvas class="aura-cv" id="fk-fx"></canvas>
+      <div class="fkbox" id="fk-box"><div class="half l"><i class="fuku brush">福</i></div><div class="half r"><i class="fuku brush">福</i></div><span class="slash"></span></div>
+      <div class="fkreveal" id="fk-reveal" hidden>
+        <div class="fkprev"><canvas class="aura-cv" id="fk-aura"></canvas><canvas id="fk-cv"></canvas></div>
+        <b class="brush" id="fk-name"></b>
+        <span class="fkmeta"><i class="hanko brush" id="fk-tier"></i><small id="fk-kind"></small><em id="fk-new"></em></span>
+      </div>
+    </div>
+    <div class="fkkinds frame2 cols" id="fk-kinds"></div>
+    <footer class="actions pair"><button id="fk-odds" class="seal sub" type="button">出る物と確率</button><button id="fk-open" class="seal" type="button"></button></footer>
+  </section>
+
+  <section id="s-odds" class="sheet" hidden>
+    <header class="bar"><button id="od-close" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h1 class="brush">出る物と確率</h1></header>
+    <div class="body" id="od-list"></div>
+  </section>
+
   <section id="s-tools" class="sheet" hidden>
     <header class="bar">
       <button id="b-tclose" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <h1 class="brush">道具</h1>
     </header>
     <div class="body">
+      <h2>小判</h2>
+      <p>福箱をためすための小判（試作だけ）。</p>
+      <div class="toggles"><button id="b-koban" class="ghost" type="button">小判 +1000</button></div>
       <h2>はじめての流れ</h2>
       <p>いまの力士と番付を取っておいて、まっさらな相撲部屋から見なおす（試作だけ）。</p>
       <div class="toggles"><button id="b-intro" class="ghost" type="button">はじめての流れを見る</button><button id="b-unstash" class="ghost" type="button" hidden>前の保存にもどす</button></div>

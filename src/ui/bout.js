@@ -8,6 +8,7 @@ import { decideKimarite } from '../data/kimarite.js';
 import { createStage } from './stage3d.js';
 import { createFx } from './fx.js';
 import { playSfx } from './sound.js';
+import { createAura } from './aura.js';
 
 const TAU = Math.PI * 2;
 // 一定の速さでまわり、最後だけゆっくり止まる（0〜1 → 0〜1）
@@ -73,7 +74,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     gainEl.style.color = kindEl.style.color;
   }
 
-  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと }
+  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと,
+  //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ） }
   function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
@@ -88,7 +90,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       el.hidden = false;
       return;
     }
-    if (curLook !== S.look) { stage.setDohyo(S.look); curLook = S.look; }
+    const look = opt.look || S.look;   // 本場所は、えらんだ土俵スキン（見た目だけ・物理は S.phys のまま）
+    if (curLook !== look) { stage.setDohyo(look); curLook = look; }
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
@@ -99,7 +102,14 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     btn('b-next').textContent = opt.nextLabel || T.nextBout;
     btn('b-home').hidden = opt.mode === 'shodohyo';
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
-    stage.setFighters(la, lb);
+    stage.setFighters(la, lb, opt.papers || []);
+    // 気（オーラ・見た目だけ）：力士の中の座標での、まん中と高さ
+    const boxOf = (ol) => {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const p of ol.outline) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+      return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, h: y1 - y0 };
+    };
+    const auras = (opt.auras || []).map((id) => createAura(id));
     const short = !!getShort();
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
     const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
@@ -114,6 +124,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     st = {
       sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
+      auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], idle3d: false,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
       t: 0, last: performance.now(), play: false, idx: 0, hold: 0, endHold: 0,
       firstHit: true, prevTouch: 0, prevTon: 0, ended: false, shown: false, went: false, kima: null,
@@ -207,14 +218,30 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     s.prevTon = ton;
     camera(s);
     fx.step(fdt);
-    stage.render();
+    if (!s.idle3d) stage.render();   // 結果が出て動かなくなったら 3D は描かない（気だけ動かすとき）
+    // 気：力士のまん中（まわっていても）を画面に写して、そのまわりに
+    let auraDraw = null;
+    if (s.auras && s.t > LOOK.inkSec) {
+      auraDraw = [];
+      for (let i = 0; i < 2; i++) {
+        const au = s.auras[i];
+        if (!au) continue;
+        au.step(fdt);
+        const bx = s.boxes[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2], c = Math.cos(rz), sn = Math.sin(rz);
+        const wx = x + bx.cx * c - bx.cy * sn, wy = y + bx.cx * sn + bx.cy * c;
+        const q = stage.project(wx, wy), q2 = stage.project(wx, wy + bx.h / 2);
+        auraDraw.push({ a: au, x: q[0], y: q[1], h: Math.hypot(q2[0] - q[0], q2[1] - q[1]) * 2 });
+      }
+    }
     const r = s.bout.result;
     // 朱の丸：体がついた所・俵の外にふれた所（どこで負けたかが見えるように）
     const mark = s.ended && (r.kind === 'touch' || r.kind === 'out') && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
-    fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
+    fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null, auras: auraDraw });
     // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
     // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
-    if (s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1) { s.sleep = true; return; }
+    const idle = s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1;
+    if (idle && !auraDraw) { s.sleep = true; return; }
+    s.idle3d = idle;   // 気があるときは、気（2D）だけ動かしつづける
     raf = requestAnimationFrame(frame);
   }
 
@@ -261,6 +288,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   window.addEventListener('resize', () => {
     if (!st) return;
     layout();
+    st.idle3d = false;   // 大きさが変わったら 3D を1こま描きなおす
     if (st.sleep) { st.sleep = false; st.last = performance.now(); raf = requestAnimationFrame(frame); }
   });
 

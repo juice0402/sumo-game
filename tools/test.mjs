@@ -136,5 +136,45 @@ console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Objec
     if (Buffer.compare(out, buf) !== 0) { fails++; console.log(`NG gunzip（level ${lvl}・${buf.length}バイト）`); }
   }
 }
+// 福箱（11/26）：確率の合計は100・持っている物は出ない・中身は見た目だけ（小判や箱は入れない）・小判の数
+{
+  const { FUKU_ITEMS, fukuOdds, drawFuku, addItem, ownedItems, kobanFor, ownedDohyo } = await import('../src/game/fukubako.js');
+  const { KOBAN } = await import('../src/data/fukubako.js');
+  const { PAPERS } = await import('../src/data/papers.js');
+  const { AURAS } = await import('../src/data/auras.js');
+  const ids = new Set();
+  for (const it of FUKU_ITEMS) {
+    ok(!ids.has(it.id), `福箱の中身がかさなっている: ${it.id}`);
+    ids.add(it.id);
+    ok(['word', 'paper', 'aura', 'dohyo'].includes(it.kind) && it.name, `福箱の中身の種類か名前がおかしい: ${it.id}`);
+    ok(it.kind !== 'paper' || PAPERS[it.id], `紙質がない: ${it.id}`);
+    ok(it.kind !== 'aura' || AURAS[it.id], `気がない: ${it.id}`);
+    ok(it.kind !== 'dohyo' || DOHYO[it.id.slice(2)], `土俵がない: ${it.id}`);
+    ok(it.kind !== 'word' || (isWord(it.id) && !SHIKONA_START.includes(it.id)), `語がおかしい: ${it.id}`);
+    ok(!/^(koban|fukubako|ticket)(_|$)/.test(it.id), `福箱から小判・箱・券が出てはいけない: ${it.id}`);
+  }
+  const st = { words: [], items: [], koban: 0, kobanDay: '' };
+  const sum = (o) => o.rows.reduce((s, r) => s + r.rate, 0);
+  ok(Math.abs(sum(fukuOdds(ownedItems(st))) - 100) < 1e-9, '福箱の確率の合計が100でない');
+  const rng = makeRng(7);
+  let n = 0;
+  for (;;) {
+    const owned = ownedItems(st), it = drawFuku(owned, rng);
+    if (!it) break;
+    ok(!owned.has(it.id), `持っている物が出た: ${it.id}`);
+    addItem(st, it);
+    n++;
+    const o = fukuOdds(ownedItems(st));
+    if (o.left) ok(Math.abs(sum(o) - 100) < 1e-9, '割りなおした確率の合計が100でない');
+    if (n > FUKU_ITEMS.length) { ok(false, '福箱が終わらない'); break; }
+  }
+  ok(n === FUKU_ITEMS.length && fukuOdds(ownedItems(st)).left === 0, '福箱をぜんぶ開けても、そろわない');
+  ok(ownedDohyo(st)[0] === 'kami' && ownedDohyo(st).length === 1 + FUKU_ITEMS.filter((it) => it.kind === 'dohyo').length, '持っている土俵の数がおかしい');
+  const k = { koban: 0, kobanDay: '' };
+  const a = kobanFor(k, 'a', 'D1'), b = kobanFor(k, 'a', 'D1'), c = kobanFor(k, 'b', 'D1'), d = kobanFor(k, 'a', 'D2');
+  ok(a.n === KOBAN.win + KOBAN.firstWin && a.first && b.n === KOBAN.win && !b.first && c.n === KOBAN.lose && d.first, '小判の数がおかしい');
+  ok(k.koban === 2 * (KOBAN.win + KOBAN.firstWin) + KOBAN.win + KOBAN.lose, '小判の合計がおかしい');
+  console.log(`福箱 ${FUKU_ITEMS.length}種（ぜんぶ開けるのに ${n}回）`);
+}
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);
