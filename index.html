@@ -2194,11 +2194,12 @@ const { playSfx } = __m['src/ui/sound.js'];
 
 const TAU = Math.PI * 2;
 // 一定の速さでまわり、最後だけゆっくり止まる（0〜1 → 0〜1）
+// 止まるときの速さは smoothstep で 1→0（減りはじめと止まる瞬間にカクッとしない）。∫(1−s) = x − x³ + x⁴/2
 function orbitEase(u) {
   const a = LOOK.orbitSlowFrom, norm = a + (1 - a) / 2;
   if (u <= a) return u / norm;
-  const v = u - a;
-  return (a + v - (v * v) / (2 * (1 - a))) / norm;
+  const x = (u - a) / (1 - a), x3 = x * x * x;
+  return (a + (1 - a) * (x - x3 + (x3 * x) / 2)) / norm;
 }
 // はじめと終わりがとくにゆるやか（降りてくるカメラ用）
 const smoother = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * t * (t * (6 * t - 15) + 10); };
@@ -2285,11 +2286,14 @@ function initBout({ getDrive, getShort, onFoe, onRecut }) {
     const fdt = Math.min(0.05, (now - s.last) / 1000);
     s.last = now;
     s.t += fdt;
-    // 物理を先に進めておく（1こま 7ms まで）
+    // 物理を先に進めておく。旋回中は 1こま 3ms まで（カメラがカクつかないように）、そのあとは 7ms まで。
+    // 2歩ずつ時間を見る（20歩まとめると、スマホで1こまが長くなって旋回がとぶ）
     const t0 = performance.now();
+    const budget = s.t < s.orbitEnd ? 3 : 7;
     const ahead = Math.max(s.idx, s.bout.settleSteps) + 240;
-    while (!s.bout.result.kind && s.bout.step < ahead && performance.now() - t0 < 7) {
-      for (let i = 0; i < 20 && !s.bout.result.kind; i++) s.bout.stepOnce();
+    while (!s.bout.result.kind && s.bout.step < ahead && performance.now() - t0 < budget) {
+      s.bout.stepOnce();
+      if (!s.bout.result.kind) s.bout.stepOnce();
     }
     const done = !!s.bout.result.kind;
     const lastIdx = s.rec.n - 1;
