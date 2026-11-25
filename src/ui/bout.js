@@ -16,7 +16,8 @@ function orbitEase(u) {
   const v = u - a;
   return (a + v - (v * v) / (2 * (1 - a))) / norm;
 }
-const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// はじめと終わりがとくにゆるやか（降りてくるカメラ用）
+const smoother = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * t * (t * (6 * t - 15) + 10); };
 const mix = (a, b, t) => a + (b - a) * t;
 
 export function initBout({ getDrive, getShort, onFoe, onRecut }) {
@@ -63,7 +64,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     stage.setFighters(la, lb);
     const short = !!getShort();
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
-    const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec);
+    const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
     const goAt = orbitEnd + (short ? 0.1 : LOOK.hush);
     st = {
       me, foe, seed, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
@@ -84,9 +85,11 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
 
   function camera(s) {
     if (s.t < s.orbitEnd) {
-      const u = Math.max(0, (s.t - s.orbitStart) / LOOK.orbitSec);
-      const d = smooth(0.5, 1, u);
-      stage.view(-TAU * (1 - orbitEase(Math.min(1, u))), mix(LOOK.orbitElev, LOOK.elev, d), mix(LOOK.orbitFar, 1, d));
+      // 1周まわって止まる → そのあとも少しかけて、戦うときの高さへ降りてくる
+      const tt = Math.max(0, s.t - s.orbitStart);
+      const u = Math.min(1, tt / LOOK.orbitSec);
+      const d = smoother(LOOK.orbitSec * LOOK.descendFrom, LOOK.orbitSec + LOOK.descendSec, tt);
+      stage.view(-TAU * (1 - orbitEase(u)), mix(LOOK.orbitElev, LOOK.elev, d), mix(LOOK.orbitFar, 1, d));
     } else {
       stage.view(0, LOOK.elev, 1);
     }
