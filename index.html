@@ -165,7 +165,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   </section>
   <p class="err" id="err" hidden></p>
 </div>
-<script>window.SUMO_BUILD = {"fp":"1A13 59F2 3E9C","rapier":"0.21.0","config":2};</script>
+<script>window.SUMO_BUILD = {"fp":"2D7E D111 3887","rapier":"0.21.0","config":3};</script>
 <script>
 (function () {
 var module = { exports: {} }; var exports = module.exports;
@@ -225,7 +225,7 @@ return { T };
 
 __m['src/data/config.js'] = (function () {
 // すべての「まだ決まっていない数字」はここ。変えたら CONFIG_VERSION を上げる（リプレイ・対戦の再現に使う）。
-const CONFIG_VERSION = 2;
+const CONFIG_VERSION = 3;
 
 // 紙（切り出しの座標）。整数の座標で、y は下向き。右が力士の正面。
 const PAPER = {
@@ -288,8 +288,9 @@ const PHYS = {
   driveHeight: 0.3,       // 押す点の高さ（0＝足もと／1＝重心の高さ）。低いほど自分の勢いで前に転びにくい
   openImpulse: 0.2,       // 立ち合いの最初の一押し
   // 勝敗
-  touchLose: true,        // 体（bodyLine より上＝上と中のエリア）が土俵についたら負け
-  bodyLine: 2 / 3,        // 体と足のさかい（紙の高さの割合。下のエリアのはじまり）
+  touchLose: true,        // 体（足より上）が土俵についたら負け
+  footH: 1 / 3,           // 足の高さ：力士のいちばん下から、紙の高さのこの割合まで
+  touchHold: 0.1,         // 体がこの秒数ついたままなら負け（はねて一瞬かすっただけは負けにしない）
   fallAngle: 2.4,         // 念のため：この角度（ラジアン・約137°）より傾いたままなら転倒
   fallHold: 0.5,          // その状態がこの秒数つづいたら転倒
   // 場外：重心が土俵の上の面より下がる（＝落ちた）か、下の地面にふれたら
@@ -617,8 +618,8 @@ function localPieces(pts, side, phys) {
   const s = phys.paperM / PAPER.w;
   const bb = bbox(pts);
   const cx = (bb.x0 + bb.x1) / 2;
-  // 紙の座標で bodyLine より上＝「体」（土俵についたら負け）、下＝「足」。凸の形を線で2つに切る
-  const yl = phys.bodyLine * PAPER.h;
+  // 力士のいちばん下から footH（紙の高さの割合）までが「足」、それより上が「体」（土俵についたら負け）。凸の形を線で2つに切る
+  const yl = bb.y1 - phys.footH * PAPER.h;
   const out = [];
   for (const pc of pieces) {
     for (const [part, isBody] of [[clipBand(pc, -1e9, yl), true], [clipBand(pc, yl, 1e9), false]]) {
@@ -674,7 +675,7 @@ function createBout(opts) {
       cols.push(c);
       if (pc.isBody) bodyCols.push(c);
     }
-    return { body, cols, bodyCols, dir: side, fallCount: 0, lost: null, at: null };
+    return { body, cols, bodyCols, dir: side, fallCount: 0, touchCount: 0, lost: null, at: null };
   };
   // 左（a）は右向き、右（b）は左右反転して左向き
   const A = makeFighter(opts.a, 1);
@@ -684,6 +685,7 @@ function createBout(opts) {
   const settleSteps = Math.round(phys.settle / dt);
   const maxSteps = settleSteps + Math.round(phys.maxTime / dt);
   const fallSteps = Math.round(phys.fallHold / dt);
+  const touchSteps = Math.max(1, Math.round(phys.touchHold / dt));
   const tapSteps = Math.round(phys.tapPeriod / dt);
   const tapLenSteps = Math.max(1, Math.round(phys.tapLen / dt));
   const firstTap = settleSteps + Math.round(rng() * tapSteps * 0.5);
@@ -748,15 +750,21 @@ function createBout(opts) {
     const com = f.body.worldCom();
     if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; return; }
     if (phys.touchLose) {
-      // 体（上・中）が土俵についたら負け
+      // 体が土俵に touchHold 秒ついたら負け（はねて一瞬かすっただけは負けにしない）
+      let hit = null;
       for (const c of f.bodyCols) {
         world.contactPair(ringCol, c, (m) => {
-          if (f.lost || m.numContacts() === 0) return;
-          f.lost = 'touch';
+          if (hit || m.numContacts() === 0) return;
           const p = m.numSolverContacts() > 0 ? m.solverContactPoint(0) : null;
-          f.at = p ? { x: p.x, y: p.y } : null;
+          hit = p ? { x: p.x, y: p.y } : { x: 0, y: 0 };
         });
-        if (f.lost) return;
+        if (hit) break;
+      }
+      if (hit) {
+        f.touchCount++;
+        if (f.touchCount >= touchSteps) { f.lost = 'touch'; f.at = hit; return; }
+      } else {
+        f.touchCount = 0;
       }
     }
     const ang = f.body.rotation();
@@ -1676,6 +1684,21 @@ function initBout({ getDrive, onFoe, onRecut }) {
     for (const ex of [L + d * 0.6, R - d * 0.6]) { ctx.beginPath(); ctx.ellipse(ex, top - d * 0.35, d * 0.7, d * 0.45, 0, 0, Math.PI * 2); ctx.fill(); }
     ctx.strokeStyle = 'rgba(238,233,222,0.12)';
     ctx.beginPath(); ctx.moveTo(0, Y(ry - P.ringDepth)); ctx.lineTo(W, Y(ry - P.ringDepth)); ctx.stroke();
+    // トン（土俵の突き上げ）の合図：土俵の両わきに短い線（カメラは土俵についているので、ゆれのかわりに見せる）
+    const k = Math.min(1, ry / (P.tapAmp * 0.6));
+    if (k > 0.05) {
+      ctx.strokeStyle = `rgba(238,233,222,${0.5 * k})`;
+      ctx.lineWidth = 2 * dpr;
+      const len = (0.12 + 0.1 * k) * sc;
+      ctx.beginPath();
+      for (const [ex, dir] of [[L, -1], [R, 1]]) {
+        for (const yy of [0.15, 0.4, 0.65]) {
+          const y = top + P.ringDepth * sc * yy;
+          ctx.moveTo(ex + dir * 0.06 * sc, y); ctx.lineTo(ex + dir * (0.06 * sc + len), y);
+        }
+      }
+      ctx.stroke();
+    }
     // 影と力士
     const fighters = [
       { x: f[o], y: f[o + 1], a: f[o + 2], ol: s.la, dark: false },
@@ -1692,7 +1715,7 @@ function initBout({ getDrive, onFoe, onRecut }) {
       const tx = (p) => [X(g.x + p[0] * c - p[1] * sn), Y(g.y + p[0] * sn + p[1] * c)];
       paperPiece(ctx, g.ol.outline, tx, { line: Math.max(2, 0.024 * sc), shade: 0.025 * sc, dark: g.dark });
       // 体と足のさかい（ここより上が土俵についたら負け）
-      const yl = (g.ol.bottom - P.bodyLine * PAPER.h) * g.ol.s;
+      const yl = P.footH * PAPER.h * g.ol.s;
       ctx.save();
       polyPathLocal(ctx, g.ol.outline, tx);
       ctx.clip();

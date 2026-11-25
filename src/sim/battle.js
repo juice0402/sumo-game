@@ -26,8 +26,8 @@ function localPieces(pts, side, phys) {
   const s = phys.paperM / PAPER.w;
   const bb = bbox(pts);
   const cx = (bb.x0 + bb.x1) / 2;
-  // 紙の座標で bodyLine より上＝「体」（土俵についたら負け）、下＝「足」。凸の形を線で2つに切る
-  const yl = phys.bodyLine * PAPER.h;
+  // 力士のいちばん下から footH（紙の高さの割合）までが「足」、それより上が「体」（土俵についたら負け）。凸の形を線で2つに切る
+  const yl = bb.y1 - phys.footH * PAPER.h;
   const out = [];
   for (const pc of pieces) {
     for (const [part, isBody] of [[clipBand(pc, -1e9, yl), true], [clipBand(pc, yl, 1e9), false]]) {
@@ -83,7 +83,7 @@ export function createBout(opts) {
       cols.push(c);
       if (pc.isBody) bodyCols.push(c);
     }
-    return { body, cols, bodyCols, dir: side, fallCount: 0, lost: null, at: null };
+    return { body, cols, bodyCols, dir: side, fallCount: 0, touchCount: 0, lost: null, at: null };
   };
   // 左（a）は右向き、右（b）は左右反転して左向き
   const A = makeFighter(opts.a, 1);
@@ -93,6 +93,7 @@ export function createBout(opts) {
   const settleSteps = Math.round(phys.settle / dt);
   const maxSteps = settleSteps + Math.round(phys.maxTime / dt);
   const fallSteps = Math.round(phys.fallHold / dt);
+  const touchSteps = Math.max(1, Math.round(phys.touchHold / dt));
   const tapSteps = Math.round(phys.tapPeriod / dt);
   const tapLenSteps = Math.max(1, Math.round(phys.tapLen / dt));
   const firstTap = settleSteps + Math.round(rng() * tapSteps * 0.5);
@@ -157,15 +158,21 @@ export function createBout(opts) {
     const com = f.body.worldCom();
     if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; return; }
     if (phys.touchLose) {
-      // 体（上・中）が土俵についたら負け
+      // 体が土俵に touchHold 秒ついたら負け（はねて一瞬かすっただけは負けにしない）
+      let hit = null;
       for (const c of f.bodyCols) {
         world.contactPair(ringCol, c, (m) => {
-          if (f.lost || m.numContacts() === 0) return;
-          f.lost = 'touch';
+          if (hit || m.numContacts() === 0) return;
           const p = m.numSolverContacts() > 0 ? m.solverContactPoint(0) : null;
-          f.at = p ? { x: p.x, y: p.y } : null;
+          hit = p ? { x: p.x, y: p.y } : { x: 0, y: 0 };
         });
-        if (f.lost) return;
+        if (hit) break;
+      }
+      if (hit) {
+        f.touchCount++;
+        if (f.touchCount >= touchSteps) { f.lost = 'touch'; f.at = hit; return; }
+      } else {
+        f.touchCount = 0;
       }
     }
     const ang = f.body.rotation();

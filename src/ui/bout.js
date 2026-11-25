@@ -115,6 +115,21 @@ export function initBout({ getDrive, onFoe, onRecut }) {
     for (const ex of [L + d * 0.6, R - d * 0.6]) { ctx.beginPath(); ctx.ellipse(ex, top - d * 0.35, d * 0.7, d * 0.45, 0, 0, Math.PI * 2); ctx.fill(); }
     ctx.strokeStyle = 'rgba(238,233,222,0.12)';
     ctx.beginPath(); ctx.moveTo(0, Y(ry - P.ringDepth)); ctx.lineTo(W, Y(ry - P.ringDepth)); ctx.stroke();
+    // トン（土俵の突き上げ）の合図：土俵の両わきに短い線（カメラは土俵についているので、ゆれのかわりに見せる）
+    const k = Math.min(1, ry / (P.tapAmp * 0.6));
+    if (k > 0.05) {
+      ctx.strokeStyle = `rgba(238,233,222,${0.5 * k})`;
+      ctx.lineWidth = 2 * dpr;
+      const len = (0.12 + 0.1 * k) * sc;
+      ctx.beginPath();
+      for (const [ex, dir] of [[L, -1], [R, 1]]) {
+        for (const yy of [0.15, 0.4, 0.65]) {
+          const y = top + P.ringDepth * sc * yy;
+          ctx.moveTo(ex + dir * 0.06 * sc, y); ctx.lineTo(ex + dir * (0.06 * sc + len), y);
+        }
+      }
+      ctx.stroke();
+    }
     // 影と力士
     const fighters = [
       { x: f[o], y: f[o + 1], a: f[o + 2], ol: s.la, dark: false },
@@ -131,7 +146,7 @@ export function initBout({ getDrive, onFoe, onRecut }) {
       const tx = (p) => [X(g.x + p[0] * c - p[1] * sn), Y(g.y + p[0] * sn + p[1] * c)];
       paperPiece(ctx, g.ol.outline, tx, { line: Math.max(2, 0.024 * sc), shade: 0.025 * sc, dark: g.dark });
       // 体と足のさかい（ここより上が土俵についたら負け）
-      const yl = (g.ol.bottom - P.bodyLine * PAPER.h) * g.ol.s;
+      const yl = P.footH * PAPER.h * g.ol.s;
       ctx.save();
       polyPathLocal(ctx, g.ol.outline, tx);
       ctx.clip();
