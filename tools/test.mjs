@@ -4,8 +4,10 @@ import { CPU_SHAPES } from '../src/data/cpu-shapes.js';
 import { checkShape } from '../src/geom/check.js';
 import { strokeToOutline } from '../src/geom/stroke.js';
 import { area } from '../src/geom/poly.js';
-import { setRapier, runBout, hashText } from '../src/sim/battle.js';
+import { setRapier, runBout, hashText, createBout, toLocal } from '../src/sim/battle.js';
 import { randomShape } from '../src/geom/random.js';
+import { decideKimarite } from '../src/data/kimarite.js';
+import { T } from '../src/data/text.js';
 import { BENCH } from '../src/sim/bench.js';
 
 let fails = 0;
@@ -58,6 +60,18 @@ const many = new Set();
 for (let s = 1; s <= 6; s++) many.add(runBout({ a: kane, b: kusabi, seed: s }).hash);
 ok(many.size > 1, 'シードを変えても結果が同じ（ゆれが効いていない）');
 const fp = BENCH.map((b) => hashText(runBout(b).hash).slice(0, 4)).join(' ');
+
+// 決まり手：CPU 5体の総当たり（5×5・シード 1 と 2）
+const kcount = {};
+for (const sa of CPU_SHAPES) for (const sb of CPU_SHAPES) for (const seed of [1, 2]) {
+  const bout = createBout({ a: sa.pts, b: sb.pts, seed, record: true });
+  while (!bout.stepOnce()) { /* 進める */ }
+  const k = decideKimarite(bout, toLocal(sa.pts, 1, bout.phys), toLocal(sb.pts, -1, bout.phys));
+  ok(!!T.kimarite[k], `決まり手が不正: ${k}（${sa.id} 対 ${sb.id} シード ${seed}）`);
+  kcount[k] = (kcount[k] || 0) + 1;
+  bout.free();
+}
+console.log('決まり手：' + Object.entries(kcount).sort((x, y) => y[1] - x[1]).map(([k, n]) => `${T.kimarite[k] || k} ${n}`).join('・'));
 
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);
