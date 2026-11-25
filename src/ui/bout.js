@@ -45,6 +45,17 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
   function layout() {
     if (stage) stage.resize();
     fx.resize();
+    if (st && st.shown) placeKind();
+  }
+
+  // 決着の説明は、紙の箱の横の面（手前）のまん中に墨で書く
+  function placeKind() {
+    const P = st.phys, h = P.ringHalf;
+    const c = stage.project(0, -P.ringDepth / 2, h), l = stage.project(-h, 0, h), r = stage.project(h, 0, h);
+    kindEl.style.left = c[0] + 'px';
+    kindEl.style.top = c[1] + 'px';
+    kindEl.style.maxWidth = Math.max(120, (r[0] - l[0]) * 0.86) + 'px';
+    kindEl.style.color = stage.look().side.text || '';
   }
 
   function start(me, foe, seed) {
@@ -155,7 +166,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     fx.step(fdt);
     stage.render();
     const r = s.bout.result;
-    const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry } : null;
+    const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
     fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
     raf = requestAnimationFrame(frame);
   }
@@ -164,6 +175,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
   function ending() {
     const s = st;
     s.ended = true;
+    s.endedAt = s.t;
     const r = s.bout.result, f = s.rec.f, o = (s.rec.n - 1) * 8, ry = f[o + 6];
     s.kima = decideKimarite(s.bout, s.la, s.lb);
     const i = r.loser === 'b' ? 1 : 0;
@@ -183,6 +195,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     stamp.textContent = r.winner === 'a' ? T.win : r.winner === 'b' ? T.lose : T.draw;
     kimaEl.textContent = (s.kima && T.kimarite[s.kima]) || '';
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
+    placeKind();
     resEl.hidden = false;
   }
 

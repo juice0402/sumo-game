@@ -30,4 +30,5 @@ export const LOOK = {
   endHold: 0.5,           // 決着のあと、結果を出すまで
   shortEndHold: 0.25,
   burstSec: 0.28,         // 激突の集中線の長さ（秒）
+  ringSec: 0.32,          // 体がついた所の朱の丸を筆で描く時間（秒）
 };
