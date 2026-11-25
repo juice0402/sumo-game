@@ -4,6 +4,7 @@ import { T } from '../data/text.js';
 import { strokeToOutline, isNearStart } from '../geom/stroke.js';
 import { checkShape } from '../geom/check.js';
 import { COL, setupCanvas, tornRect, fiberPattern, polyPath, paperPiece, inkStroke } from './ink.js';
+import { playSfx } from './sound.js';
 
 const OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 const NG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -187,6 +188,7 @@ export function initCut({ onDecide }) {
     cv.setPointerCapture(e.pointerId);
     raw = [toPaper(e)]; outline = null; check = null; fallT = -1;
     drawing = true; near = false;
+    playSfx('fude', { vol: 0.45 });
     okBtn.disabled = true;
     checks.hidden = true;
     setHint(T.cutDrawing);

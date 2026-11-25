@@ -1,9 +1,10 @@
 // src を1つの index.html にまとめる（Node の標準だけ）。
 //   node tools/build.mjs [--artifact 出力.html]
 // - src/ の ES モジュールを、import/export を外して順につなぐ（import は1行で `import { a, b } from './x.js';` の形だけ）
-// - 物理（Rapier 決定論版）は node_modules から読んでそのまま入れる
+// - 物理（Rapier 決定論版）と 3D（Three.js r160 の three.min.js・window.THREE）は node_modules から読んでそのまま入れる
+// - 効果音 assets/sfx/*.mp3 は base64 にして window.SUMO_SFX に入れる（コードには埋めこまない）
 // - 「指紋」の正しい値を、ここで計算して入れる（道具の画面でくらべる）
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import RAPIER from '@dimforge/rapier2d-deterministic-compat';
@@ -48,14 +49,29 @@ const rapierSrc = readFileSync(resolve(root, 'node_modules/@dimforge/rapier2d-de
   .replace(/^\/\/# sourceMappingURL=.*$/gm, '');
 const rapierJs = `(function () {\nvar module = { exports: {} }; var exports = module.exports;\n${rapierSrc}\nwindow.RAPIER = module.exports;\n})();\n`;
 
+// 3D：UMD の three.min.js（そのまま入れると window.THREE になる）。古い書き方の注意の1行だけ消す
+const threePkg = JSON.parse(readFileSync(resolve(root, 'node_modules/three/package.json'), 'utf8'));
+const threeJs = readFileSync(resolve(root, 'node_modules/three/build/three.min.js'), 'utf8')
+  .replace(/^console\.warn\([^\n]*?\),/, 'void 0,');
+
+// 効果音
+const sfxDir = resolve(root, 'assets/sfx');
+const sfx = {};
+if (existsSync(sfxDir)) {
+  for (const f of readdirSync(sfxDir).sort()) {
+    if (!f.endsWith('.mp3')) continue;
+    sfx[f.slice(0, -4)] = 'data:audio/mpeg;base64,' + readFileSync(resolve(sfxDir, f)).toString('base64');
+  }
+}
+
 await RAPIER.init();
 setRapier(RAPIER);
-const info = { fp: fingerprint(), rapier: rapierPkg.version, config: CONFIG_VERSION };
+const info = { fp: fingerprint(), rapier: rapierPkg.version, three: threePkg.version, config: CONFIG_VERSION };
 
 const css = readFileSync(resolve(root, 'src/ui/style.css'), 'utf8');
 const page = readFileSync(resolve(root, 'src/ui/page.html'), 'utf8').replace('/*STYLE*/', () => css);
-const scripts = `<script>window.SUMO_BUILD = ${JSON.stringify(info)};</script>\n<script>\n${rapierJs}</script>\n<script>\n${bundle}</script>\n`;
-for (const s of [bundle]) if (/<\/script/i.test(s)) throw new Error('</script が入っている');
+const scripts = `<script>window.SUMO_BUILD = ${JSON.stringify(info)};</script>\n<script>window.SUMO_SFX = ${JSON.stringify(sfx)};</script>\n<script>\n${rapierJs}</script>\n<script>\n${threeJs}</script>\n<script>\n${bundle}</script>\n`;
+for (const s of [bundle, threeJs]) if (/<\/script/i.test(s)) throw new Error('</script が入っている');
 const content = page.replace('<!--SCRIPTS-->', () => scripts);
 
 const cut = content.indexOf('</style>') + '</style>'.length;
@@ -74,4 +90,4 @@ ${content.slice(cut)}</body>
 writeFileSync(resolve(root, 'index.html'), html);
 const ai = process.argv.indexOf('--artifact');
 if (ai >= 0) writeFileSync(resolve(process.argv[ai + 1]), content);
-console.log(`index.html ${(html.length / 1e6).toFixed(2)}MB・モジュール ${order.length}・指紋 ${info.fp}`);
+console.log(`index.html ${(html.length / 1e6).toFixed(2)}MB・モジュール ${order.length}・効果音 ${Object.keys(sfx).length}・指紋 ${info.fp}`);

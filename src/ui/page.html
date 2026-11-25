@@ -31,11 +31,12 @@
   </section>
 
   <section id="s-bout" class="screen" hidden>
+    <canvas id="bout-gl"></canvas>
     <canvas id="bout-cv"></canvas>
-    <div class="names"><span id="n-a"></span><span id="n-b"></span></div>
+    <div class="names" id="names"><span id="n-a"></span><span id="n-b"></span></div>
     <div class="cutin" id="cutin"><div class="band"></div><div class="word brush">勝負<small>FIGHT</small></div></div>
     <div class="result" id="result" hidden>
-      <div class="big brush" id="r-big"></div>
+      <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
       <div class="kind" id="r-kind"></div>
       <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-replay" class="ghost" type="button">もう一度見る</button></div>
       <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button></div>
@@ -60,7 +61,10 @@
       <p id="tbl-sum"></p>
       <h2>動き</h2>
       <div class="seg" id="drive-seg2" style="align-self:flex-start"><button type="button" data-d="hop">ぴょこぴょこ</button><button type="button" data-d="push">ずっと押す</button></div>
+      <h2>音と演出</h2>
+      <div class="toggles"><button id="b-mute" class="ghost" type="button" aria-pressed="false">音を消す</button><button id="b-short" class="ghost" type="button" aria-pressed="false">演出を短く</button></div>
       <p id="ver"></p>
+      <p id="credits"></p>
     </div>
   </section>
   <p class="err" id="err" hidden></p>
