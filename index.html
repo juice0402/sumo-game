@@ -1983,9 +1983,11 @@ function initCut({ onDecide }) {
     const dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1;
     return { p: [a[0] + dx * k, a[1] + dy * k], ux: dx / m, uy: dy / m };
   }
-  function demoTick() {
+  // 動くのは朱の丸だけ（ゆっくり）なので、紙ぜんぶの描きなおしは 1秒に約20回まで（毎こまだと重い・11/25）
+  let demoLast = 0;
+  function demoTick(now) {
     if (!demo || cv.closest('.screen').hidden) return;   // 画面をはなれたら止める（show でまた動く）
-    if (!drawing && !outline && !raw.length) draw();
+    if (!drawing && !outline && !raw.length && !(now - demoLast < 45)) { demoLast = now; draw(); }
     requestAnimationFrame(demoTick);
   }
   function drawDemo(ctx, dpr) {
@@ -2800,6 +2802,9 @@ function createStage(cv, P) {
   }
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // 影は、物が動いたときだけ描きなおす（旋回の間はカメラだけが動くので、影は同じ・11/25）
+  renderer.shadowMap.autoUpdate = false;
+  const shadowDirty = () => { renderer.shadowMap.needsUpdate = true; };
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(LOOK.fov, 1, 0.1, 90);
   const sun = new THREE.DirectionalLight(0xfff6e8, 2.1);
@@ -2843,6 +2848,7 @@ function createStage(cv, P) {
     dohyo.add(box);
     dohyo.userData = { floor, look: d };
     scene.add(dohyo, floor);
+    shadowDirty();
   }
 
   function makeFighter(ol, dark) {
@@ -2869,25 +2875,32 @@ function createStage(cv, P) {
     for (const m of fighters) { scene.remove(m); m.userData.free(); }
     fighters = [makeFighter(la, false), makeFighter(lb, true)];
     scene.add(...fighters);
+    shadowDirty();
   }
 
   // 記録の1こま（a の x・y・回転, b の x・y・回転, 土俵の上の面の y, ふれているか）
   let ry = 0;
   function setFrame(f, o) {
+    if (f[o + 6] !== ry) shadowDirty();
     ry = f[o + 6];
     for (let i = 0; i < 2; i++) {
-      const m = fighters[i];
-      m.position.set(f[o + i * 3], f[o + i * 3 + 1] - ry, 0);
-      m.rotation.z = f[o + i * 3 + 2];
+      const m = fighters[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2];
+      if (x !== m.position.x || y !== m.position.y || rz !== m.rotation.z) shadowDirty();
+      m.position.set(x, y, 0);
+      m.rotation.z = rz;
     }
     dohyo.userData.floor.position.y = -P.ringDepth - ry; // 床は動かない（土俵だけがトンと上がる）
   }
 
   function resize() {
     const r = cv.getBoundingClientRect();
-    cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOOK.maxDpr));
-    renderer.setSize(cssW, cssH, false);
+    const w = Math.max(1, r.width), h = Math.max(1, r.height), pr = Math.min(window.devicePixelRatio || 1, LOOK.maxDpr);
+    // 大きさが同じなら、描く板を作りなおさない（取組のたびに作りなおすと重い・11/25）
+    if (w !== cssW || h !== cssH || pr !== renderer.getPixelRatio()) {
+      cssW = w; cssH = h;
+      if (pr !== renderer.getPixelRatio()) renderer.setPixelRatio(pr);
+      renderer.setSize(cssW, cssH, false);
+    }
     camera.aspect = cssW / cssH;
     const tv = Math.tan((LOOK.fov * D2R) / 2), th = tv * camera.aspect;
     base = Math.max(LOOK.viewHalfW / th, LOOK.viewHalfH / tv);
@@ -2932,7 +2945,7 @@ function createFx(cv) {
   let lay = null;
   let drops = [], bursts = [];
 
-  function resize() { lay = setupCanvas(cv); }
+  function resize() { lay = setupCanvas(cv, LOOK.maxDpr); }   // 3D と同じ細かさまで（それより細かくても見えず、毎こま重い）
 
   // 墨のしぶき（x・y は描く座標）
   function splash(x, y, power, dir = 0) {
@@ -2957,6 +2970,7 @@ function createFx(cv) {
   }
 
   function clear() { drops = []; bursts = []; }
+  const busy = () => drops.length > 0 || bursts.length > 0;
 
   // はじまり：和紙の画面を、大きな墨の筆が左から右へ横切る（通ったあとに土俵が見える）。p は 0〜1
   function inkSweep(ctx, W, H, p) {
@@ -3091,7 +3105,7 @@ function createFx(cv) {
     if (o.sweep !== null && o.sweep < 1) inkSweep(ctx, W, H, o.sweep);
   }
 
-  return { resize, splash, burst, step, clear, draw };
+  return { resize, splash, burst, step, clear, draw, busy };
 }
 
 return { createFx };
@@ -3288,6 +3302,9 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const r = s.bout.result;
     const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
     fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
+    // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
+    // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
+    if (s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1) { s.sleep = true; return; }
     raf = requestAnimationFrame(frame);
   }
 
@@ -3331,7 +3348,11 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
   document.getElementById('b-home').addEventListener('click', () => { stop(); if (onHome) onHome(); });
   document.getElementById('b-foe').addEventListener('click', () => { stop(); onFoe(); });
   document.getElementById('b-recut').addEventListener('click', () => { stop(); onRecut(); });
-  window.addEventListener('resize', () => { if (st) layout(); });
+  window.addEventListener('resize', () => {
+    if (!st) return;
+    layout();
+    if (st.sleep) { st.sleep = false; st.last = performance.now(); raf = requestAnimationFrame(frame); }
+  });
 
   return { start, stop };
 }

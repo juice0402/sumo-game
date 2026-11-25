@@ -188,6 +188,9 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const r = s.bout.result;
     const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
     fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
+    // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
+    // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
+    if (s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1) { s.sleep = true; return; }
     raf = requestAnimationFrame(frame);
   }
 
@@ -231,7 +234,11 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   document.getElementById('b-home').addEventListener('click', () => { stop(); if (onHome) onHome(); });
   document.getElementById('b-foe').addEventListener('click', () => { stop(); onFoe(); });
   document.getElementById('b-recut').addEventListener('click', () => { stop(); onRecut(); });
-  window.addEventListener('resize', () => { if (st) layout(); });
+  window.addEventListener('resize', () => {
+    if (!st) return;
+    layout();
+    if (st.sleep) { st.sleep = false; st.last = performance.now(); raf = requestAnimationFrame(frame); }
+  });
 
   return { start, stop };
 }

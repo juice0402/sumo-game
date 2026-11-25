@@ -66,3 +66,7 @@
 
 ## 自動で作るファイル（読まない）
 - index.html・docs/balance.md・node_modules/・package-lock.json
+
+## 軽さの記録（code-rules C・CPU ×4 の headless Chrome・3回の中ほど）
+- 11/25 軽量化：index.html 4.39 → 1.75MB／タイトルが出るまで 約1000 → 約650ms／物理と3Dの用意まで 約1050 → 約850ms／いちばん長い固まり 約220 → 約140ms／メモリ 17 → 11MB／旋回中の1こまの描画 22 → 12回（影は物が動いたときだけ）／結果が出てからの描画 毎秒約240回 → 0（大きさが変わったら1こまだけ）
+- fps は headless だと画面描きがソフト（SwiftShader）なので目安にならない。くらべるのは描画の回数と固まりの長さ

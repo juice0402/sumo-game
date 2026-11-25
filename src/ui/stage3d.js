@@ -104,6 +104,9 @@ export function createStage(cv, P) {
   }
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // 影は、物が動いたときだけ描きなおす（旋回の間はカメラだけが動くので、影は同じ・11/25）
+  renderer.shadowMap.autoUpdate = false;
+  const shadowDirty = () => { renderer.shadowMap.needsUpdate = true; };
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(LOOK.fov, 1, 0.1, 90);
   const sun = new THREE.DirectionalLight(0xfff6e8, 2.1);
@@ -147,6 +150,7 @@ export function createStage(cv, P) {
     dohyo.add(box);
     dohyo.userData = { floor, look: d };
     scene.add(dohyo, floor);
+    shadowDirty();
   }
 
   function makeFighter(ol, dark) {
@@ -173,25 +177,32 @@ export function createStage(cv, P) {
     for (const m of fighters) { scene.remove(m); m.userData.free(); }
     fighters = [makeFighter(la, false), makeFighter(lb, true)];
     scene.add(...fighters);
+    shadowDirty();
   }
 
   // 記録の1こま（a の x・y・回転, b の x・y・回転, 土俵の上の面の y, ふれているか）
   let ry = 0;
   function setFrame(f, o) {
+    if (f[o + 6] !== ry) shadowDirty();
     ry = f[o + 6];
     for (let i = 0; i < 2; i++) {
-      const m = fighters[i];
-      m.position.set(f[o + i * 3], f[o + i * 3 + 1] - ry, 0);
-      m.rotation.z = f[o + i * 3 + 2];
+      const m = fighters[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2];
+      if (x !== m.position.x || y !== m.position.y || rz !== m.rotation.z) shadowDirty();
+      m.position.set(x, y, 0);
+      m.rotation.z = rz;
     }
     dohyo.userData.floor.position.y = -P.ringDepth - ry; // 床は動かない（土俵だけがトンと上がる）
   }
 
   function resize() {
     const r = cv.getBoundingClientRect();
-    cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOOK.maxDpr));
-    renderer.setSize(cssW, cssH, false);
+    const w = Math.max(1, r.width), h = Math.max(1, r.height), pr = Math.min(window.devicePixelRatio || 1, LOOK.maxDpr);
+    // 大きさが同じなら、描く板を作りなおさない（取組のたびに作りなおすと重い・11/25）
+    if (w !== cssW || h !== cssH || pr !== renderer.getPixelRatio()) {
+      cssW = w; cssH = h;
+      if (pr !== renderer.getPixelRatio()) renderer.setPixelRatio(pr);
+      renderer.setSize(cssW, cssH, false);
+    }
     camera.aspect = cssW / cssH;
     const tv = Math.tan((LOOK.fov * D2R) / 2), th = tv * camera.aspect;
     base = Math.max(LOOK.viewHalfW / th, LOOK.viewHalfH / tv);

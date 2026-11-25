@@ -37,9 +37,11 @@ export function initCut({ onDecide }) {
     const dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1;
     return { p: [a[0] + dx * k, a[1] + dy * k], ux: dx / m, uy: dy / m };
   }
-  function demoTick() {
+  // 動くのは朱の丸だけ（ゆっくり）なので、紙ぜんぶの描きなおしは 1秒に約20回まで（毎こまだと重い・11/25）
+  let demoLast = 0;
+  function demoTick(now) {
     if (!demo || cv.closest('.screen').hidden) return;   // 画面をはなれたら止める（show でまた動く）
-    if (!drawing && !outline && !raw.length) draw();
+    if (!drawing && !outline && !raw.length && !(now - demoLast < 45)) { demoLast = now; draw(); }
     requestAnimationFrame(demoTick);
   }
   function drawDemo(ctx, dpr) {
