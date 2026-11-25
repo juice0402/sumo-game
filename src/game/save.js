@@ -26,12 +26,13 @@ function cleanSlot(s) {
 }
 
 export function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
+  const st = { drive: 'hop', mute: false, short: false, look: 'a', slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
     st.mute = d.mute === true;
     st.short = d.short === true;
+    if (d.look === 'a' || d.look === 'b') st.look = d.look;
     if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
     else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
     if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
@@ -47,7 +48,7 @@ export function saveState(st) {
   const cur = st.slots[st.active];
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
+      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short, look: st.look,
       slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun,
     }));
   } catch (e) { /* */ }

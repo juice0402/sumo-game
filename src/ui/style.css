@@ -191,3 +191,60 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 取組の結果：番付・戦績のひとこと */
 .result .gain{margin-top:auto;margin-bottom:10px;text-align:center;font-size:15px;color:var(--kin);font-variant-numeric:tabular-nums;text-shadow:1px 1px 0 var(--sumi)}
 .result .gain[hidden]+.row{margin-top:auto}
+/* ===== 動き：画面を開くと、右から順にシュッと入る（11/25 しょーくん「右から、しししシュッ」）===== */
+@keyframes whip{0%{opacity:0;transform:translateX(115%) skewX(-16deg)}62%{opacity:1;transform:translateX(-4%) skewX(3deg)}100%{opacity:1;transform:none}}
+@keyframes inkin{from{clip-path:inset(-10% 100% -10% 0)}to{clip-path:inset(-10% -5% -10% 0)}}
+@keyframes inkdown{from{clip-path:inset(0 -10% 100% -10%)}to{clip-path:inset(0 -10% -5% -10%)}}
+.screen.enter :is(.menu,.modes,.slots,.stagecards,.sched,.ladder) > *,
+.screen.enter :is(.mine,.profile,.myrank,.foecard,.field,.selhead,.nowhead){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 40ms)}
+.screen.enter .bar h1{animation:inkin .42s cubic-bezier(.3,.7,.3,1) both}
+.slots,.screen .body,.menu,.modes{overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){.screen.enter *{animation-duration:.01s!important;animation-delay:0s!important}}
+
+/* ===== 見た目の案A「番付表」：縦書き・二重の罫・縦の朱の帯 ===== */
+html[data-look=a] #s-home,html[data-look=a] #s-mode{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto minmax(0,1fr) auto;column-gap:10px}
+html[data-look=a] :is(#s-home,#s-mode) .bar{display:contents}
+html[data-look=a] :is(#s-home,#s-mode) .bar h1{grid-column:2;grid-row:1/3;writing-mode:vertical-rl;font-size:46px;letter-spacing:.2em;padding:14px 0 0 12px;border-left:1px solid var(--kin);align-self:start;animation-name:inkdown}
+html[data-look=a] #s-mode .bar .back{grid-column:1;grid-row:1;margin-top:8px}
+html[data-look=a] #b-tools{grid-column:1;grid-row:1;justify-self:start;align-self:start;margin-top:6px}
+html[data-look=a] .mine{grid-column:1;grid-row:2;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;border:0;padding:0}
+html[data-look=a] .mine .who{writing-mode:vertical-rl;max-height:300px;gap:6px}
+html[data-look=a] .mine .who b{font-size:58px;letter-spacing:.08em;white-space:nowrap}
+html[data-look=a] .mine .who small{font-size:14px}
+html[data-look=a] .mine .who em{font-size:14px;color:var(--kin)}
+html[data-look=a] .mine canvas{width:84px;height:110px;align-self:flex-end}
+html[data-look=a] .menu{grid-column:1/3;grid-row:3;flex-direction:row-reverse;align-items:stretch;justify-content:stretch;gap:0;height:clamp(220px,40vh,320px);padding:0;margin:14px 0 18px;border-top:5px double var(--washi2);border-bottom:5px double var(--washi2)}
+html[data-look=a] .menu .seal{writing-mode:vertical-rl;flex:1 1 0;width:auto;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi);border-left:1px solid var(--line)}
+html[data-look=a] .menu .seal:last-child{border-left:0}
+html[data-look=a] .menu .seal svg{width:20px;height:20px}
+html[data-look=a] .menu #m-shobu{background:var(--b-shuv) center/86% 100% no-repeat;font-size:38px;letter-spacing:.24em;flex-grow:1.5;border-left:0}
+html[data-look=a] .modes{grid-column:1/3;grid-row:2/4;flex-direction:row-reverse;gap:0;padding:0;margin:14px 0 18px;align-items:stretch;border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);max-height:62vh;align-self:end}
+html[data-look=a] .modecard{writing-mode:vertical-rl;display:flex;flex-direction:column;flex:1 1 0;gap:10px;align-items:center;justify-content:flex-start;background:none;border:0;border-left:1px solid var(--line);border-radius:0;padding:18px 0}
+html[data-look=a] .modecard:last-child{border-left:0}
+html[data-look=a] .modecard b{font-size:44px;letter-spacing:.2em}
+html[data-look=a] .modecard span{font-size:13px;letter-spacing:.08em}
+html[data-look=a] .modecard.main{background:var(--b-shuv) center/94% 100% no-repeat;border-left:0;border-radius:0;flex-grow:1.9;padding:22px 0 14px}
+html[data-look=a] .modecard.main small,html[data-look=a] .modecard.main span{color:var(--washi)}
+
+/* ===== 見た目の案B「切り紙」：はさみで切った和紙が、墨の机に置いてある ===== */
+html[data-look=b] #s-home .bar h1::after{content:"紙";display:inline-grid;place-items:center;width:30px;height:30px;margin-left:12px;vertical-align:4px;background:var(--shu);color:var(--washi);font-size:17px;border-radius:3px;rotate:-6deg;letter-spacing:0}
+html[data-look=b] #s-home .bar h1{font-size:34px}
+html[data-look=b] .mine{border:0;gap:20px;padding:10px 4px 6px}
+html[data-look=b] .mine canvas{width:112px;height:148px;rotate:-5deg;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.5))}
+html[data-look=b] .mine .who b{font-size:36px;white-space:normal;line-height:1.15}
+html[data-look=b] .mine .who em{color:var(--kin);font-size:14px;margin-top:4px}
+html[data-look=b] .menu{gap:6px;align-items:stretch;padding:10px 6px 26px}
+html[data-look=b] .menu .seal{width:auto;min-height:66px;background:var(--c-paper1) center/100% 100% no-repeat;color:var(--sumi);font-size:21px;padding:0 34px 4px}
+html[data-look=b] .menu .seal:nth-child(1){background-image:var(--c-shu);color:var(--washi);rotate:-1.6deg;min-height:76px;font-size:26px;margin-right:18px}
+html[data-look=b] .menu .seal:nth-child(2){background-image:var(--c-paper2);rotate:1deg;margin-left:22px}
+html[data-look=b] .menu .seal:nth-child(3){background-image:var(--c-paper3);rotate:-.8deg;margin-right:30px}
+html[data-look=b] .menu .seal:nth-child(4){background-image:var(--c-paper4);rotate:1.4deg;margin-left:10px}
+html[data-look=b] .modes{gap:4px}
+html[data-look=b] .modecard{background:var(--c-tile) center/100% 100% no-repeat;border:0;border-radius:0;color:var(--sumi);padding:22px 38px 30px 26px}
+html[data-look=b] .modecard span{color:#5b554b}
+html[data-look=b] .modecard small{color:var(--shu)}
+html[data-look=b] .modecard:nth-child(1){rotate:-1.2deg;margin-right:26px}
+html[data-look=b] .modecard:nth-child(3){rotate:1.1deg;margin-left:30px}
+html[data-look=b] .modecard.main{background-image:var(--c-tileshu);color:var(--washi);border:0;border-radius:0;padding:30px 28px 36px;rotate:.6deg}
+html[data-look=b] .modecard.main b{font-size:48px}
+html[data-look=b] .modecard.main span,html[data-look=b] .modecard.main small{color:var(--washi)}

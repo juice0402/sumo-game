@@ -51,6 +51,22 @@ function brushDisc(color, seed) {
   return svgOf(200, 200, `<g fill='${color}'><path d='M${pts.join('L')}Z'/>${dots}</g>`, true);
 }
 
+// 縦の筆の帯（縦書きのボタン用）：横の帯を90度まわしたもの
+function brushBandV(color, seed) {
+  const h = brushBand(color, seed).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  return svgOf(64, 240, `<g transform='translate(64,0) rotate(90)'>${h}</g>`);
+}
+
+// はさみで切った紙（まっすぐな切り口・かどを少し落とす・右下に紙の厚みの影）。preserveAspectRatio なしで伸ばす
+function cutPaper(color, seed, W = 300, H = 90) {
+  const r = rand(seed), j = (a) => (r() - 0.5) * a;
+  const m = 6, x0 = m + j(4), x1 = W - m - 8 + j(4), y0 = m + j(3), y1 = H - m - 6 + j(3);
+  const cutA = 6 + r() * 10, cutB = 4 + r() * 12;
+  const pts = [[x0 + cutA, y0 + j(2)], [x1 + j(3), y0 + j(3)], [x1 + j(3), y1 - cutB], [x1 - cutB * 1.4, y1 + j(2)], [x0 + j(3), y1 + j(3)], [x0 + j(2), y0 + cutA * 0.8]];
+  const d = (dx, dy) => 'M' + pts.map((p) => `${n1(p[0] + dx)},${n1(p[1] + dy)}`).join('L') + 'Z';
+  return svgOf(W, H, `<path d='${d(4, 5)}' fill='rgba(0,0,0,.5)'/><path d='${d(0, 0)}' fill='${color}'/>`);
+}
+
 export function applyButtonArt() {
   const s = document.documentElement.style;
   s.setProperty('--b-shu', url(brushBand(COL.shu, 3)));
@@ -62,4 +78,9 @@ export function applyButtonArt() {
   s.setProperty('--b-lineshu', url(brushBand(COL.shu, 8)));
   s.setProperty('--b-ring', url(inkRing('#cfc8b8', 4)));
   s.setProperty('--b-sun', url(brushDisc(COL.shu, 6)));
+  s.setProperty('--b-shuv', url(brushBandV(COL.shu, 5)));
+  for (let i = 1; i <= 4; i++) s.setProperty('--c-paper' + i, url(cutPaper('#EEE9DE', 20 + i)));
+  s.setProperty('--c-shu', url(cutPaper(COL.shu, 31)));
+  s.setProperty('--c-tile', url(cutPaper('#EEE9DE', 41, 300, 200)));
+  s.setProperty('--c-tileshu', url(cutPaper(COL.shu, 42, 300, 200)));
 }

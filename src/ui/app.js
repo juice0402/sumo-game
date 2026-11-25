@@ -37,10 +37,23 @@ const who = (s) => ({ name: shikonaText(s.shikona), sub: titleText(s.title) });
 let cur = null;
 const nav = [];
 const onShow = {};
+// 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
+const ENTER = '.menu > *, .modes > *, .slots > *, .stagecards > *, .sched > *, .ladder > *, .mine, .profile, .myrank, .foecard, .field, .selhead, .nowhead';
+function enter(el) {
+  el.classList.remove('enter');
+  void el.offsetWidth;   // 動きを最初から
+  const items = el.querySelectorAll(ENTER);
+  items.forEach((c, i) => c.style.setProperty('--i', i));
+  el.classList.add('enter');
+  const n = Math.min(items.length, 6);
+  for (let i = 0; i < n; i++) setTimeout(() => playSfx('fude', { vol: 0.1, rate: 1.7 + i * 0.06 }), 40 + i * 58);
+}
 function show(id) {
   for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== id;
   cur = id;
   if (onShow[id]) onShow[id]();
+  const el = document.getElementById(id);
+  if (id !== 's-bout' && id !== 's-cut') enter(el);
 }
 function go(id) { if (cur && cur !== id && cur !== 's-title' && cur !== 's-bout') nav.push(cur); show(id); }
 function back() { show(nav.pop() || 's-home'); }
@@ -235,6 +248,14 @@ function boot() {
   };
   toggle('b-mute', 'mute', () => setMuted(state.mute));
   toggle('b-short', 'short');
+  // 見た目の案（試作のあいだだけ・道具で切りかえ）
+  const lookSeg = document.getElementById('look-seg');
+  const paintLook = () => {
+    document.documentElement.dataset.look = state.look;
+    for (const b of lookSeg.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.l === state.look));
+  };
+  lookSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.look = b.dataset.l; save(); paintLook(); });
+  paintLook();
   document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
