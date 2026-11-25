@@ -70,8 +70,12 @@ const info = { fp: fingerprint(), rapier: rapierPkg.version, three: threePkg.ver
 
 const css = readFileSync(resolve(root, 'src/ui/style.css'), 'utf8');
 const page = readFileSync(resolve(root, 'src/ui/page.html'), 'utf8').replace('/*STYLE*/', () => css);
-const scripts = `<script>window.SUMO_BUILD = ${JSON.stringify(info)};</script>\n<script>window.SUMO_SFX = ${JSON.stringify(sfx)};</script>\n<script>\n${rapierJs}</script>\n<script>\n${threeJs}</script>\n<script>\n${bundle}</script>\n`;
-for (const s of [bundle, threeJs]) if (/<\/script/i.test(s)) throw new Error('</script が入っている');
+// はじめの画面を早く出すため、ゲームのコードを先に・重いもの（物理・3D・効果音）は最後に「まだ動かさない形」で入れる。
+// ゲームのコードが切る画面を出してから、ui/app.js の loadLibs が順に動かす
+const scripts = `<script>window.SUMO_BUILD = ${JSON.stringify(info)};</script>\n<script>\n${bundle}</script>\n`
+  + `<script type="text/plain" id="lib-rapier">\n${rapierJs}</script>\n<script type="text/plain" id="lib-three">\n${threeJs}</script>\n`
+  + `<script type="application/json" id="lib-sfx">${JSON.stringify(sfx)}</script>\n`;
+for (const s of [bundle, threeJs, rapierJs]) if (/<\/script/i.test(s)) throw new Error('</script が入っている');
 const content = page.replace('<!--SCRIPTS-->', () => scripts);
 
 const cut = content.indexOf('</style>') + '</style>'.length;

@@ -37,9 +37,18 @@ export function unlockAudio() {
       const r = ctx.resume();
       if (r && r.catch) r.catch(() => {});
     }
-    if (loading) return;
+    loadBufs();
+  } catch (e) { /* 音が出なくてもゲームは続く */ }
+}
+
+// 効果音のデータは、はじめの画面を出したあとに入る（app.js の loadLibs）。入ったら sfxReady で読む
+export function sfxReady() { if (ctx) loadBufs(); }
+
+function loadBufs() {
+  try {
+    if (loading || !window.SUMO_SFX) return;
     loading = true;
-    const src = window.SUMO_SFX || {};
+    const src = window.SUMO_SFX;
     for (const name of Object.keys(src)) {
       if (bufs[name]) continue;
       try {
