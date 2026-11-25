@@ -158,11 +158,18 @@ export function createBout(opts) {
     const com = f.body.worldCom();
     if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; f.lostAt = step; return; }
     if (phys.touchLose) {
-      // 体が土俵に touchHold 秒ついたら負け（はねて一瞬かすっただけは負けにしない）
+      // 体が土俵についたら負け。touchReal：本当にふれた（めりこんだか、押し返す力が出た）所だけを数える
+      // （近いだけの「ふれそう」は数えない）→ 頭から落ちてはねても負け（11/25 しょーくん）。touchHold 秒つづいたら負け
       let hit = null;
       for (const c of f.bodyCols) {
         world.contactPair(ringCol, c, (m) => {
-          if (hit || m.numContacts() === 0) return;
+          const k = m.numContacts();
+          if (hit || k === 0) return;
+          if (phys.touchReal) {
+            let real = false;
+            for (let i = 0; i < k && !real; i++) real = m.contactDist(i) <= 0 || m.contactImpulse(i) > 0;
+            if (!real) return;
+          }
           const p = m.numSolverContacts() > 0 ? m.solverContactPoint(0) : null;
           hit = p ? { x: p.x, y: p.y } : { x: 0, y: 0 };
         });
