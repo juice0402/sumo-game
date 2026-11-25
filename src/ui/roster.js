@@ -9,17 +9,27 @@ import { createRoller } from './roller.js';
 // 縦書きの名前：字の数を --n に入れて、列の高さに収まる大きさにする（CSS の font-size が --n を使う）
 export function fitText(el, text) {
   el.textContent = text;
-  el.style.setProperty('--n', String(Math.max(2, Array.from(text).length)));
+  setN(el);
   el.classList.add('fit');
 }
+// 字の数だけ入れる（大きさは CSS が、入れ物の高さ 100cqh と --n から決める＝どの画面の高さでも1列に収まる）
+export function setN(el) { el.style.setProperty('--n', String(Math.max(2, Array.from(el.textContent).length))); }
+// 縦の見出し：中の span に字を入れて --n を
+export function headText(h1, text) {
+  let sp = h1.querySelector('span');
+  if (!sp) { h1.textContent = ''; sp = document.createElement('span'); h1.appendChild(sp); }
+  sp.textContent = text;
+  setN(sp);
+}
 
-// 力士のカード（部屋の力士・力士選出で使う）。番付表の1列＝1力士。opt：{ active, onPick(i), emptyOk }
+// 力士のカード（部屋の力士・力士選出で使う）。番付表の1列＝1力士。opt：{ onPick(i, ボタン), emptyOk }
+// 朱の帯は、はじめはのせない（タップしたときに choose.js でベタッと・11/26 しょーくん）
 export function renderSlots(el, slots, opt) {
   el.textContent = '';
   slots.forEach((s, i) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'slot' + (s ? '' : ' empty') + (s && i === opt.active ? ' on' : '');
+    b.className = 'slot' + (s ? '' : ' empty');
     if (!s && !opt.emptyOk) b.disabled = true;
     if (s) {
       b.innerHTML = '<canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span>';
@@ -31,7 +41,7 @@ export function renderSlots(el, slots, opt) {
       fitText(b.querySelector('b'), T.slotEmpty);
       b.querySelector('em').textContent = opt.emptyOk ? T.slotCut : '';
     }
-    b.addEventListener('click', () => opt.onPick(i));
+    b.addEventListener('click', () => opt.onPick(i, b));
     el.appendChild(b);
   });
   // 描くのはならべてから（canvas の大きさが決まってから）

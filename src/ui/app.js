@@ -17,7 +17,8 @@ import { initBout } from './bout.js';
 import { initTools } from './tools.js';
 import { initHeya } from './heya.js';
 import { reset as resetChoose } from './choose.js';
-import { renderSlots, initEdit, fitText } from './roster.js';
+import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
+import { choose } from './choose.js';
 import { initJungyo, initBanzuke, initSelect } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
@@ -99,6 +100,9 @@ function loadLibs() {
 }
 
 function boot() {
+  // 縦の見出し・メニューの字・勝負の説明は、どの画面の高さでも1列に収まる大きさに（CSS が 100cqh と --n から決める）
+  for (const h of document.querySelectorAll('.screen.v > .bar h1')) headText(h, h.textContent);
+  for (const el of document.querySelectorAll('.menu .lbl, .modecard b, .modecard span')) setN(el);
   let editSlot = 0, bzTitle = '番付', stamping = false;
   // 切る：どの枠を切るか・切ったあとどこへ行くか
   let cutSlot = 0, afterCut = null;
@@ -135,7 +139,7 @@ function boot() {
   onShow['s-pick'] = () => {
     pick.show();
     const s = activeSlot();
-    document.getElementById('me-text').textContent = s ? shikonaText(s.shikona) : T.yourShape;
+    fitText(document.getElementById('me-text'), s ? shikonaText(s.shikona) : T.yourShape);
   };
 
   const bout = initBout({
@@ -157,14 +161,12 @@ function boot() {
   }
   onShow['s-select'] = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
-    // 選んだ列に朱の判子をポンと押してから取組へ
-    onPick(i) {
+    // 選んだ列に朱の帯をベタッと＋太鼓ドドン、朱の判子「出」をポン → ほかは下へ抜けて取組へ
+    onPick(i, btn) {
       if (stamping) return;
       stamping = true;
-      const btn = document.querySelectorAll('#sel-slots .slot')[i];
-      if (btn) btn.classList.add('stamp');
-      playSfx('ton', { vol: 0.7 });
-      setTimeout(() => loadLibs().then(() => { stamping = false; fight(i); }), 460);
+      btn.classList.add('oshi');   // 朱の判子「出」（.stamp は結果の勝・負の判子と名前がかぶるので oshi）
+      choose(btn, () => loadLibs().then(() => { stamping = false; fight(i); }), state.short);
     },
   });
   function fight(i) {
@@ -240,10 +242,12 @@ function boot() {
 
   // 部屋の力士（3枠）と編集
   onShow['s-roster'] = () => renderSlots(document.getElementById('roster-slots'), state.slots, {
-    active: state.active, emptyOk: true,
-    onPick(i) {
-      if (state.slots[i]) { editSlot = i; go('s-edit'); return; }
-      cutFor(i, () => { editSlot = i; show('s-edit'); });   // 新しい力士：切ったら名前を見せる（もどると部屋の力士へ）
+    emptyOk: true,
+    onPick(i, btn) {
+      choose(btn, () => {
+        if (state.slots[i]) { editSlot = i; go('s-edit'); return; }
+        cutFor(i, () => { editSlot = i; show('s-edit'); });   // 新しい力士：切ったら名前を見せる（もどると部屋の力士へ）
+      }, state.short);
     },
   });
   const edit = initEdit({

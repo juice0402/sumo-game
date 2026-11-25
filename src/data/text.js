@@ -40,7 +40,7 @@ export const T = {
   mode: { jungyo: '巡業', honbasho: '本場所', keiko: '稽古' },
   slotEmpty: '空き',
   slotCut: '紙を切って力士をつくる',
-  rec: (r) => (r && (r.w || r.l || r.d) ? `${r.w}勝${r.l}敗${r.d ? r.d + '分' : ''}` : 'まだ取っていない'),
+  rec: (r) => `${(r && r.w) | 0}勝${(r && r.l) | 0}敗${r && r.d ? r.d + '分' : ''}`,   // まだ取っていなくても 0勝0敗
   rollNone: 'なし',   // つなぎの「なし」（くるくるの中）
   lockedWords: (n) => `まだ持っていない語 あと${n}・相手の四股名で見つけよう`,
   linkNone: '（なし）',

@@ -5,7 +5,7 @@ import { DOHYO } from '../data/dohyo.js';
 import { BANZUKE } from '../data/banzuke.js';
 import { schedule, slotLeftMin } from '../game/jungyo.js';
 import { rankOf, nextRank } from '../game/rating.js';
-import { renderSlots } from './roster.js';
+import { renderSlots, headText, fitText, setN } from './roster.js';
 
 function hhmm(ms) { const d = new Date(ms); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; }
 
@@ -19,8 +19,9 @@ function stageCard(id, big) {
   sw.style.setProperty('--top', d.top.paper);
   sw.style.setProperty('--ring', d.top.ring);
   sw.style.setProperty('--side', d.side.paper);
-  el.querySelector('b').textContent = S.name;
+  fitText(el.querySelector('b'), S.name);
   el.querySelector('span').textContent = S.note;
+  setN(el.querySelector('span'));
   return el;
 }
 
@@ -52,9 +53,9 @@ export function initBanzuke() {
   return {
     // st：保存の中身（rate・hon）／title：見出し（番付 or 本場所）
     show(st, title) {
-      document.getElementById('bz-h').textContent = title;
+      headText(document.getElementById('bz-h'), title);
       const r = rankOf(st.rate), nx = nextRank(st.rate);
-      document.getElementById('bz-rank').textContent = r.name;
+      fitText(document.getElementById('bz-rank'), r.name);
       document.getElementById('bz-rate').textContent = String(st.rate);
       document.getElementById('bz-rec').textContent = T.mode.honbasho + ' ' + T.rec(st.hon);
       document.getElementById('bz-next').textContent = nx ? T.toNext(nx.name, nx.min - st.rate) : T.top;
@@ -81,8 +82,10 @@ export function initSelect() {
     // o：{ mode, stage, drawn（抽選したか）, slots, active, onPick(i) }
     show(o) {
       document.getElementById('sel-mode').textContent = T.mode[o.mode];
+      setN(document.getElementById('sel-mode'));
       const S = STAGES[o.stage];
       document.getElementById('sel-stage').textContent = o.drawn ? T.jungyoDraw(S.name) + '・' + S.note : T.stageLine(S.name, S.note);
+      setN(document.getElementById('sel-stage'));
       renderSlots(document.getElementById('sel-slots'), o.slots, { active: o.active, onPick: o.onPick, emptyOk: false });
     },
   };
