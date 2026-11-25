@@ -313,7 +313,6 @@ button{font:inherit;color:inherit;cursor:pointer}
       <button id="m-shobu" class="seal" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 19L19 5M5 5l14 14"/></svg>勝負</button>
       <button id="m-rikishi" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M7.8 16L16 4M16.2 16L8 4"/></svg>力士をつくる</button>
       <button id="m-banzuke" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/><path d="M7.5 9v6M16.5 9v6"/></svg>番付</button>
-      <button id="m-jungyo" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19c4-1 3-7 8-7s4-6 8-7"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="5" r="1.6"/></svg>土俵巡業</button>
     </nav>
   </section>
 
@@ -425,6 +424,9 @@ button{font:inherit;color:inherit;cursor:pointer}
       <h1 class="brush">道具</h1>
     </header>
     <div class="body">
+      <h2>はじめての流れ</h2>
+      <p>いまの力士と番付を取っておいて、まっさらな相撲部屋から見なおす（試作だけ）。</p>
+      <div class="toggles"><button id="b-intro" class="ghost" type="button">はじめての流れを見る</button><button id="b-unstash" class="ghost" type="button" hidden>前の保存にもどす</button></div>
       <h2>指紋</h2>
       <p>決まった3番の結果。スマホと iPad で同じなら、どの端末でも同じ取組になる。</p>
       <div class="fp" id="fp-me">はかっています…</div>
@@ -1441,11 +1443,35 @@ function saveState(st) {
   } catch (e) { /* */ }
 }
 
+// 道具の「はじめての流れを見る」（試作だけ）：いまの保存を1つだけ取っておき、まっさらな部屋から見なおす／もどす
+const STASH_KEY = SAVE_KEY + '-bak';
+function freshProgress() {
+  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
+}
+function hasStash() {
+  try { return !!localStorage.getItem(STASH_KEY); } catch (e) { return false; }
+}
+function stashSave() {   // もう取ってあれば上書きしない（何度見なおしても、最初の力士たちを守る）
+  try {
+    const cur = localStorage.getItem(SAVE_KEY);
+    if (cur && !localStorage.getItem(STASH_KEY)) localStorage.setItem(STASH_KEY, cur);
+  } catch (e) { /* */ }
+}
+function unstashSave() {
+  try {
+    const b = localStorage.getItem(STASH_KEY);
+    if (!b) return false;
+    localStorage.setItem(SAVE_KEY, b);
+    localStorage.removeItem(STASH_KEY);
+    return true;
+  } catch (e) { return false; }
+}
+
 function addRec(r, winner, side = 'a') {
   if (winner === side) r.w++; else if (winner) r.l++; else r.d++;
 }
 
-return { SLOT_COUNT, newRikishi, loadState, saveState, addRec };
+return { SLOT_COUNT, newRikishi, loadState, saveState, freshProgress, hasStash, stashSave, unstashSave, addRec };
 })();
 
 __m['src/data/cpu-shapes.js'] = (function () {
@@ -1481,7 +1507,21 @@ const CPU_SHAPES = [
   },
 ];
 
-return { CPU_SHAPES };
+// はじめての人に筆がなぞって見せるお手本（11/25 しょーくん「お手本くらいは人型っぽく」）。CPU には入れない。
+// 髷・頭・肩・少しひらいた腕・おなか・ひらいた足。点検に通ること（tools/test.mjs）
+const OTEHON = {
+  id: 'hito', name: 'お手本',
+  pts: [[150, 10], [161, 13], [165, 24], [175, 29], [182, 38], [186, 50], [186, 62], [182, 74], [174, 84], [168, 90], [168, 95],
+    [194, 98], [218, 104], [238, 116], [254, 140], [266, 170], [276, 204], [280, 228], [276, 244], [262, 250], [250, 240],
+    [246, 214], [236, 184], [224, 162], [230, 190], [232, 216], [227, 242], [214, 264], [206, 278], [214, 304], [218, 334],
+    [222, 364], [228, 394], [232, 410], [180, 410], [178, 382], [172, 350], [162, 324], [150, 318], [138, 324], [128, 350],
+    [122, 382], [120, 410], [68, 410], [72, 394], [78, 364], [82, 334], [86, 304], [94, 278], [86, 264], [73, 242], [68, 216],
+    [70, 190], [76, 162], [64, 184], [54, 214], [50, 240], [38, 250], [24, 244], [20, 228], [24, 204], [34, 170], [46, 140],
+    [62, 116], [82, 104], [106, 98], [132, 95], [132, 90], [126, 84], [118, 74], [114, 62], [114, 50], [118, 38], [125, 29],
+    [135, 24], [139, 13]],
+};
+
+return { CPU_SHAPES, OTEHON };
 })();
 
 __m['src/game/rating.js'] = (function () {
@@ -1900,7 +1940,7 @@ const { PAPER, CHECK } = __m['src/data/config.js'];
 const { T } = __m['src/data/text.js'];
 const { strokeToOutline, isNearStart } = __m['src/geom/stroke.js'];
 const { checkShape } = __m['src/geom/check.js'];
-const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
+const { OTEHON } = __m['src/data/cpu-shapes.js'];
 const { COL, setupCanvas, tornRect, fiberPattern, polyPath, paperPiece, inkStroke } = __m['src/ui/ink.js'];
 const { playSfx } = __m['src/ui/sound.js'];
 
@@ -1916,11 +1956,11 @@ function initCut({ onDecide }) {
   let outline = null, check = null, fallT = -1;
   let lay = null;
   let pred = [], rafId = 0;   // pred＝指の少し先（ブラウザの予測・描くだけで形には入れない）
-  // はじめての人へのお手本：釣鐘の形を、筆がすっと一筆でなぞる（指を置いたら消える）
+  // はじめての人へのお手本：人の形（data/cpu-shapes.js の OTEHON）を、筆がすっと一筆でなぞる（指を置いたら消える）
   let demo = null;
-  const DEMO_SEC = 2.2, DEMO_HOLD = 0.9;
+  const DEMO_SEC = 3.4, DEMO_HOLD = 1.0;
   function demoPath() {
-    const pts = CPU_SHAPES[0].pts.concat([CPU_SHAPES[0].pts[0]]);
+    const pts = OTEHON.pts.concat([OTEHON.pts[0]]);
     const len = [0];
     for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
     return { pts, len, total: len[len.length - 1] };
@@ -3472,7 +3512,6 @@ function initHeya(cb) {
   on('m-shobu', cb.onShobu);
   on('m-rikishi', cb.onRoster);
   on('m-banzuke', cb.onBanzuke);
-  on('m-jungyo', cb.onJungyo);
   on('mc-jungyo', cb.onJungyoMatch);
   on('mc-honbasho', cb.onHonbasho);
   on('mc-keiko', cb.onKeiko);
@@ -3679,7 +3718,7 @@ __m['src/ui/app.js'] = (function () {
 const { T } = __m['src/data/text.js'];
 const { STAGES, HONBASHO_STAGE } = __m['src/data/stages.js'];
 const { setRapier } = __m['src/sim/battle.js'];
-const { loadState, saveState, newRikishi, addRec } = __m['src/game/save.js'];
+const { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } = __m['src/game/save.js'];
 const { shikonaText, titleText, randomShikona } = __m['src/game/names.js'];
 const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
 const { rankOf, eloDelta } = __m['src/game/rating.js'];
@@ -3870,8 +3909,7 @@ function boot() {
     onRoster() { if (hasRikishi()) go('s-roster'); else startIntro(); },
     onShobu() { if (hasRikishi()) go('s-mode'); else startIntro(); },
     onBanzuke() { bzTitle = '番付'; go('s-banzuke'); },
-    onJungyo() { go('s-jungyo'); },
-    onJungyoMatch() { go('s-jungyo'); },
+    onJungyoMatch() { go('s-jungyo'); },   // 土俵巡業の予定は、巡業をえらんだ人だけが見る（11/25 部屋のメニューから外した）
     onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
     onKeiko() { pick.resetMarks(); go('s-pick'); },
   });
@@ -3947,7 +3985,23 @@ function boot() {
 
   // 道具（試作のあいだだけ・本番では消して、音と演出は「設定」へ）
   const tools = initTools({ getShape: () => (activeSlot() ? activeSlot().shape : null), getDrive: () => state.drive });
-  document.getElementById('b-tools').addEventListener('click', () => loadLibs().then(() => tools.open()));
+  // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
+  const unstashBtn = document.getElementById('b-unstash');
+  const paintStash = () => { unstashBtn.hidden = !hasStash(); };
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun'];
+  document.getElementById('b-intro').addEventListener('click', () => {
+    stashSave();
+    Object.assign(state, freshProgress());
+    save();
+    tools.close();
+    home();
+  });
+  unstashBtn.addEventListener('click', () => {
+    if (unstashSave()) { const st = loadState(); for (const k of PROGRESS) state[k] = st[k]; }
+    tools.close();
+    home();
+  });
+  document.getElementById('b-tools').addEventListener('click', () => { paintStash(); loadLibs().then(() => tools.open()); });
   setMuted(state.mute);
   const toggle = (id, key, after) => {
     const b = document.getElementById(id);

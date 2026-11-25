@@ -3,7 +3,7 @@ import { PAPER, CHECK } from '../data/config.js';
 import { T } from '../data/text.js';
 import { strokeToOutline, isNearStart } from '../geom/stroke.js';
 import { checkShape } from '../geom/check.js';
-import { CPU_SHAPES } from '../data/cpu-shapes.js';
+import { OTEHON } from '../data/cpu-shapes.js';
 import { COL, setupCanvas, tornRect, fiberPattern, polyPath, paperPiece, inkStroke } from './ink.js';
 import { playSfx } from './sound.js';
 
@@ -19,11 +19,11 @@ export function initCut({ onDecide }) {
   let outline = null, check = null, fallT = -1;
   let lay = null;
   let pred = [], rafId = 0;   // pred＝指の少し先（ブラウザの予測・描くだけで形には入れない）
-  // はじめての人へのお手本：釣鐘の形を、筆がすっと一筆でなぞる（指を置いたら消える）
+  // はじめての人へのお手本：人の形（data/cpu-shapes.js の OTEHON）を、筆がすっと一筆でなぞる（指を置いたら消える）
   let demo = null;
-  const DEMO_SEC = 2.2, DEMO_HOLD = 0.9;
+  const DEMO_SEC = 3.4, DEMO_HOLD = 1.0;
   function demoPath() {
-    const pts = CPU_SHAPES[0].pts.concat([CPU_SHAPES[0].pts[0]]);
+    const pts = OTEHON.pts.concat([OTEHON.pts[0]]);
     const len = [0];
     for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
     return { pts, len, total: len[len.length - 1] };

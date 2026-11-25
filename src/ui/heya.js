@@ -14,7 +14,6 @@ export function initHeya(cb) {
   on('m-shobu', cb.onShobu);
   on('m-rikishi', cb.onRoster);
   on('m-banzuke', cb.onBanzuke);
-  on('m-jungyo', cb.onJungyo);
   on('mc-jungyo', cb.onJungyoMatch);
   on('mc-honbasho', cb.onHonbasho);
   on('mc-keiko', cb.onKeiko);

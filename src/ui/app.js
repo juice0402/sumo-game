@@ -4,7 +4,7 @@
 import { T } from '../data/text.js';
 import { STAGES, HONBASHO_STAGE } from '../data/stages.js';
 import { setRapier } from '../sim/battle.js';
-import { loadState, saveState, newRikishi, addRec } from '../game/save.js';
+import { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } from '../game/save.js';
 import { shikonaText, titleText, randomShikona } from '../game/names.js';
 import { CPU_SHAPES } from '../data/cpu-shapes.js';
 import { rankOf, eloDelta } from '../game/rating.js';
@@ -195,8 +195,7 @@ function boot() {
     onRoster() { if (hasRikishi()) go('s-roster'); else startIntro(); },
     onShobu() { if (hasRikishi()) go('s-mode'); else startIntro(); },
     onBanzuke() { bzTitle = '番付'; go('s-banzuke'); },
-    onJungyo() { go('s-jungyo'); },
-    onJungyoMatch() { go('s-jungyo'); },
+    onJungyoMatch() { go('s-jungyo'); },   // 土俵巡業の予定は、巡業をえらんだ人だけが見る（11/25 部屋のメニューから外した）
     onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
     onKeiko() { pick.resetMarks(); go('s-pick'); },
   });
@@ -272,7 +271,23 @@ function boot() {
 
   // 道具（試作のあいだだけ・本番では消して、音と演出は「設定」へ）
   const tools = initTools({ getShape: () => (activeSlot() ? activeSlot().shape : null), getDrive: () => state.drive });
-  document.getElementById('b-tools').addEventListener('click', () => loadLibs().then(() => tools.open()));
+  // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
+  const unstashBtn = document.getElementById('b-unstash');
+  const paintStash = () => { unstashBtn.hidden = !hasStash(); };
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun'];
+  document.getElementById('b-intro').addEventListener('click', () => {
+    stashSave();
+    Object.assign(state, freshProgress());
+    save();
+    tools.close();
+    home();
+  });
+  unstashBtn.addEventListener('click', () => {
+    if (unstashSave()) { const st = loadState(); for (const k of PROGRESS) state[k] = st[k]; }
+    tools.close();
+    home();
+  });
+  document.getElementById('b-tools').addEventListener('click', () => { paintStash(); loadLibs().then(() => tools.open()); });
   setMuted(state.mute);
   const toggle = (id, key, after) => {
     const b = document.getElementById(id);

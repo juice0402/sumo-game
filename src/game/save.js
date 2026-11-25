@@ -53,6 +53,30 @@ export function saveState(st) {
   } catch (e) { /* */ }
 }
 
+// 道具の「はじめての流れを見る」（試作だけ）：いまの保存を1つだけ取っておき、まっさらな部屋から見なおす／もどす
+const STASH_KEY = SAVE_KEY + '-bak';
+export function freshProgress() {
+  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
+}
+export function hasStash() {
+  try { return !!localStorage.getItem(STASH_KEY); } catch (e) { return false; }
+}
+export function stashSave() {   // もう取ってあれば上書きしない（何度見なおしても、最初の力士たちを守る）
+  try {
+    const cur = localStorage.getItem(SAVE_KEY);
+    if (cur && !localStorage.getItem(STASH_KEY)) localStorage.setItem(STASH_KEY, cur);
+  } catch (e) { /* */ }
+}
+export function unstashSave() {
+  try {
+    const b = localStorage.getItem(STASH_KEY);
+    if (!b) return false;
+    localStorage.setItem(SAVE_KEY, b);
+    localStorage.removeItem(STASH_KEY);
+    return true;
+  } catch (e) { return false; }
+}
+
 export function addRec(r, winner, side = 'a') {
   if (winner === side) r.w++; else if (winner) r.l++; else r.d++;
 }

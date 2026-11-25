@@ -1,6 +1,6 @@
 // 点検（node tools/test.mjs）。だめなときだけ行を出して、最後に1行。
 import RAPIER from '@dimforge/rapier2d-deterministic-compat';
-import { CPU_SHAPES } from '../src/data/cpu-shapes.js';
+import { CPU_SHAPES, OTEHON } from '../src/data/cpu-shapes.js';
 import { checkShape } from '../src/geom/check.js';
 import { strokeToOutline } from '../src/geom/stroke.js';
 import { area } from '../src/geom/poly.js';
@@ -22,8 +22,8 @@ import { makeRng } from '../src/sim/rng.js';
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.log('NG ' + msg); } };
 
-// CPU の形は点検に通る・分けた形の面積が元と同じ
-for (const s of CPU_SHAPES) {
+// CPU の形とお手本は点検に通る・分けた形の面積が元と同じ
+for (const s of [...CPU_SHAPES, OTEHON]) {
   const r = checkShape(s.pts);
   ok(r.ok, `${s.id} が点検に通らない: ${r.problems.join(',')}`);
   if (r.pieces) {
