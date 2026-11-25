@@ -19,40 +19,65 @@ export function initCut({ onDecide }) {
   let outline = null, check = null, fallT = -1;
   let lay = null;
   let pred = [], rafId = 0;   // pred＝指の少し先（ブラウザの予測・描くだけで形には入れない）
-  // はじめての人へのお手本：人の形（data/cpu-shapes.js の OTEHON）を、筆がすっと一筆でなぞる（指を置いたら消える）
+  // はじめての人へのお手本（11/25 しょーくん「早すぎる・型抜きみたいに点線で」）：人の形（data/cpu-shapes.js の OTEHON）を、
+  // 紙に墨の点線でうすく引いておく。描いている間も消さない（点線にそって切る）。切り直しても出る。
+  // はじまりは朱の丸（ゆっくり息をする）と「ここから」・向きの矢じるし。動くのは丸だけ
   let demo = null;
-  const DEMO_SEC = 3.4, DEMO_HOLD = 1.0;
   function demoPath() {
     const pts = OTEHON.pts.concat([OTEHON.pts[0]]);
     const len = [0];
     for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
     return { pts, len, total: len[len.length - 1] };
   }
+  function pointAt(path, d) {   // 線のはじめから d の所の点と向き
+    const { pts, len } = path;
+    let i = 1;
+    while (i < pts.length - 1 && len[i] < d) i++;
+    const a = pts[i - 1], b = pts[i], k = (d - len[i - 1]) / (len[i] - len[i - 1] || 1);
+    const dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1;
+    return { p: [a[0] + dx * k, a[1] + dy * k], ux: dx / m, uy: dy / m };
+  }
   function demoTick() {
-    if (!demo) return;
+    if (!demo || cv.closest('.screen').hidden) return;   // 画面をはなれたら止める（show でまた動く）
     if (!drawing && !outline && !raw.length) draw();
     requestAnimationFrame(demoTick);
   }
   function drawDemo(ctx, dpr) {
-    const t = (performance.now() - demo.t0) / 1000 % (DEMO_SEC + DEMO_HOLD + 0.5);
-    const u = Math.min(1, t / DEMO_SEC), fade = t > DEMO_SEC + DEMO_HOLD ? 1 - (t - DEMO_SEC - DEMO_HOLD) / 0.5 : 1;
-    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;   // はじめと終わりをゆっくり
-    const want = e * demo.path.total, out = [];
-    const { pts, len } = demo.path;
-    for (let i = 0; i < pts.length; i++) {
-      if (len[i] <= want) { out.push(pts[i]); continue; }
-      const k = (want - len[i - 1]) / (len[i] - len[i - 1]);
-      out.push([pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k]);
-      break;
-    }
+    const path = demo.path;
     ctx.save();
-    ctx.globalAlpha = 0.5 * Math.max(0, fade);
-    inkStroke(ctx, out, tx, 3 * dpr);
-    const p0 = tx(pts[0]), pe = tx(out[out.length - 1]);
-    ctx.globalAlpha = Math.max(0, fade);
-    ctx.fillStyle = COL.shu;
-    ctx.beginPath(); ctx.arc(p0[0], p0[1], 5 * dpr, 0, Math.PI * 2); ctx.fill();
-    if (u < 1) { ctx.fillStyle = COL.sumi; ctx.beginPath(); ctx.arc(pe[0], pe[1], 7 * dpr, 0, Math.PI * 2); ctx.fill(); }
+    // 型抜きの点線
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = COL.sumi;
+    ctx.globalAlpha = raw.length ? 0.3 : 0.5;
+    ctx.lineWidth = 3 * dpr;
+    ctx.setLineDash([0.01, 9 * dpr]);
+    ctx.beginPath();
+    path.pts.forEach((p, i) => { const q = tx(p); if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (!raw.length) {
+      ctx.globalAlpha = 1;
+      // 向きの矢じるし（はじまりから少し先）
+      const { p, ux, uy } = pointAt(path, 34);
+      const q = tx(p), L = 7 * dpr;
+      ctx.strokeStyle = COL.shu;
+      ctx.lineWidth = 2.6 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(q[0] - ux * L - uy * L * 0.8, q[1] - uy * L + ux * L * 0.8);
+      ctx.lineTo(q[0], q[1]);
+      ctx.lineTo(q[0] - ux * L + uy * L * 0.8, q[1] - uy * L - ux * L * 0.8);
+      ctx.stroke();
+      // はじまりの朱の丸（ゆっくり息をする）と「ここから」
+      const t = (performance.now() - demo.t0) / 1000;
+      const p0 = tx(path.pts[0]), r = (5.5 + 1.5 * Math.sin(t * 2.2)) * dpr;
+      ctx.fillStyle = COL.shu;
+      ctx.beginPath(); ctx.arc(p0[0], p0[1], r, 0, Math.PI * 2); ctx.fill();
+      ctx.font = `500 ${12 * dpr}px "Zen Kaku Gothic New", sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(T.cutHere, p0[0] - 12 * dpr, p0[1]);
+    }
     ctx.restore();
   }
 
@@ -183,7 +208,7 @@ export function initCut({ onDecide }) {
         }
       }
     }
-    if (demo && !cut && !raw.length) drawDemo(ctx, dpr);
+    if (demo && !cut) drawDemo(ctx, dpr);   // 点線は描いている線の下に
     // 描いている線
     if (!cut && raw.length) {
       inkStroke(ctx, drawing && pred.length ? raw.concat(pred) : raw, tx, 3.4 * dpr);
@@ -210,7 +235,7 @@ export function initCut({ onDecide }) {
     raw = []; outline = null; check = null; fallT = -1; drawing = false; near = false;
     okBtn.disabled = true;
     checks.hidden = true;
-    setHint(T.cutHint);
+    setHint(demo ? T.cutDemo : T.cutHint);
     draw();
   }
 
@@ -248,7 +273,6 @@ export function initCut({ onDecide }) {
     if (!lay) layout();
     e.preventDefault();
     cv.setPointerCapture(e.pointerId);
-    demo = null;
     raw = [toPaper(e)]; pred = []; outline = null; check = null; fallT = -1;
     drawing = true; near = false;
     playSfx('fude', { vol: 0.45 });
