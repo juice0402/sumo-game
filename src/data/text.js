@@ -26,6 +26,7 @@ export const T = {
   lose: '負',
   draw: '引分',
   kind: {
+    touch: (who) => `${who}の体が土俵についた`,
     fall: (who) => `${who}がたおれた`,
     out: (who) => `${who}が土俵の外へ`,
     time: () => '時間切れ',

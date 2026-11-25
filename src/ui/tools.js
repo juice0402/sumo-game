@@ -79,8 +79,8 @@ export function initTools({ getShape, getDrive }) {
       return `<tr><td>${res.shapes[i].name}</td>${cells}<td>${pct((p.w + p.d * 0.5) / p.n)}</td><td>${pct(p.d / p.n)}</td><td>${(p.t / p.n).toFixed(1)}秒</td></tr>`;
     }).join('');
     out.innerHTML = `<table class="tbl">${head}${rows}</table>`;
-    const all = res.per.reduce((a, p) => ({ n: a.n + p.n, d: a.d + p.d, f: a.f + p.fall, o: a.o + p.out }), { n: 0, d: 0, f: 0, o: 0 });
-    sum.textContent = `${total}番・${(ms / 1000).toFixed(1)}秒。引き分け ${pct(all.d / all.n)}・負けのうち転倒 ${all.f}・場外 ${all.o}`;
+    const all = res.per.reduce((a, p) => ({ n: a.n + p.n, d: a.d + p.d, f: a.f + p.fall + p.touch, o: a.o + p.out }), { n: 0, d: 0, f: 0, o: 0 });
+    sum.textContent = `${total}番・${(ms / 1000).toFixed(1)}秒。引き分け ${pct(all.d / all.n)}・負けのうち体がついた／転倒 ${all.f}・場外 ${all.o}`;
   }
 
   tblBtn.addEventListener('click', makeTable);

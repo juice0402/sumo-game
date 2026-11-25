@@ -15,7 +15,7 @@ export function makeTableRunner(shapes, { seeds = 6, phys = null, seedBase = 1 }
   }
   const cell = () => ({ w: 0, l: 0, d: 0, n: 0, t: 0 });
   const grid = shapes.map(() => shapes.map(cell));
-  const per = shapes.map(() => ({ w: 0, l: 0, d: 0, n: 0, t: 0, fall: 0, out: 0, time: 0, both: 0 }));
+  const per = shapes.map(() => ({ w: 0, l: 0, d: 0, n: 0, t: 0, fall: 0, touch: 0, out: 0, time: 0, both: 0 }));
 
   function add({ i, j }, r) {
     // i が左、j が右。i から見た結果
@@ -29,7 +29,7 @@ export function makeTableRunner(shapes, { seeds = 6, phys = null, seedBase = 1 }
       const p = per[x];
       p.n++; p.t += r.time;
       if (r.winner === side) p.w++;
-      else if (r.winner) { p.l++; if (r.kind === 'fall') p.fall++; else p.out++; }
+      else if (r.winner) { p.l++; p[r.kind === 'out' ? 'out' : r.kind === 'touch' ? 'touch' : 'fall']++; }
       else { p.d++; if (r.kind === 'time') p.time++; else p.both++; }
     }
   }
