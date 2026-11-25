@@ -8,5 +8,5 @@
 - 勝敗にかかわる計算は四則演算だけ（Math.sin などを使わない）。演出は記録の再生だけにして、物理にさわらない
 - 見た目：墨 #201E1B・和紙 #EEE9DE・朱 #AB392F・金 #B79A53。AI っぽい飾り（グラデーション・光る輪・絵文字）は入れない
 - 絵・音・福箱にさわるときは、ネット副業プロジェクトの claude/game-art-rule.md
-- 企画メモはネット副業プロジェクトの claude/sumo-game-idea.md（要件の全文は claude/sumo-youken.md）
+- いまの状態・次はネット副業プロジェクトの claude/sumo-now.md（区切りごとにこれだけ書きかえる）。決まりは claude/sumo-game-idea.md（要件の全文は claude/sumo-youken.md）
 - 返事はいつも日本語
