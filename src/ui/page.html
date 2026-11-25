@@ -1,4 +1,4 @@
-<title>紙相撲 試作</title>
+<title>PAPER SUMO 試作</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6,10 +6,92 @@
 <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet" media="print" id="webfont" onload="this.media='all'">
 <style>/*STYLE*/</style>
 <div id="app">
-  <section id="s-cut" class="screen">
+  <section id="s-title" class="screen" hidden>
+    <div class="logo" id="logo">
+      <div class="sun"></div>
+      <div class="word brush">PAPER<br>SUMO</div>
+      <div class="tate brush">紙相撲</div>
+    </div>
+    <p class="catch brush">一枚の紙で、世界に挑め。</p>
+    <footer class="actions"><button id="b-start" class="seal" type="button">はじめる</button></footer>
+    <p class="tiny">試作・名前は仮</p>
+  </section>
+
+  <section id="s-home" class="screen" hidden>
     <header class="bar">
-      <h1 class="brush">力士をつくる</h1>
+      <h1 class="brush">相撲部屋</h1>
       <button id="b-tools" class="ghost" type="button">道具</button>
+    </header>
+    <button class="mine" id="home-mine" type="button"><canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span></button>
+    <nav class="menu">
+      <button id="m-shobu" class="seal" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 19L19 5M5 5l14 14"/></svg>勝負</button>
+      <button id="m-rikishi" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M7.8 16L16 4M16.2 16L8 4"/></svg>力士をつくる</button>
+      <button id="m-banzuke" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/><path d="M7.5 9v6M16.5 9v6"/></svg>番付</button>
+      <button id="m-jungyo" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19c4-1 3-7 8-7s4-6 8-7"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="5" r="1.6"/></svg>土俵巡業</button>
+    </nav>
+  </section>
+
+  <section id="s-mode" class="screen" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">勝負</h1></header>
+    <div class="modes">
+      <button class="modecard" id="mc-jungyo" type="button"><b class="brush">巡業</b><span>番付は動かない・土俵が変わる</span><small id="mc-jungyo-now"></small></button>
+      <button class="modecard main" id="mc-honbasho" type="button"><b class="brush">本場所</b><span>番付をかけた真剣勝負</span><small id="mc-hon-now"></small></button>
+      <button class="modecard" id="mc-keiko" type="button"><b class="brush">稽古</b><span>CPU の5体と取る・相性を見る</span></button>
+    </div>
+  </section>
+
+  <section id="s-roster" class="screen" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">部屋の力士</h1></header>
+    <div class="slots" id="roster-slots"></div>
+    <p class="note">出られるのは、この3体から1体</p>
+  </section>
+
+  <section id="s-edit" class="screen" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">力士の編集</h1><button id="ed-retire" class="ghost" type="button">引退</button></header>
+    <div class="profile"><canvas id="ed-cv"></canvas><div class="who"><small id="ed-title"></small><b class="brush" id="ed-name"></b><em id="ed-rec"></em></div></div>
+    <div class="field"><div class="flabel">四股名</div>
+      <div class="wordrow"><button class="ghost word" data-g="kami" type="button"></button><button class="ghost word" data-g="tsunagi" type="button"></button><button class="ghost word" data-g="shimo" type="button"></button></div>
+      <button id="ed-rand" class="ghost" type="button">おまかせ</button>
+    </div>
+    <div class="field"><div class="flabel">称号</div><div class="wordrow"><button class="ghost word" data-g="title" type="button"></button></div></div>
+    <footer class="actions pair">
+      <button id="ed-recut" class="seal sub" type="button">切り直す</button>
+      <button id="ed-done" class="seal" type="button">完了</button>
+    </footer>
+  </section>
+
+  <section id="s-jungyo" class="screen" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">土俵巡業</h1></header>
+    <div class="body">
+      <div class="nowhead"><span>いま開催中</span><em id="jg-left"></em></div>
+      <div class="stagecards" id="jg-now"></div>
+      <h2>このあと</h2>
+      <div class="sched" id="jg-list"></div>
+    </div>
+    <footer class="actions"><button id="jg-go" class="seal" type="button">巡業の取組へ</button></footer>
+  </section>
+
+  <section id="s-banzuke" class="screen" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush" id="bz-h">番付</h1></header>
+    <div class="body">
+      <div class="myrank"><b class="brush" id="bz-rank"></b><div><em id="bz-rate"></em><span id="bz-rec"></span><span id="bz-next"></span></div></div>
+      <ol class="ladder" id="bz-ladder"></ol>
+      <p class="note" id="bz-world"></p>
+    </div>
+    <footer class="actions"><button id="bz-go" class="seal" type="button">本場所の取組へ</button></footer>
+  </section>
+
+  <section id="s-select" class="screen" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">力士選出</h1></header>
+    <div class="selhead"><b class="brush" id="sel-mode"></b><span id="sel-stage"></span></div>
+    <div class="foecard"><span class="q brush">？</span><span id="sel-foe"></span></div>
+    <div class="slots" id="sel-slots"></div>
+  </section>
+
+  <section id="s-cut" class="screen" hidden>
+    <header class="bar">
+      <button id="b-cutback" class="round" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h1 class="brush">力士をつくる</h1>
     </header>
     <div class="stage" id="cut-stage"><canvas id="cut-cv"></canvas></div>
     <p class="hint" id="cut-hint">一筆で、力士の形を描こう</p>
@@ -22,7 +104,7 @@
 
   <section id="s-pick" class="screen" hidden>
     <header class="bar">
-      <button id="b-back" class="round" type="button" aria-label="切り直す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button id="b-back" class="round" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
       <h1 class="brush">相手をえらぶ</h1>
     </header>
     <div class="me"><canvas id="me-cv"></canvas><p id="me-text">あなたの力士</p><button id="b-all" class="ghost" type="button">全員と取る</button></div>
@@ -39,9 +121,15 @@
     <div class="result" id="result" hidden>
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
       <div class="kind" id="r-kind"></div>
-      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-replay" class="ghost" type="button">もう一度見る</button></div>
-      <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button></div>
+      <div class="gain" id="r-gain" hidden></div>
+      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button><button id="b-replay" class="ghost" type="button">もう一度見る</button></div>
+      <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button><button id="b-home" class="ghost" type="button">部屋へ</button></div>
     </div>
+  </section>
+
+  <section id="s-words" class="sheet" hidden>
+    <header class="bar"><button id="w-close" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h1 class="brush" id="w-title"></h1></header>
+    <div class="body" id="w-list"></div>
   </section>
 
   <section id="s-tools" class="sheet" hidden>

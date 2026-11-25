@@ -1,0 +1,58 @@
+// 保存（端末の中だけ・試作）。キーは試作①からの sumo-proto-v1 のまま、中身を足していく（前の形はそのまま読める）。
+//   shape・drive・mute・short：試作①②から（shape はいま選んでいる力士の形を写す＝道具が使う）
+//   slots：力士3枠（{ shape, shikona:[上・つなぎ・下], title, rec:{w,l,d} } か null）・active：いま選んでいる枠
+//   rate・hon・jun：本場所のレートと戦績・巡業の戦績（オンラインになったらサーバーが正）
+import { checkShape } from '../geom/check.js';
+import { validShikona, validTitle, randomShikona, startTitle } from './names.js';
+import { RATE } from '../data/banzuke.js';
+
+const SAVE_KEY = 'sumo-proto-v1';
+export const SLOT_COUNT = 3;
+
+function rec(r) { return { w: (r && r.w) | 0, l: (r && r.l) | 0, d: (r && r.d) | 0 }; }
+
+export function newRikishi(shape) {
+  return { shape, shikona: randomShikona(), title: startTitle(), rec: rec() };
+}
+
+function cleanSlot(s) {
+  if (!s || !s.shape || !checkShape(s.shape).ok) return null;
+  return {
+    shape: s.shape,
+    shikona: validShikona(s.shikona) ? s.shikona : randomShikona(),
+    title: validTitle(s.title) ? s.title : startTitle(),
+    rec: rec(s.rec),
+  };
+}
+
+export function loadState() {
+  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec() };
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
+    st.mute = d.mute === true;
+    st.short = d.short === true;
+    if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
+    else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
+    if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
+    if (Number.isFinite(d.rate)) st.rate = Math.round(d.rate);
+    st.hon = rec(d.hon);
+    st.jun = rec(d.jun);
+  } catch (e) { /* 保存できない画面でも遊べる */ }
+  if (!st.slots[st.active]) st.active = Math.max(0, st.slots.findIndex(Boolean));
+  return st;
+}
+
+export function saveState(st) {
+  const cur = st.slots[st.active];
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
+      slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun,
+    }));
+  } catch (e) { /* */ }
+}
+
+export function addRec(r, winner, side = 'a') {
+  if (winner === side) r.w++; else if (winner) r.l++; else r.d++;
+}

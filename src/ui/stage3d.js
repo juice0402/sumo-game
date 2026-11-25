@@ -118,26 +118,29 @@ export function createStage(cv, P) {
   let dohyo = null, fighters = [], base = 10, cssW = 1, cssH = 1;
   const disposables = [];
   const keep = (o) => { disposables.push(o); return o; };
+  const dohyoRes = [];
+  const keepD = (o) => { dohyoRes.push(o); return o; };
 
   // 土俵（項目を読むだけ。見た目の項目を足せば別の土俵になる）
   function setDohyo(id) {
-    if (dohyo) { scene.remove(dohyo); }
+    if (dohyo) { scene.remove(dohyo, dohyo.userData.floor); }   // 床も外す（残すと箱の横の面をかくす）
+    for (const o of dohyoRes.splice(0)) o.dispose();             // 前の土俵の絵と形をすてる（土俵を切りかえても重くならない）
     const d = DOHYO[id] || DOHYO[DOHYO_DEFAULT];
     scene.background = new THREE.Color(d.bg);
     scene.fog = new THREE.Fog(d.bg, base * 0.9, base * 2.2);
     const W = 2 * P.ringHalf, H = P.ringDepth;
-    const side = keep(new THREE.MeshLambertMaterial({ map: keep(makeTex(THREE, sideCanvas(d, P))) }));
-    const topMap = keep(makeTex(THREE, topCanvas(d, P)));
-    const top = keep(new THREE.MeshLambertMaterial({ map: topMap, emissive: 0xffffff, emissiveMap: topMap, emissiveIntensity: LOOK.paperGlow * 0.4 }));
-    const under = keep(new THREE.MeshLambertMaterial({ color: d.floor }));
-    const geo = keep(new THREE.BoxGeometry(W, H, W));
+    const side = keepD(new THREE.MeshLambertMaterial({ map: keepD(makeTex(THREE, sideCanvas(d, P))) }));
+    const topMap = keepD(makeTex(THREE, topCanvas(d, P)));
+    const top = keepD(new THREE.MeshLambertMaterial({ map: topMap, emissive: 0xffffff, emissiveMap: topMap, emissiveIntensity: LOOK.paperGlow * 0.4 }));
+    const under = keepD(new THREE.MeshLambertMaterial({ color: d.floor }));
+    const geo = keepD(new THREE.BoxGeometry(W, H, W));
     const box = new THREE.Mesh(geo, [side, side, top, under, side, side]);
     box.position.y = -H / 2;
     box.castShadow = true;
     box.receiveShadow = true;
-    const edges = new THREE.LineSegments(keep(new THREE.EdgesGeometry(geo)), keep(new THREE.LineBasicMaterial({ color: d.edge })));
+    const edges = new THREE.LineSegments(keepD(new THREE.EdgesGeometry(geo)), keepD(new THREE.LineBasicMaterial({ color: d.edge })));
     box.add(edges);
-    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(60, 60)), keep(new THREE.MeshLambertMaterial({ color: d.floor })));
+    const floor = new THREE.Mesh(keepD(new THREE.PlaneGeometry(60, 60)), keepD(new THREE.MeshLambertMaterial({ color: d.floor })));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     dohyo = new THREE.Group();

@@ -9,6 +9,15 @@ import { randomShape } from '../src/geom/random.js';
 import { decideKimarite } from '../src/data/kimarite.js';
 import { T } from '../src/data/text.js';
 import { BENCH } from '../src/sim/bench.js';
+import { SHIKONA } from '../src/data/shikona.js';
+import { TITLES } from '../src/data/titles.js';
+import { STAGES, JUNGYO, HONBASHO_STAGE } from '../src/data/stages.js';
+import { DOHYO } from '../src/data/dohyo.js';
+import { BANZUKE } from '../src/data/banzuke.js';
+import { randomShikona, validShikona, shikonaText } from '../src/game/names.js';
+import { rankOf, eloDelta } from '../src/game/rating.js';
+import { schedule, stagesOf } from '../src/game/jungyo.js';
+import { makeRng } from '../src/sim/rng.js';
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.log('NG ' + msg); } };
@@ -72,6 +81,37 @@ for (const sa of CPU_SHAPES) for (const sb of CPU_SHAPES) for (const seed of [1,
   bout.free();
 }
 console.log('決まり手：' + Object.entries(kcount).sort((x, y) => y[1] - x[1]).map(([k, n]) => `${T.kimarite[k] || k} ${n}`).join('・'));
+
+// 四股名：id がかぶらない・ランダムな名前が正しい・実在の有名な四股名や、まずい組み合わせにならない（要件 10）
+const ids = new Set();
+for (const g of ['kami', 'tsunagi', 'shimo']) for (const w of SHIKONA[g]) { ok(!ids.has(w.id), `四股名の id がかぶる: ${w.id}`); ids.add(w.id); }
+for (const t of TITLES) { ok(!ids.has(t.id), `称号の id がかぶる: ${t.id}`); ids.add(t.id); }
+const nrng = makeRng(7);
+for (let i = 0; i < 200; i++) ok(validShikona(randomShikona(nrng)), 'ランダムな四股名が正しくない');
+const NG = ['若乃花', '貴乃花', '千代の富士', '栃錦', '照ノ富士', '霧島', '大鵬', '北の湖', '朝青龍', '白鵬', '鶴竜', '雷電', '双葉山', '大の里', '稀勢の里', '武蔵丸', '曙', '鬼太郎', '猫侍', '死', '殺'];
+let names = 0;
+for (const k of SHIKONA.kami) for (const t of SHIKONA.tsunagi) for (const s2 of SHIKONA.shimo) {
+  const n = shikonaText([k.id, t.id, s2.id]);
+  names++;
+  for (const w of NG) if (n.includes(w)) ok(false, `四股名がまずい: ${n}（${w}）`);
+}
+// 土俵：見た目がある・本場所は標準・巡業の予定は同じ時刻なら同じ並び
+for (const id in STAGES) ok(!!DOHYO[STAGES[id].look], `土俵の見た目がない: ${id}`);
+ok(Object.keys(STAGES[HONBASHO_STAGE].phys).length === 0, '本場所の土俵に物理の上書きがある');
+for (const id of JUNGYO.pool) ok(!!STAGES[id], `巡業の土俵がない: ${id}`);
+const sch = schedule(Date.UTC(2026, 10, 25, 7));
+ok(sch.length === JUNGYO.ahead && sch.every((x) => x.stages.length === 2 && x.stages[0] !== x.stages[1]), '巡業の予定が2つずつでない');
+ok(JSON.stringify(stagesOf(123456)) === JSON.stringify(stagesOf(123456)), '巡業の予定が同じ時刻でちがう');
+// 特殊土俵でも取組が最後まで進み、同じ結果になる
+for (const id in STAGES) {
+  const o = { a: CPU_SHAPES[0].pts, b: CPU_SHAPES[1].pts, seed: 5, phys: STAGES[id].phys };
+  const x = runBout(o), y = runBout(o);
+  ok(x.hash === y.hash && !!x.kind, `特殊土俵の取組がおかしい: ${id}`);
+}
+// 番付：はじめは序ノ口・勝つと上がる・同じ強さの引き分けは動かない
+ok(rankOf(1500).id === BANZUKE[0].id && rankOf(2400).id === 'yokozuna', '番付の帯がずれている');
+ok(eloDelta(1500, 1500, 1) > 0 && eloDelta(1500, 1500, 0) < 0 && eloDelta(1500, 1500, 0.5) === 0, 'レートの増減がおかしい');
+console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Object.keys(STAGES).length}`);
 
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);
