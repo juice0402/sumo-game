@@ -25,6 +25,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .seal:active{background-image:var(--b-shu2)}
 .seal:disabled{background-image:var(--b-off);color:var(--dim)}
 .seal svg{width:20px;height:20px}
+/* 和紙の筆の帯（朱の帯のとなりに並べる、もう1つの帯）。並べるときは同じ幅（11/25 しょーくん） */
+.seal.sub{background-image:var(--b-paper);color:var(--sumi)}
+.seal.sub:active{background-image:var(--b-paper2)}
+.actions.pair{gap:14px}
+.actions.pair .seal{flex:1 1 0;max-width:180px;justify-content:center;padding:0 8px;font-size:17px;letter-spacing:.06em;white-space:nowrap}
 .stage{position:relative;flex:1;min-height:0}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .hint{margin:8px 0 0;text-align:center;font-size:15px;color:var(--washi2);min-height:24px}

@@ -37,6 +37,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .seal:active{background-image:var(--b-shu2)}
 .seal:disabled{background-image:var(--b-off);color:var(--dim)}
 .seal svg{width:20px;height:20px}
+/* 和紙の筆の帯（朱の帯のとなりに並べる、もう1つの帯）。並べるときは同じ幅（11/25 しょーくん） */
+.seal.sub{background-image:var(--b-paper);color:var(--sumi)}
+.seal.sub:active{background-image:var(--b-paper2)}
+.actions.pair{gap:14px}
+.actions.pair .seal{flex:1 1 0;max-width:180px;justify-content:center;padding:0 8px;font-size:17px;letter-spacing:.06em;white-space:nowrap}
 .stage{position:relative;flex:1;min-height:0}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .hint{margin:8px 0 0;text-align:center;font-size:15px;color:var(--washi2);min-height:24px}
@@ -125,8 +130,8 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="stage" id="cut-stage"><canvas id="cut-cv"></canvas></div>
     <p class="hint" id="cut-hint">一筆で、力士の形を描こう</p>
     <div class="checks" id="cut-checks" hidden></div>
-    <footer class="actions">
-      <button id="b-redo" class="round" type="button" aria-label="切り直す"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg></button>
+    <footer class="actions pair">
+      <button id="b-redo" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.6h4.6"/></svg>仕切り直し</button>
       <button id="b-ok" class="seal" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>決定</button>
     </footer>
   </section>
@@ -2687,6 +2692,8 @@ function applyButtonArt() {
   s.setProperty('--b-shu', url(brushBand(COL.shu, 3)));
   s.setProperty('--b-shu2', url(brushBand('#c4493d', 3)));
   s.setProperty('--b-off', url(brushBand('#3a3631', 3)));
+  s.setProperty('--b-paper', url(brushBand('#cfc8b8', 3)));   // 和紙の帯（仕切り直し）
+  s.setProperty('--b-paper2', url(brushBand('#EEE9DE', 3)));
   s.setProperty('--b-line', url(brushBand('#cfc8b8', 8)));    // 字の下の筆の線（ふつうのボタン）
   s.setProperty('--b-lineshu', url(brushBand(COL.shu, 8)));
   s.setProperty('--b-ring', url(inkRing('#cfc8b8', 4)));

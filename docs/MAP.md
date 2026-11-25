@@ -37,7 +37,7 @@
 | ui/sound.js | 効果音（Web Audio）。unlockAudio（最初のタップ）・playSfx・setMuted |
 | ui/tools.js | 道具（指紋・相性表・動きの切りかえ）。音と演出の切りかえは app.js |
 | ui/ink.js | 墨・和紙の描きかた |
-| ui/btnart.js | ボタンの絵（朱の筆の帯・字の下の筆の線・筆の輪）を SVG で作って CSS の変数 --b-… に入れる。ピルの形にしない |
+| ui/btnart.js | ボタンの絵（朱の筆の帯・和紙の筆の帯・字の下の筆の線・筆の輪）を SVG で作って CSS の変数 --b-… に入れる。ピルの形にしない |
 | ui/page.html・ui/style.css | 画面のもと・見た目 |
 
 ## 決まり（物理）
