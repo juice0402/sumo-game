@@ -102,7 +102,11 @@ function loadLibs() {
 function boot() {
   // 縦の見出し・メニューの字・勝負の説明は、どの画面の高さでも1列に収まる大きさに（CSS が 100cqh と --n から決める）
   for (const h of document.querySelectorAll('.screen.v > .bar h1')) headText(h, h.textContent);
-  for (const el of document.querySelectorAll('.menu .lbl, .modecard b, .modecard span')) setN(el);
+  for (const el of document.querySelectorAll('.modecard b, .modecard span')) setN(el);
+  // 部屋のメニューは、どの項目も同じ字の大きさ（いちばん長い字の数に合わせる・11/26 しょーくん「勝負と力士をつくるの大きさが違う」）
+  const lbls = [...document.querySelectorAll('.menu .lbl')];
+  const nMax = Math.max(...lbls.map((el) => Array.from(el.textContent).length));
+  for (const el of lbls) el.style.setProperty('--n', String(nMax));
   let editSlot = 0, bzTitle = '番付', stamping = false;
   // 切る：どの枠を切るか・切ったあとどこへ行くか
   let cutSlot = 0, afterCut = null;

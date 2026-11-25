@@ -154,12 +154,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mine canvas{width:84px;height:110px;align-self:flex-end;flex:none}
 .menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
 .menu .seal svg{width:20px;height:20px}
-.menu .lbl{white-space:nowrap;letter-spacing:calc(var(--ls,.32) * 1em);font-size:min(var(--lmax,23px),calc((100cqh - 64px) / (var(--n,4) * (1 + var(--ls,.32)) + .1)))}
-.menu #m-shobu{--lmax:38px;--ls:.24;flex-grow:1.5}
+.menu .lbl{white-space:nowrap;letter-spacing:.32em;font-size:min(30px,calc((100cqh - 32px) / (var(--n,4) * 1.32 + .1)))}   /* どの項目も同じ大きさ（--n はいちばん長い字の数）・32px は上の印とすきま */
+#s-home .menu{height:clamp(240px,42vh,330px)}
 /* まだ力士がいない部屋：「力士をつくる」だけ朱の帯・ほかは暗く */
 #s-home.fresh .menu>*:not(#m-rikishi){opacity:.36}
-#s-home.fresh .menu #m-shobu{--lmax:23px;--ls:.32;flex-grow:1}
-#s-home.fresh .menu #m-rikishi{--lmax:27px;--ls:.14;flex-grow:1.5}
 #s-home.fresh .mine .who b{color:var(--washi2)}
 /* 四股名をさずかる */
 .meimei{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;position:relative}
