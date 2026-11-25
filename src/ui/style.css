@@ -105,3 +105,281 @@ button{font:inherit;color:inherit;cursor:pointer}
 .err{position:absolute;inset:auto 16px 30% 16px;text-align:center;color:#e9a097}
 @media (min-width:700px){.bar h1{font-size:30px}}
 @media (prefers-reduced-motion:reduce){.cutin.go .band,.cutin.go .word,.kimarite,.stamp{animation-duration:.01s}}
+/* ===== 案A「番付表」（11/25 しょーくん「スタイリッシュすぎてかっこいい・とことん突き詰めよう」）=====
+   本物の番付表のように：見出しは右に縦書き（金の細い罫）・中身は上下を二重の罫でかこみ、右から縦の列で読む。
+   いまの・主のものは縦の朱の筆の帯。字（Yuji Syuku の縦書き）そのものを主役にして、飾りは足さない */
+.tiny{margin:0 0 14px;text-align:center;font-size:12px;color:var(--dim)}
+.note{margin:0 0 12px;text-align:center;font-size:13px;color:var(--dim)}
+/* タイトル */
+#s-title{justify-content:center}
+.logo{position:relative;align-self:center;width:min(78vw,340px);aspect-ratio:1;display:grid;place-items:center;margin-top:auto}
+.logo .sun{position:absolute;right:2%;top:4%;width:62%;aspect-ratio:1;background:var(--b-sun) center/100% 100% no-repeat;opacity:.92}
+.logo .word{position:relative;font-size:min(19vw,84px);line-height:.92;letter-spacing:.02em;color:var(--washi);text-shadow:4px 4px 0 var(--sumi);transform:rotate(-6deg)}
+.logo .tate{position:absolute;right:4%;bottom:0;writing-mode:vertical-rl;font-size:22px;letter-spacing:.3em;color:var(--washi2)}
+.catch{text-align:center;font-size:20px;margin:6px 0 auto;color:var(--washi2);letter-spacing:.1em}
+
+/* 画面のわく：右に縦の見出し／左上にもどる・道具／左に主役（hero）／下に二重の罫の表（frame2）／いちばん下にボタン */
+.screen.v{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto auto;column-gap:10px}
+.screen.v>.bar{display:contents}
+.screen.v>.bar h1{grid-column:2;grid-row:1/3;align-self:stretch;container-type:size;width:60px;--h1max:clamp(34px,10.5vw,44px);writing-mode:vertical-rl;letter-spacing:.18em;line-height:1.1;padding:14px 0 0 12px;border-left:1px solid var(--kin);margin:0;overflow:hidden}
+.screen.v>.bar h1>span{display:block;white-space:nowrap;font-size:min(var(--h1max),calc(100cqh / (var(--n,4) * 1.18 + .1)))}
+.screen.v>.bar>button{grid-column:1;grid-row:1;align-self:start;justify-self:start;margin-top:8px}
+.screen.v>.bar>.ghost{justify-self:end}
+.screen.v>.hero{grid-column:1;grid-row:2;min-height:0;container-type:size}
+.screen.v>.frame2{grid-column:1/3;grid-row:3}
+.screen.v>:is(.actions,.note,.foot,.drive){grid-column:1/3;grid-row:4}
+.frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 14px}
+.cols{display:flex;flex-direction:row-reverse;align-items:stretch;height:clamp(200px,36vh,300px)}
+.cols.tall{height:clamp(280px,56vh,460px)}
+.cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:16px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
+.cols>*{container-type:size}
+.cols>*:last-child{border-left:0}
+.cols>button:active{background-color:rgba(238,233,222,.06)}
+.cols b,.fit{font-size:min(var(--max,32px),calc(var(--room,230px) / (var(--n,4) * 1.08 + .1)));letter-spacing:.06em;line-height:1.1;white-space:nowrap}
+.cols small,.cols span,.cols em{flex:none}
+/* いまの・主のもの＝縦の朱の帯 */
+.cols>.on,.ladder li.on{background:var(--b-shuv) center/88% 100% no-repeat;border-left-color:transparent}
+.cols>.on+*{border-left-color:var(--line)}
+.who{display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:4px}
+.who small{font-size:12px;color:var(--kin);line-height:1.3}
+.who em{font-style:normal;font-size:13px;color:var(--dim)}
+.on .who small,.on .who em{color:var(--washi)}
+
+/* 相撲部屋 */
+.mine{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;background:none;border:0;padding:0;color:var(--washi)}
+.mine .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.mine .who b{--max:58px;--room:calc(100cqh - 8px)}
+.mine .who small{font-size:14px}
+.mine .who em{font-size:14px;color:var(--kin)}
+.mine canvas{width:84px;height:110px;align-self:flex-end;flex:none}
+.menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
+.menu .seal svg{width:20px;height:20px}
+.menu .lbl{white-space:nowrap;letter-spacing:.32em;font-size:min(30px,calc((100cqh - 32px) / (var(--n,4) * 1.32 + .1)))}   /* どの項目も同じ大きさ（--n はいちばん長い字の数）・32px は上の印とすきま */
+#s-home .menu{height:clamp(240px,42vh,330px)}
+/* まだ力士がいない部屋：「力士をつくる」だけ朱の帯・ほかは暗く */
+#s-home.fresh .menu>*:not(#m-rikishi){opacity:.36}
+#s-home.fresh .mine .who b{color:var(--washi2)}
+/* 四股名をさずかる */
+.meimei{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px;position:relative}
+.meimei .who{writing-mode:vertical-rl;max-height:100%;gap:10px}
+.meimei .who b{--max:72px;--room:calc(100cqh - 8px)}
+.meimei .who small{font-size:14px}
+.meimei canvas{width:96px;height:126px;align-self:flex-end;flex:none}
+.meihan{position:absolute;left:30%;top:80%;width:44px;padding:6px 0;text-align:center;font-size:19px;line-height:1.05;color:var(--washi);background:var(--shu);border:3px double var(--washi);border-radius:4px;opacity:0}
+#s-meimei>.note{grid-row:3;margin:10px 0}
+#s-meimei.enter #mm-name{animation:inkdown .7s .35s cubic-bezier(.3,.7,.3,1) both}
+#s-meimei.enter .meihan{animation:hanko .34s 1.12s cubic-bezier(.2,.9,.2,1) both}
+/* 勝負 */
+.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:18px 0 14px}
+.modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(44px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 50px) / 1.1))}
+.modecard span{white-space:nowrap;letter-spacing:.08em;line-height:1.3;color:var(--washi2);font-size:min(13px,calc((100cqh - 32px) / (var(--n,12) * 1.08 + .1)))}
+.modecard small{white-space:nowrap;line-height:1.3;font-size:12px;color:var(--kin)}   /* 力士の札の称号と同じ：右に金の小さい字 */
+.modecard.main{flex-grow:1.9}
+/* 力士の列（部屋の力士・選出） */
+.slots{overflow:hidden}
+.slot{position:relative}
+.slot .who{order:-1;align-items:flex-start}
+.slot b{--max:38px;--room:calc(100cqh - 124px)}   /* 下の形（76px）とすきまを引いた高さ */
+.slot canvas{width:58px;height:76px;flex:none;margin-top:auto}
+.slot.empty b{color:var(--dim)}
+.plus{font-size:30px;color:var(--dim);margin-top:auto;writing-mode:horizontal-tb}
+.slot:disabled{opacity:.4}
+/* 朱の判子：選んだ列にポンと押す */
+@keyframes hanko{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2) rotate(-14deg)}60%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(-6deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-8deg)}}
+.slot.oshi::after{content:"出";position:absolute;left:50%;top:46%;width:54px;height:54px;display:grid;place-items:center;writing-mode:horizontal-tb;font-family:"Yuji Syuku",serif;font-size:32px;color:var(--washi);background:var(--shu);border:3px double var(--washi);border-radius:4px;animation:hanko .34s cubic-bezier(.2,.9,.2,1) both}
+/* 力士の編集 */
+.profile{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:20px;position:relative}
+.profile .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.profile .who b{--max:56px;--room:calc(100cqh - 52px)}   /* 左下の「おまかせ」にかからない */
+.profile .who small{font-size:14px}
+.profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
+#ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
+#s-edit .actions{padding-top:0}
+/* 土俵巡業 */
+.jghero{display:flex;flex-direction:column;min-height:0}
+.nowhead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px;font-size:13px;color:var(--washi2)}
+.nowhead em{font-style:normal;color:var(--kin)}
+.stagecards{flex:1;min-height:0;display:flex;flex-direction:row-reverse;gap:0;border-top:1px solid var(--line)}
+.stagecard{flex:1 1 0;min-width:0;container-type:size;position:relative;writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;padding:14px 0 62px;border-left:1px solid var(--line)}
+.stagecard:last-child{border-left:0}
+.stagecard b{--max:34px;--room:100cqh}
+.stagecard span{white-space:nowrap;color:var(--dim);font-size:min(12px,calc(100cqh / (var(--n,6) * 1.02 + .1)))}
+.sw{position:absolute;left:50%;bottom:10px;margin-left:-38px;writing-mode:horizontal-tb;width:76px;height:42px}
+.sw::before{content:"";position:absolute;left:0;right:0;bottom:0;height:15px;background:var(--side);border:1.5px solid var(--sumi)}
+.sw i{position:absolute;left:0;right:0;top:0;height:29px;background:var(--top);border:1.5px solid var(--sumi);clip-path:polygon(14% 0,86% 0,100% 100%,0 100%)}
+.sw i::after{content:"";position:absolute;left:28%;right:28%;top:22%;bottom:22%;border:2.5px solid var(--ring);border-radius:50%}
+.sched{overflow:hidden}
+.srow{display:grid;grid-template-columns:62px 1fr 1fr;gap:8px;padding:7px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.srow:last-child{border-bottom:0}
+.srow em{font-style:normal;color:var(--kin);font-variant-numeric:tabular-nums}
+.srow span{font-family:"Yuji Syuku",serif;font-size:16px}
+/* 番付 */
+.myrank{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px}
+.myrank b{writing-mode:vertical-rl;--max:clamp(56px,17vw,76px);--room:calc(100cqh - 8px);line-height:1}
+.myrank .info{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--washi2);max-height:100%}
+.myrank em{font-style:normal;font-size:16px;color:var(--kin);text-combine-upright:none}
+.ladder{list-style:none;padding:0;height:clamp(180px,30vh,240px)}
+.ladder li{padding:12px 0 8px;gap:6px}
+.ladder li b{--max:21px;--room:150px;color:var(--washi2)}
+.ladder li span{writing-mode:horizontal-tb;margin-top:auto;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
+.ladder li.on b,.ladder li.on span{color:var(--washi)}
+.foot .actions{padding-top:4px}
+/* 力士選出 */
+.selhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:stretch;gap:26px;padding-top:8px}
+.selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
+.selhead b{white-space:nowrap;letter-spacing:.14em;line-height:1;font-size:min(clamp(44px,13vw,58px),calc((100cqh - 16px) / (var(--n,3) * 1.14 + .1)))}
+.selhead span{white-space:nowrap;color:var(--washi2);font-size:min(13px,calc((100cqh - 16px) / (var(--n,12) * 1.02 + .1)))}
+/* 稽古 */
+.me{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:18px;position:relative;border:0;padding:0}
+.me p{writing-mode:vertical-rl;margin:0;--max:44px;--room:calc(100cqh - 52px);font-size:min(var(--max),calc(var(--room) / (var(--n,4) * 1.08 + .1)));color:var(--washi);flex:none;max-height:100%}
+.me canvas{width:76px;height:100px;align-self:flex-end}
+#b-all{position:absolute;left:0;bottom:0}
+.foes{display:flex;grid-template-columns:none;overflow:hidden;padding:0;gap:0}
+.foe{border-radius:0}
+.foe b{order:-1;font-size:24px;letter-spacing:.1em}
+.foe canvas{width:54px;height:72px;margin-top:auto}
+.foe .marks{writing-mode:horizontal-tb;flex-wrap:wrap;justify-content:center;width:44px}
+.drive{padding-bottom:10px}
+/* 取組の結果：番付・戦績のひとこと */
+.result .gain{position:absolute;transform:translate(-50%,3px);width:max-content;margin:0;text-align:center;font-size:14px;line-height:1.3;color:var(--sumi);font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;animation:kindin .45s .7s forwards}
+.result.has-gain .kind{transform:translate(-50%,-100%)}   /* 決まりの文の下が横の面のまん中 → その下にひとこと */
+.result .gain+.row{margin-top:auto}
+
+/* ===== 動き（11/25 しょーくん「右から、しししシュッ」・できるだけカッコよく）=====
+   ひとつの流れにまとめる：見出しが筆で上から書かれる → 主役が入る → 表の列が右から順に飛びこむ（少し行きすぎて戻る）→ ボタン */
+@keyframes whip{0%{opacity:0;transform:translateX(115%) skewX(-16deg)}62%{opacity:1;transform:translateX(-4%) skewX(3deg)}100%{opacity:1;transform:none}}
+@keyframes inkdown{from{clip-path:inset(0 -10% 100% -10%)}to{clip-path:inset(0 -10% -5% -10%)}}
+@keyframes inkin{from{clip-path:inset(-10% 100% -10% 0)}to{clip-path:inset(-10% -5% -10% 0)}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sunin{0%{opacity:0;transform:scale(1.5) rotate(-20deg)}70%{opacity:.92;transform:scale(.96) rotate(2deg)}100%{opacity:.92;transform:none}}
+.screen.enter.v>.bar h1{animation:inkdown .5s cubic-bezier(.3,.7,.3,1) both}
+.screen.enter :is(.hero,.cols>*,.stagecards>*,.sched>*,.rl-col,.actions>*,.note,.drive){animation:whip .44s cubic-bezier(.2,.9,.25,1) both;animation-delay:calc(var(--i,0) * 58ms + 90ms)}
+.screen.enter .hero{animation-name:rise;animation-duration:.4s}
+#s-title.enter .sun{animation:sunin .55s .05s cubic-bezier(.2,.9,.2,1) both}
+#s-title.enter .word{animation:inkin .55s .35s cubic-bezier(.3,.7,.3,1) both}
+#s-title.enter .tate{animation:inkdown .5s .75s both}
+#s-title.enter .catch{animation:rise .6s 1s both}
+#s-title.enter .actions>*{animation:whip .44s 1.25s cubic-bezier(.2,.9,.25,1) both}
+.screen .body,.sched{overflow-x:hidden}
+.cols{overflow:hidden}
+@media (prefers-reduced-motion:reduce){.screen.enter *{animation-duration:.01s!important;animation-delay:0s!important}}
+@media (min-width:700px){.screen.v>.bar h1{--h1max:48px;width:64px}.cols b{--max:40px}}
+
+/* ===== えらんだ瞬間（11/26 しょーくん）：相撲部屋と勝負のメニュー（ui/choose.js）=====
+   はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は下へ抜けて消える */
+.screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
+.screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
+.cols>.chosen::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--b-shuv) center/88% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
+.cols>.chosen :is(span,small){color:var(--washi)}
+.screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
+.cols.leaving{animation:jolt .2s .12s both}
+@keyframes slam{0%{clip-path:inset(0 0 100% 0);transform:translateY(-8%) scale(1.5,1.12) rotate(-5deg);opacity:.7}55%{clip-path:inset(0 0 0 0);transform:scale(.96,1.03) rotate(1deg);opacity:1}100%{clip-path:inset(0 0 -2% 0);transform:none;opacity:1}}
+@keyframes punch{0%{transform:scale(1.14)}100%{transform:none}}
+@keyframes punch2{0%{transform:scale(.93,1.07)}55%{transform:scale(1.04,.98)}100%{transform:none}}
+@keyframes jolt{30%{transform:translateY(3px)}100%{transform:none}}
+@keyframes leaveD{to{transform:translateY(105%);opacity:0}}
+
+/* 部屋の自作力士：ときどきぴょこっと（たまに2回・ui/heya.js） */
+.mine canvas{transform-origin:50% 100%}
+.mine canvas.hop{animation:hop .58s cubic-bezier(.3,.6,.3,1)}
+.mine canvas.hop2{animation:hop .5s cubic-bezier(.3,.6,.3,1) 2}
+@keyframes hop{0%{transform:none}14%{transform:scale(1.1,.86)}40%{transform:translateY(-20px) scale(.94,1.08) rotate(-3deg)}64%{transform:translateY(0) scale(1.12,.85)}80%{transform:scale(.97,1.04)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.mine canvas.hop,.mine canvas.hop2,.cols.leaving{animation:none}}
+
+/* 巡業の取組：旋回のあいだに土俵の名前（11/26 しょーくん「どの土俵かわからない・かっこよく」）。
+   番付表の見出しと同じく、右に縦書き＋金の罫。罫が上から引かれ → 名前を筆で上から → 「巡業」と土俵のくせ → 右へ抜けて消える */
+.stagename{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 86px);writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:12px;pointer-events:none;text-shadow:3px 3px 0 var(--sumi)}
+.stagename:not(.in){display:none}
+.stagename::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1px solid var(--kin);transform-origin:top;animation:snrule .45s cubic-bezier(.3,.7,.3,1) both}
+.stagename small{font-size:13px;letter-spacing:.4em;color:var(--kin);animation:rise .4s .45s both}
+.stagename b{font-size:clamp(40px,11vw,56px);letter-spacing:.16em;line-height:1.05;color:var(--washi);animation:inkdown .6s .12s cubic-bezier(.3,.7,.3,1) both}
+.stagename span{font-size:14px;letter-spacing:.2em;color:var(--washi2);animation:rise .4s .7s both}
+.stagename.out{animation:snout .36s cubic-bezier(.55,0,.85,.35) both}
+@keyframes snrule{from{transform:scaleY(0)}to{transform:none}}
+@keyframes snout{to{opacity:0;transform:translateX(40%) skewX(-10deg)}}
+
+/* ===== くるくる（力士の編集・ui/roller.js。11/26 しょーくん「スプラの二つ名みたいにロールして選べる」）=====
+   横に 称号｜上の句・つなぎ・下の句 のドラム。指で上下にまわすと真ん中の行に止まり、そこに横いっぱいの朱の筆の帯。
+   真ん中は和紙の字で大きく、上下は遠いほどうすく */
+.roller{--row:34px;margin:10px 0 12px}
+.rl-heads,.rl-body{display:flex}
+.rl-heads span,.rl-col{flex:1.25 1 0;min-width:0}
+.rl-heads .ti,.rl-col.ti{flex-grow:1.5}
+.rl-heads .tn,.rl-col.tn{flex-grow:.6}
+.rl-heads span{padding:8px 0 4px;text-align:center;font-size:11px;letter-spacing:.2em;color:var(--kin)}
+.rl-body{position:relative;height:calc(var(--row) * 5)}
+.rl-band{position:absolute;left:-6px;right:-6px;top:calc(var(--row) * 2);height:var(--row);background:var(--b-shu) center/100% 100% no-repeat;pointer-events:none}
+.rl-col{position:relative}
+.rl-col.ti+.rl-col{border-left:3px double var(--line)}
+.rl-list{height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;padding:calc(var(--row) * 2) 0;scrollbar-width:none;touch-action:pan-y}
+.rl-list::-webkit-scrollbar{display:none}
+.rl-item{height:var(--row);display:flex;align-items:center;justify-content:center;scroll-snap-align:center;white-space:nowrap;font-size:min(16px,var(--fit,16px));color:var(--washi2);opacity:.14;cursor:pointer;transition:opacity .12s,font-size .12s}
+.rl-item.n2{opacity:.3}
+.rl-item.n1{opacity:.6}
+.rl-item.sel{opacity:1;color:var(--washi);font-size:min(20px,var(--fit,20px));text-shadow:1px 1px 0 rgba(32,30,27,.5)}
+.rl-lock{margin:8px 0 0;text-align:center;font-size:12px;color:var(--dim)}
+/* 小判・福箱・気・見た目（11/26 福箱）。光る輪やグラデーションは使わない */
+.koban{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--kin);letter-spacing:.04em;white-space:nowrap}
+.koban::before{content:"";width:11px;height:16px;border-radius:50%;border:1.5px solid var(--kin)}
+.screen.v>.bar>.koban{grid-column:1;grid-row:1;align-self:start;justify-self:end;margin-top:21px}
+#s-home>.bar>.koban{justify-self:start}
+.mine{position:relative}
+.hero .aura-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.rl-tabs{display:flex;justify-content:center;gap:30px}
+.rl-tabs button{background:none;border:0;padding:6px 8px 12px;min-height:40px;font-size:14px;letter-spacing:.24em;color:var(--dim)}
+.rl-tabs button[aria-pressed=true]{background:var(--b-lineshu) center bottom 4px/100% 6px no-repeat;color:var(--washi)}
+.rl-mise .rl-col+.rl-col{border-left:3px double var(--line)}
+#s-fuku .fkkinds{height:clamp(132px,24vh,180px)}
+.fkkinds>div{gap:8px;padding:12px 0 10px}
+.fkkinds b{--max:22px;--room:calc(100cqh - 56px)}
+.fkkinds span{font-size:12px;color:var(--washi2)}
+.fkkinds span i{font-style:normal;text-combine-upright:all}
+.fkhero{position:relative;display:grid;place-items:center}
+.fkbox{position:relative;width:min(66cqw,62cqh);aspect-ratio:1/.92}
+.fkbox .half{position:absolute;top:0;bottom:0;width:50%;overflow:hidden;background:var(--washi2);border:1.5px solid var(--sumi3)}
+.fkbox .half.l{left:0;border-right:0;transform-origin:0 100%}
+.fkbox .half.r{right:0;border-left:0;transform-origin:100% 100%}
+.fkbox .half::before{content:"";position:absolute;top:0;bottom:0;width:36%;background:var(--washi)}   /* 掛け紙 */
+.fkbox .half.l::before{right:0}
+.fkbox .half.r::before{left:0}
+.fkbox .half::after{content:"";position:absolute;left:0;right:0;top:72%;height:7%;background:var(--shu)}   /* 朱のひも */
+.fkbox .fuku{position:absolute;top:6%;height:60%;width:200%;display:grid;place-items:center;font-style:normal;color:var(--sumi);font-size:calc(min(66cqw,62cqh) * .34);line-height:1;z-index:1}
+.fkbox .half.l .fuku{left:0}
+.fkbox .half.r .fuku{left:-100%}
+.fkbox .slash{position:absolute;left:50%;top:50%;width:132%;height:9%;background:var(--b-shu) center/100% 100% no-repeat;transform:translate(-50%,-50%) rotate(-78deg) scaleX(0);z-index:2;pointer-events:none}
+.fkbox.shake{animation:fkshake .9s both}
+.fkbox.cut .slash{animation:fkslash .2s cubic-bezier(.2,.9,.25,1) both}
+.fkbox.open .slash{opacity:0;transition:opacity .25s .12s}
+.fkbox.open .half.l{animation:fktearL .4s cubic-bezier(.3,.7,.3,1) forwards}
+.fkbox.open .half.r{animation:fktearR .4s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes fkshake{0%{transform:none}6%{transform:translateY(-4px) rotate(-2deg)}14%{transform:none}39%{transform:translateY(-6px) rotate(2.5deg)}47%{transform:none}72%{transform:translateY(-9px) rotate(-3deg)}82%{transform:scale(1.03,.97)}100%{transform:none}}
+@keyframes fkslash{to{transform:translate(-50%,-50%) rotate(-78deg) scaleX(1)}}
+@keyframes fktearL{to{transform:translateX(-46%) rotate(-16deg);opacity:0}}
+@keyframes fktearR{to{transform:translateX(46%) rotate(16deg);opacity:0}}
+.fkreveal{position:absolute;inset:0;display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:18px;z-index:2}
+.fkreveal>b{writing-mode:vertical-rl;--max:60px;--room:calc(100cqh - 24px);letter-spacing:.08em;line-height:1.1;white-space:nowrap}
+.fkreveal[data-kind=word]>b{--max:92px}
+.fkreveal[data-tier=tokujo]>b{background:var(--b-shuv) center/100% 100% no-repeat;padding:14px 6px}
+.fkreveal[data-tier=kiwami]>b{color:var(--kin)}
+.fkmeta{writing-mode:vertical-rl;display:flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.12em;color:var(--washi2);max-height:100%}
+.fkmeta em{font-style:normal;color:var(--kin)}
+.hanko{display:inline-grid;place-items:center;border:2px solid currentColor;border-radius:4px;font-style:normal;padding:5px 3px;font-size:20px;line-height:1.05;letter-spacing:0;transform:rotate(-6deg)}
+.fkprev{position:relative;width:min(34cqw,38cqh);aspect-ratio:3/4;flex:none}
+.fkreveal[data-kind=word] .fkprev{display:none}
+.fkreveal[data-kind=dohyo] .fkprev{aspect-ratio:4/3;width:min(46cqw,42cqh)}
+.fkprev #fk-cv{display:block;width:100%;height:100%}
+.fkprev .aura-cv{position:absolute;inset:-25%;width:150%;height:150%;pointer-events:none;z-index:1}
+.fkreveal.in .fkprev{animation:rise .4s both}
+.fkreveal.in>b{animation:inkdown .5s .08s both}
+.fkreveal.in .fkmeta{animation:rise .35s .3s both}
+.fkreveal.in .hanko{animation:fkstamp .3s .5s both}
+@keyframes fkstamp{0%{opacity:0;transform:scale(2) rotate(-14deg)}100%{opacity:1;transform:rotate(-6deg)}}
+@media (prefers-reduced-motion:reduce){.fkbox.shake{animation:none}}
+#s-odds .bar h1{font-size:22px}
+.odds{border-top:1px solid var(--line);padding:12px 0 6px;margin-top:10px}
+.odds h2{display:flex;align-items:center;gap:12px;margin:0 0 6px;font-size:16px}
+.odds h2 .hanko{font-size:16px;padding:3px 6px;transform:rotate(-4deg)}
+.odds h2 b{font-size:20px;letter-spacing:.02em}
+.odds h2 small{font-size:12px;color:var(--washi2);font-weight:500}
+.sheet .odds p{font-size:13px;line-height:1.75}
+.odds p b{color:var(--kin);font-weight:500;margin-right:8px;font-size:12px;letter-spacing:.1em}

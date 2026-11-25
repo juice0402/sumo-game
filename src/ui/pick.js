@@ -5,14 +5,33 @@ import { T } from '../data/text.js';
 import { makeQueue } from '../sim/runner.js';
 import { setupCanvas, paperPiece } from './ink.js';
 
-export function drawShapeThumb(cv, pts, flip = false) {
+// paper：紙質（data/papers.js の id）
+export function drawShapeThumb(cv, pts, flip = false, paper = null) {
   const { ctx, W, H, dpr } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const m = 4 * dpr;
   const s = Math.min((W - 2 * m) / PAPER.w, (H - 2 * m) / PAPER.h);
   const ox = (W - PAPER.w * s) / 2, oy = (H - PAPER.h * s) / 2;
   const tx = (p) => [ox + (flip ? PAPER.w - p[0] : p[0]) * s, oy + p[1] * s];
-  paperPiece(ctx, pts, tx, { line: 2 * dpr, shade: 2 * dpr });
+  paperPiece(ctx, pts, tx, { line: 2 * dpr, shade: 2 * dpr, paper, unit: PAPER.w * s });
+}
+// 小さな絵の中の、形のまん中と高さ（CSS px・その canvas の左上から）。気の見本の位置あわせに
+export function thumbBox(cv, pts) {
+  const W = cv.clientWidth, H = cv.clientHeight, m = 4;
+  const s = Math.min((W - 2 * m) / PAPER.w, (H - 2 * m) / PAPER.h);
+  const ox = (W - PAPER.w * s) / 2, oy = (H - PAPER.h * s) / 2;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+  return { x: ox + ((x0 + x1) / 2) * s, y: oy + ((y0 + y1) / 2) * s, h: (y1 - y0) * s };
+}
+// 気の見本（auraPreview）にわたす「力士のまん中と高さ」：aura の canvas から見た、絵の canvas の中の形
+export function thumbAuraBox(auraCv, cv, pts) {
+  return () => {
+    const a = auraCv.getBoundingClientRect(), c = cv.getBoundingClientRect(), b = thumbBox(cv, pts);
+    if (!c.width) return null;
+    const k = c.width / (cv.clientWidth || 1);   // 跳ねる動き（transform）で大きさが変わる分
+    return { x: c.left - a.left + b.x * k, y: c.top - a.top + b.y * k, h: b.h * k };
+  };
 }
 
 export function initPick({ getShape, getDrive, setDrive, onFight, onBack }) {

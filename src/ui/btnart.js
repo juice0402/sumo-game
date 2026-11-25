@@ -36,6 +36,27 @@ function inkRing(color, seed) {
   return svgOf(48, 48, `<path d='M${pts.join('L')}' fill='none' stroke='${color}' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/>`, true);
 }
 
+// 筆で塗った丸（タイトルの朱の日の丸。ふちがかすれて、右上で筆が抜ける）
+function brushDisc(color, seed) {
+  const r = rand(seed), c = 100, pts = [];
+  for (let i = 0; i < 64; i++) {
+    const a = (i / 64) * Math.PI * 2, rr = 86 + Math.sin(a * 3 + 1) * 3 + (r() - 0.5) * 7 + (a > 5.2 ? (a - 5.2) * 9 : 0);
+    pts.push(`${n1(c + Math.cos(a) * rr)},${n1(c + Math.sin(a) * rr)}`);
+  }
+  let dots = '';
+  for (let i = 0; i < 14; i++) {
+    const a = r() * Math.PI * 2, rr = 92 + r() * 8;
+    dots += `<circle cx='${n1(c + Math.cos(a) * rr)}' cy='${n1(c + Math.sin(a) * rr)}' r='${n1(0.8 + r() * 2.2)}'/>`;
+  }
+  return svgOf(200, 200, `<g fill='${color}'><path d='M${pts.join('L')}Z'/>${dots}</g>`, true);
+}
+
+// 縦の筆の帯（縦書きのボタン用）：横の帯を90度まわしたもの
+function brushBandV(color, seed) {
+  const h = brushBand(color, seed).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  return svgOf(64, 240, `<g transform='translate(64,0) rotate(90)'>${h}</g>`);
+}
+
 export function applyButtonArt() {
   const s = document.documentElement.style;
   s.setProperty('--b-shu', url(brushBand(COL.shu, 3)));
@@ -46,4 +67,6 @@ export function applyButtonArt() {
   s.setProperty('--b-line', url(brushBand('#cfc8b8', 8)));    // 字の下の筆の線（ふつうのボタン）
   s.setProperty('--b-lineshu', url(brushBand(COL.shu, 8)));
   s.setProperty('--b-ring', url(inkRing('#cfc8b8', 4)));
+  s.setProperty('--b-sun', url(brushDisc(COL.shu, 6)));
+  s.setProperty('--b-shuv', url(brushBandV(COL.shu, 5)));
 }

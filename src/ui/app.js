@@ -1,11 +1,28 @@
-// はじまり：物理を用意して、画面をつなぐ（切る → 相手 → 取組 → もう一番／切り直す）
+// はじまり：物理を用意して、画面をつなぐ
+//   タイトル → 相撲部屋 →「勝負」→ 巡業（土俵巡業の抽選）／本場所（番付）／稽古（CPU）→ 力士選出 → 取組
+//   相撲部屋 → 力士をつくる（3枠）→ 力士の編集（四股名・称号・切り直す・引退）
 import { T } from '../data/text.js';
+import { STAGES, HONBASHO_STAGE } from '../data/stages.js';
 import { setRapier } from '../sim/battle.js';
-import { checkShape } from '../geom/check.js';
+import { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } from '../game/save.js';
+import { shikonaText, titleText, randomShikona, ownedWords } from '../game/names.js';
+import { CPU_SHAPES } from '../data/cpu-shapes.js';
+import { rankOf, eloDelta } from '../game/rating.js';
+import { drawStage } from '../game/jungyo.js';
+import { makeFoe } from '../game/foe.js';
 import { initCut } from './cut.js';
-import { initPick } from './pick.js';
+import { unpackLib } from './unpack.js';
+import { initPick, drawShapeThumb } from './pick.js';
 import { initBout } from './bout.js';
 import { initTools } from './tools.js';
+import { initHeya } from './heya.js';
+import { reset as resetChoose } from './choose.js';
+import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
+import { choose } from './choose.js';
+import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo } from '../game/fukubako.js';
+import { DOHYO } from '../data/dohyo.js';
+import { initFuku } from './fuku.js';
+import { initJungyo, initBanzuke, initSelect } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
 
@@ -16,36 +33,53 @@ applyButtonArt();
   if (l) { if (l.sheet) l.media = 'all'; else l.addEventListener('load', () => { l.media = 'all'; }); }
 }
 
-const SAVE_KEY = 'sumo-proto-v1';
-const state = { shape: null, drive: 'hop', seed: 1, mute: false, short: false };
+const state = loadState();
+state.seed = (Date.now() % 9973) + 1;
+const save = () => saveState(state);
+const activeSlot = () => state.slots[state.active];
+const hasRikishi = () => state.slots.some(Boolean);
+const who = (s) => ({ name: shikonaText(s.shikona), sub: titleText(s.title) });
 
-function load() {
-  try {
-    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
-    if (d.shape && checkShape(d.shape).ok) state.shape = d.shape;
-    if (d.drive === 'push' || d.drive === 'hop') state.drive = d.drive;
-    state.mute = d.mute === true;
-    state.short = d.short === true;
-  } catch (e) { /* 保存できない画面でも遊べる */ }
+// 画面の行き来（もどるボタンは1つ前へ）
+let cur = null;
+const nav = [];
+const onShow = {};
+// 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
+const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .rl-col, .actions > *, .note, .drive';
+function enter(el) {
+  resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
+  el.classList.remove('enter');
+  void el.offsetWidth;   // 動きを最初から
+  const items = el.querySelectorAll(ENTER);
+  items.forEach((c, i) => c.style.setProperty('--i', i));
+  el.classList.add('enter');
+  const n = Math.min(items.length, 6);
+  for (let i = 0; i < n; i++) setTimeout(() => playSfx('fude', { vol: 0.1, rate: 1.7 + i * 0.06 }), 40 + i * 58);
 }
-function save() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ shape: state.shape, drive: state.drive, mute: state.mute, short: state.short })); } catch (e) { /* */ }
-}
-
 function show(id) {
   for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== id;
+  cur = id;
+  if (onShow[id]) onShow[id]();
+  const el = document.getElementById(id);
+  if (id !== 's-bout' && id !== 's-cut') enter(el);
 }
+function go(id) { if (cur && cur !== id && cur !== 's-title' && cur !== 's-bout') nav.push(cur); show(id); }
+function back() { show(nav.pop() || 's-home'); }
+function home() { nav.length = 0; show('s-home'); }
 
-// 重いもの（物理 3.4MB・3D 0.7MB・効果音）は、切る画面を出してから動かす（はじめの画面を早く出すため）。
+// 重いもの（物理 3.4MB・3D 0.7MB・効果音）は、はじめの画面を出してから動かす（はじめの画面を早く出すため）。
 // ビルドが <script type="text/plain" id="lib-…"> に入れておいたものを、1つずつ動かす（あいだに画面を描けるように少し待つ）
 let ready = null;
 function loadLibs() {
   if (ready) return ready;
-  const run = (id) => new Promise((ok) => setTimeout(() => {
-    const el = document.getElementById(id);
-    if (el) { const s = document.createElement('script'); s.text = el.textContent; document.head.appendChild(s); el.remove(); }
-    ok();
-  }, 30));
+  // 重いものは gzip して入れてある（unpack.js）。1つずつ、画面に息つぎさせながら（30ms あけて）ほどく
+  const pause = () => new Promise((ok) => setTimeout(ok, 30));
+  const run = (id) => pause().then(() => unpackLib(id)).then((bytes) => {
+    if (!bytes) return;
+    const s = document.createElement('script');
+    s.text = new TextDecoder().decode(bytes);
+    document.head.appendChild(s);
+  });
   const domReady = new Promise((ok) => {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ok, { once: true }); else ok();
   });
@@ -57,8 +91,9 @@ function loadLibs() {
       } catch (e) { /* 音なしで続ける */ }
     })
     .then(() => run('lib-rapier'))
-    .then(() => window.RAPIER.init())
-    .then(() => { setRapier(window.RAPIER); return run('lib-three'); });
+    .then(() => pause().then(() => unpackLib('lib-wasm')))
+    .then((wasm) => { window.__SUMO_WASM = wasm.buffer; return window.RAPIER.init(); })
+    .then(() => { delete window.__SUMO_WASM; setRapier(window.RAPIER); return run('lib-three'); });
   ready.catch(() => {
     const el = document.getElementById('err');
     el.textContent = T.noWasm;
@@ -67,28 +102,239 @@ function loadLibs() {
   return ready;
 }
 
-async function boot() {
-  load();
-  state.seed = (Date.now() % 9973) + 1;
+function boot() {
+  // 縦の見出し・メニューの字・勝負の説明は、どの画面の高さでも1列に収まる大きさに（CSS が 100cqh と --n から決める）
+  for (const h of document.querySelectorAll('.screen.v > .bar h1')) headText(h, h.textContent);
+  for (const el of document.querySelectorAll('.modecard b, .modecard span')) setN(el);
+  // 部屋のメニューは、どの項目も同じ字の大きさ（いちばん長い字の数に合わせる・11/26 しょーくん「勝負と力士をつくるの大きさが違う」）
+  const lbls = [...document.querySelectorAll('.menu .lbl')];
+  const nMax = Math.max(...lbls.map((el) => Array.from(el.textContent).length));
+  for (const el of lbls) el.style.setProperty('--n', String(nMax));
+  let editSlot = 0, bzTitle = '番付', stamping = false;
+  // 切る：どの枠を切るか・切ったあとどこへ行くか
+  let cutSlot = 0, afterCut = null;
+  function cutFor(i, then, opt) {
+    cutSlot = i;
+    afterCut = then;
+    go('s-cut');
+    cut.show(state.slots[i] ? state.slots[i].shape : null, opt);
+  }
   const cut = initCut({
-    onDecide(pts) { playSfx('kami', { vol: 0.8 }); state.shape = pts; save(); loadLibs().then(() => { pick.resetMarks(); show('s-pick'); pick.show(); }); },
+    onDecide(pts) {
+      playSfx('kami', { vol: 0.8 });
+      const s = state.slots[cutSlot];
+      const isNew = !s;
+      if (s) s.shape = pts; else state.slots[cutSlot] = newRikishi(pts, ownedWords(state.words));
+      state.active = cutSlot;
+      save();
+      loadLibs().then(() => afterCut(isNew));
+    },
   });
+  document.getElementById('b-cutback').addEventListener('click', back);
+
+  // 稽古（CPU 5体）
   const pick = initPick({
-    getShape: () => state.shape,
+    getShape: () => (activeSlot() ? activeSlot().shape : null),
     getDrive: () => state.drive,
     setDrive(d) { state.drive = d; save(); },
-    onFight(foe) { show('s-bout'); bout.start(state.shape, foe, state.seed++); },
-    onBack() { show('s-cut'); cut.show(state.shape); },
+    onFight(foe) {
+      show('s-bout');
+      const me = activeSlot();
+      bout.start(me.shape, foe, state.seed++, { mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura] });
+    },
+    onBack: back,
   });
+  onShow['s-pick'] = () => {
+    pick.show();
+    const s = activeSlot();
+    fitText(document.getElementById('me-text'), s ? shikonaText(s.shikona) : T.yourShape);
+  };
+
   const bout = initBout({
     getDrive: () => state.drive,
     getShort: () => state.short,
-    onFoe() { show('s-pick'); pick.show(); },
-    onRecut() { show('s-cut'); cut.show(null); },
+    onFoe() { show('s-pick'); },
+    onRecut() { cutFor(state.active, () => { pick.resetMarks(); show('s-pick'); }); },
+    onNext(mode) { if (mode === 'shodohyo') show('s-meimei'); else openSelect(mode); },
+    onHome: home,
   });
-  const tools = initTools({ getShape: () => state.shape, getDrive: () => state.drive });
-  document.getElementById('b-tools').addEventListener('click', () => loadLibs().then(() => tools.open()));
-  // 音と演出（道具の画面）
+
+  // 巡業・本場所：選出 → 取組（相手は仮の CPU・四股名と称号はランダム）
+  const select = initSelect();
+  let match = null;
+  function openSelect(mode, fresh) {
+    const stage = mode === 'jungyo' ? drawStage(Date.now(), Math.random) : HONBASHO_STAGE;
+    match = { mode, stage };
+    if (fresh) go('s-select'); else show('s-select');
+  }
+  onShow['s-select'] = () => select.show({
+    mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
+    // 選んだ列に朱の帯をベタッと＋太鼓ドドン、朱の判子「出」をポン → ほかは下へ抜けて取組へ
+    onPick(i, btn) {
+      if (stamping) return;
+      stamping = true;
+      btn.classList.add('oshi');   // 朱の判子「出」（.stamp は結果の勝・負の判子と名前がかぶるので oshi）
+      choose(btn, () => loadLibs().then(() => { stamping = false; fight(i); }), state.short);
+    },
+  });
+  function fight(i) {
+    const me = state.slots[i];
+    if (!me) return;
+    state.active = i;
+    save();
+    const foe = makeFoe(Math.random, state.rate);
+    const m = match;
+    show('s-bout');
+    bout.start(me.shape, foe, state.seed++, {
+      mode: m.mode, stage: m.stage, a: who(me), b: who(foe),
+      papers: [me.paper, foe.paper], auras: [me.aura, foe.aura],
+      look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
+      onResult(r) {
+        addRec(me.rec, r.winner);
+        // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
+        const kb = kobanFor(state, r.winner, todayKey());
+        const kbText = '・' + T.kobanGain(kb.n, kb.first);
+        if (m.mode === 'honbasho') {
+          const before = rankOf(state.rate);
+          const d = eloDelta(state.rate, foe.rate, r.winner === 'a' ? 1 : r.winner ? 0 : 0.5);
+          state.rate += d;
+          addRec(state.hon, r.winner);
+          save();
+          const after = rankOf(state.rate);
+          const move = after.min > before.min ? '　' + T.promote(after.name) : after.min < before.min ? '　' + T.demote(after.name) : '';
+          return T.rateGain(after.name, state.rate, d) + move + kbText;
+        }
+        addRec(state.jun, r.winner);
+        save();
+        return `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}` + kbText;
+      },
+    });
+  }
+
+  // 部屋・勝負
+  const heya = initHeya({
+    onStart: home,
+    getShort: () => state.short,
+    onRoster() { if (hasRikishi()) go('s-roster'); else startIntro(); },
+    onShobu() { if (hasRikishi()) go('s-mode'); else startIntro(); },
+    onJungyoMatch() { go('s-jungyo'); },   // 土俵巡業の予定は、巡業をえらんだ人だけが見る（11/25 部屋のメニューから外した）
+    onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
+    onKeiko() { pick.resetMarks(); go('s-pick'); },
+    onFuku() { go('s-fuku'); },
+  });
+  onShow['s-home'] = () => heya.home(state);
+
+  // 福箱（11/26）：小判で開ける。中身は見た目だけ
+  const fuku = initFuku({ getState: () => state, onSave: save, getShort: () => state.short });
+  onShow['s-fuku'] = () => fuku.show();
+
+  // はじめての流れ（11/25 しょーくん「BからのA」）：空の相撲部屋 →「力士をつくる」→ お手本つきで切る
+  //   → 初土俵（CPU の釣鐘と1番・戦績には数えない）→ 四股名をさずかる → 相撲部屋
+  function startIntro() {
+    const i = Math.max(0, state.slots.findIndex((s) => !s));
+    cutFor(i, () => shodohyo(i), { demo: true });
+  }
+  function shodohyo(i) {
+    const me = state.slots[i];
+    const foe = CPU_SHAPES[0];
+    meimeiSlot = i;
+    show('s-bout');
+    bout.start(me.shape, foe, state.seed++, { mode: 'shodohyo', a: { name: T.you, sub: T.shodohyo }, b: { name: foe.name }, nextLabel: T.toMeimei, papers: [me.paper] });
+  }
+  let meimeiSlot = 0;
+  onShow['s-meimei'] = () => {
+    const s = state.slots[meimeiSlot];
+    document.getElementById('mm-title').textContent = titleText(s.title);
+    fitText(document.getElementById('mm-name'), shikonaText(s.shikona));
+    drawShapeThumb(document.getElementById('mm-cv'), s.shape, false, s.paper);
+    setTimeout(() => playSfx('sumi', { vol: 0.45 }), 380);
+    setTimeout(() => playSfx('ton', { vol: 0.75 }), 1150);
+  };
+  document.getElementById('mm-again').addEventListener('click', () => {
+    state.slots[meimeiSlot].shikona = randomShikona(Math.random, ownedWords(state.words));
+    save();
+    show('s-meimei');
+  });
+  document.getElementById('mm-ok').addEventListener('click', home);
+  onShow['s-mode'] = () => heya.mode(state);
+
+  // 部屋の力士（3枠）と編集
+  onShow['s-roster'] = () => renderSlots(document.getElementById('roster-slots'), state.slots, {
+    emptyOk: true,
+    onPick(i, btn) {
+      choose(btn, () => {
+        if (state.slots[i]) { editSlot = i; go('s-edit'); return; }
+        cutFor(i, () => { editSlot = i; show('s-edit'); });   // 新しい力士：切ったら名前を見せる（もどると部屋の力士へ）
+      }, state.short);
+    },
+  });
+  const edit = initEdit({
+    getSlot: (i) => state.slots[i],
+    getOwned: () => ownedWords(state.words),
+    getMise: () => ({ papers: ownedPapers(state), auras: ownedAuras(state) }),
+    onChange() { save(); },
+    onRecut(i) { cutFor(i, () => back()); },
+    onRetire(i) {
+      state.slots[i] = null;
+      if (state.active === i) state.active = Math.max(0, state.slots.findIndex(Boolean));
+      save();
+      back();
+    },
+    onDone: back,
+  });
+  onShow['s-edit'] = () => edit.show(editSlot);
+
+  // 土俵巡業・番付
+  const jungyo = initJungyo();
+  onShow['s-jungyo'] = () => jungyo.show();
+  document.getElementById('jg-go').addEventListener('click', () => {
+    if (!hasRikishi()) { go('s-roster'); return; }
+    openSelect('jungyo', true);
+  });
+  const banzuke = initBanzuke();
+  // 本場所の土俵（福箱の土俵スキン）：押すたびに、持っている土俵を順に。1つだけなら出さない
+  const bzDohyo = document.getElementById('bz-dohyo');
+  const paintDohyo = () => {
+    const own = ownedDohyo(state);
+    if (!own.includes(state.dohyo)) state.dohyo = 'kami';
+    bzDohyo.hidden = own.length < 2;
+    bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
+  };
+  bzDohyo.addEventListener('click', () => {
+    const own = ownedDohyo(state);
+    state.dohyo = own[(own.indexOf(state.dohyo) + 1) % own.length];
+    save();
+    paintDohyo();
+    playSfx('kami', { vol: 0.5 });
+  });
+  onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
+  document.getElementById('bz-go').addEventListener('click', () => {
+    if (!hasRikishi()) { go('s-roster'); return; }
+    openSelect('honbasho', true);
+  });
+
+  for (const b of document.querySelectorAll('.back')) b.addEventListener('click', back);
+
+  // 道具（試作のあいだだけ・本番では消して、音と演出は「設定」へ）
+  const tools = initTools({ getShape: () => (activeSlot() ? activeSlot().shape : null), getDrive: () => state.drive });
+  // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
+  const unstashBtn = document.getElementById('b-unstash');
+  const paintStash = () => { unstashBtn.hidden = !hasStash(); };
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo'];
+  document.getElementById('b-intro').addEventListener('click', () => {
+    stashSave();
+    Object.assign(state, freshProgress());
+    save();
+    tools.close();
+    home();
+  });
+  unstashBtn.addEventListener('click', () => {
+    if (unstashSave()) { const st = loadState(); for (const k of PROGRESS) state[k] = st[k]; }
+    tools.close();
+    home();
+  });
+  document.getElementById('b-koban').addEventListener('click', () => { state.koban += 1000; save(); heya.home(state); });   // 福箱をためす（試作だけ）
+  document.getElementById('b-tools').addEventListener('click', () => { paintStash(); loadLibs().then(() => tools.open()); });
   setMuted(state.mute);
   const toggle = (id, key, after) => {
     const b = document.getElementById(id);
@@ -101,8 +347,7 @@ async function boot() {
   document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
-  show('s-cut');
-  cut.show(state.shape);
+  show('s-title');
   loadLibs();
 }
 

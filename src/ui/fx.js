@@ -7,7 +7,7 @@ export function createFx(cv) {
   let lay = null;
   let drops = [], bursts = [];
 
-  function resize() { lay = setupCanvas(cv); }
+  function resize() { lay = setupCanvas(cv, LOOK.maxDpr); }   // 3D と同じ細かさまで（それより細かくても見えず、毎こま重い）
 
   // 墨のしぶき（x・y は描く座標）
   function splash(x, y, power, dir = 0) {
@@ -32,6 +32,7 @@ export function createFx(cv) {
   }
 
   function clear() { drops = []; bursts = []; }
+  const busy = () => drops.length > 0 || bursts.length > 0;
 
   // はじまり：和紙の画面を、大きな墨の筆が左から右へ横切る（通ったあとに土俵が見える）。p は 0〜1
   function inkSweep(ctx, W, H, p) {
@@ -126,6 +127,7 @@ export function createFx(cv) {
     ctx.clearRect(0, 0, W, H);
     const st = o.stage;
     tonMarks(ctx, st, o.P, o.ton, st.look().tonMark);
+    if (o.auras) for (const a of o.auras) a.a.draw(ctx, a.x * dpr, a.y * dpr, a.h * dpr);   // 気（見た目だけ）
     // 集中線
     for (const b of bursts) {
       const q = st.project(b.x, b.y);
@@ -166,5 +168,5 @@ export function createFx(cv) {
     if (o.sweep !== null && o.sweep < 1) inkSweep(ctx, W, H, o.sweep);
   }
 
-  return { resize, splash, burst, step, clear, draw };
+  return { resize, splash, burst, step, clear, draw, busy };
 }

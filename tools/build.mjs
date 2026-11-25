@@ -1,10 +1,12 @@
 // src を1つの index.html にまとめる（Node の標準だけ）。
 //   node tools/build.mjs [--artifact 出力.html]
 // - src/ の ES モジュールを、import/export を外して順につなぐ（import は1行で `import { a, b } from './x.js';` の形だけ）
-// - 物理（Rapier 決定論版）と 3D（Three.js r160 の three.min.js・window.THREE）は node_modules から読んでそのまま入れる
+// - 物理（Rapier 決定論版）と 3D（Three.js r160 の three.min.js・window.THREE）は node_modules から読み、gzip して base64 で入れる
+//   （wasm も別に gzip。ほどくのは src/ui/unpack.js・11/25 の軽量化：4.39MB → 約1.7MB）
 // - 効果音 assets/sfx/*.mp3 は base64 にして window.SUMO_SFX に入れる（コードには埋めこまない）
 // - 「指紋」の正しい値を、ここで計算して入れる（道具の画面でくらべる）
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import RAPIER from '@dimforge/rapier2d-deterministic-compat';
@@ -47,7 +49,13 @@ const bundle = `(function () {\n'use strict';\nconst __m = {};\n${order.map(wrap
 const rapierPkg = JSON.parse(readFileSync(resolve(root, 'node_modules/@dimforge/rapier2d-deterministic-compat/package.json'), 'utf8'));
 const rapierSrc = readFileSync(resolve(root, 'node_modules/@dimforge/rapier2d-deterministic-compat/dist/rapier.cjs'), 'utf8')
   .replace(/^\/\/# sourceMappingURL=.*$/gm, '');
-const rapierJs = `(function () {\nvar module = { exports: {} }; var exports = module.exports;\n${rapierSrc}\nwindow.RAPIER = module.exports;\n})();\n`;
+// wasm は文字（base64）のまま JS に入っているので取り出して、JS からは window.__SUMO_WASM（ほどいた ArrayBuffer）を読ませる
+const WASM_RE = /[A-Za-z_$][\w$]*\.toByteArray\("(AGFzbQ[A-Za-z0-9+/=]+)"\)\.buffer/g;
+const wasmHits = [...rapierSrc.matchAll(WASM_RE)];
+if (wasmHits.length !== 1) throw new Error(`Rapier の wasm が見つからない（${wasmHits.length}）`);
+const wasmBin = Buffer.from(wasmHits[0][1], 'base64');
+const rapierJs = `(function () {\nvar module = { exports: {} }; var exports = module.exports;\n${rapierSrc.replace(WASM_RE, () => 'window.__SUMO_WASM')}\nwindow.RAPIER = module.exports;\n})();\n`;
+const gz64 = (buf) => gzipSync(buf, { level: 9 }).toString('base64');
 
 // 3D：UMD の three.min.js（そのまま入れると window.THREE になる）。古い書き方の注意の1行だけ消す
 const threePkg = JSON.parse(readFileSync(resolve(root, 'node_modules/three/package.json'), 'utf8'));
@@ -73,7 +81,8 @@ const page = readFileSync(resolve(root, 'src/ui/page.html'), 'utf8').replace('/*
 // はじめの画面を早く出すため、ゲームのコードを先に・重いもの（物理・3D・効果音）は最後に「まだ動かさない形」で入れる。
 // ゲームのコードが切る画面を出してから、ui/app.js の loadLibs が順に動かす
 const scripts = `<script>window.SUMO_BUILD = ${JSON.stringify(info)};</script>\n<script>\n${bundle}</script>\n`
-  + `<script type="text/plain" id="lib-rapier">\n${rapierJs}</script>\n<script type="text/plain" id="lib-three">\n${threeJs}</script>\n`
+  + `<script type="text/plain" id="lib-rapier">\n${gz64(Buffer.from(rapierJs))}</script>\n<script type="text/plain" id="lib-wasm">\n${gz64(wasmBin)}</script>\n`
+  + `<script type="text/plain" id="lib-three">\n${gz64(Buffer.from(threeJs))}</script>\n`
   + `<script type="application/json" id="lib-sfx">${JSON.stringify(sfx)}</script>\n`;
 for (const s of [bundle, threeJs, rapierJs]) if (/<\/script/i.test(s)) throw new Error('</script が入っている');
 const content = page.replace('<!--SCRIPTS-->', () => scripts);

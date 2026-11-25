@@ -130,6 +130,24 @@ export function createBout(opts) {
     }
     return false;
   };
+  // 俵より外で、本当に土俵にふれている所（足でも体でも）。ふれていれば、その場所（世界の座標）を返す。
+  // 土俵は回らないので、土俵から見た x がそのまま中心からの距離（四則演算とくらべるだけ）
+  const outside = (f) => {
+    let at = null;
+    const ry = ringBody.translation().y;
+    for (const c of f.cols) {
+      world.contactPair(ringCol, c, (m, flipped) => {
+        const k = m.numContacts();
+        for (let i = 0; i < k && !at; i++) {
+          if (!(m.contactDist(i) <= 0 || m.contactImpulse(i) > 0)) continue;
+          const p = flipped ? m.localContactPoint2(i) : m.localContactPoint1(i);
+          if (p && (p.x > phys.tawara || p.x < -phys.tawara)) at = { x: p.x, y: p.y + ry };
+        }
+      });
+      if (at) return at;
+    }
+    return null;
+  };
   const fightersTouch = () => {
     for (const c of A.cols) {
       let hit = false;
@@ -157,12 +175,24 @@ export function createBout(opts) {
     if (f.lost) return;
     const com = f.body.worldCom();
     if (com.y < 0 || touches(f, floorCol)) { f.lost = 'out'; f.lostAt = step; return; }
+    // 俵の外の土俵（蛇の目・土俵の横の面）にふれたら負け（踏み出し・勇み足など。11/26 しょーくん「土俵の外に足がついたら負け」）
+    if (phys.tawara > 0) {
+      const at = outside(f);
+      if (at) { f.lost = 'out'; f.lostAt = step; f.at = at; return; }
+    }
     if (phys.touchLose) {
-      // 体が土俵に touchHold 秒ついたら負け（はねて一瞬かすっただけは負けにしない）
+      // 体が土俵についたら負け。touchReal：本当にふれた（めりこんだか、押し返す力が出た）所だけを数える
+      // （近いだけの「ふれそう」は数えない）→ 頭から落ちてはねても負け（11/25 しょーくん）。touchHold 秒つづいたら負け
       let hit = null;
       for (const c of f.bodyCols) {
         world.contactPair(ringCol, c, (m) => {
-          if (hit || m.numContacts() === 0) return;
+          const k = m.numContacts();
+          if (hit || k === 0) return;
+          if (phys.touchReal) {
+            let real = false;
+            for (let i = 0; i < k && !real; i++) real = m.contactDist(i) <= 0 || m.contactImpulse(i) > 0;
+            if (!real) return;
+          }
           const p = m.numSolverContacts() > 0 ? m.solverContactPoint(0) : null;
           hit = p ? { x: p.x, y: p.y } : { x: 0, y: 0 };
         });

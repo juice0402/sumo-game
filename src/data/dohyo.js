@@ -9,7 +9,6 @@ export const DOHYO = {
       fiber: 0.55,           // 和紙のすじの濃さ（0〜1）
       ring: '#201E1B',       // 墨の輪
       ringW: 0.055,          // 輪の太さ（土俵の幅に対する割合）
-      ringInset: 0.03,       // 輪をふちから内へ（土俵の幅に対する割合）
       shikiri: 0.2,          // 仕切り線の中心からの距離（m・0＝なし）
       shikiriLen: 0.34,      // 仕切り線の長さ（m）
     },
@@ -25,6 +24,66 @@ export const DOHYO = {
     bg: '#201E1B',           // うしろ
     tonMark: '#EEE9DE',      // トンの合図の線
   },
+  // 氷の土俵（data/stages.js の kori）：つめたい白の和紙・青みの厚紙
+  kori: {
+    name: '氷の箱',
+    top: { paper: '#E4EBEB', fiber: 0.3, ring: '#201E1B', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { paper: '#b4c2c4', line: '#201E1B', inset: 0.05, layer: '#7a8d91', text: '#201E1B' },
+    edge: '#201E1B', floor: '#242a2d', bg: '#1b2023', tonMark: '#E4EBEB',
+  },
+  // 激震の土俵（data/stages.js の gekishin）：朱の輪・焼けた色の厚紙
+  gekishin: {
+    name: '激震の箱',
+    top: { paper: '#E9E0CD', fiber: 0.65, ring: '#AB392F', ringW: 0.07, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { paper: '#bba887', line: '#201E1B', inset: 0.05, layer: '#7c6a4b', text: '#201E1B' },
+    edge: '#201E1B', floor: '#2e2620', bg: '#221b17', tonMark: '#EEE9DE',
+  },
 };
+
+// ---- 土俵スキン（11/26：福箱から出る・本場所で使える・見た目だけ）。top.pat は ui/papertex.js のもよう ----
+Object.assign(DOHYO, {
+  ai: {
+    name: '藍の土俵',
+    top: { paper: '#DCE2EA', fiber: 0.5, ring: '#2F4766', ringW: 0.055, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { paper: '#8b9bb0', line: '#201E1B', inset: 0.05, layer: '#5d6d82', text: '#201E1B' },
+    edge: '#201E1B', floor: '#21252b', bg: '#1a1d22', tonMark: '#EEE9DE',
+  },
+  wakakusa: {
+    name: '若草の土俵',
+    top: { paper: '#E6EAD5', fiber: 0.6, ring: '#3D6B4F', ringW: 0.055, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { paper: '#a9b38a', line: '#201E1B', inset: 0.05, layer: '#77825a', text: '#201E1B' },
+    edge: '#201E1B', floor: '#23271f', bg: '#1c1f19', tonMark: '#EEE9DE',
+  },
+  sakura: {
+    name: '桜の土俵',
+    top: { paper: '#F3E4E1', fiber: 0.5, ring: '#AB392F', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34, pat: 'hanabira', ink: '#E7B3BA' },
+    side: { paper: '#d6b3b0', line: '#201E1B', inset: 0.05, layer: '#a8807c', text: '#201E1B' },
+    edge: '#201E1B', floor: '#2b2224', bg: '#221b1d', tonMark: '#EEE9DE',
+  },
+  yuyake: {
+    name: '夕焼けの土俵',
+    top: { paper: '#F1DEC6', fiber: 0.6, ring: '#201E1B', ringW: 0.055, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { paper: '#d0956a', line: '#201E1B', inset: 0.05, layer: '#9c6440', text: '#201E1B' },
+    edge: '#201E1B', floor: '#2e2219', bg: '#261a14', tonMark: '#EEE9DE',
+  },
+  urushi: {
+    name: '漆の土俵',
+    top: { paper: '#2a1d1a', fiber: 0.15, ring: '#C2453A', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, shikiriInk: '#EEE9DE' },
+    side: { paper: '#5c2a24', line: '#B79A53', inset: 0.05, layer: '#3d1a16', text: '#EEE9DE' },
+    edge: '#B79A53', floor: '#1d1615', bg: '#161110', tonMark: '#EEE9DE',
+  },
+  suminagashi: {
+    name: '墨流しの土俵',
+    top: { paper: '#EEE9DE', fiber: 0.4, ring: '#201E1B', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, pat: 'suminagashi', ink: '#6f685c' },
+    side: { paper: '#b9b1a2', line: '#201E1B', inset: 0.05, layer: '#868072', text: '#201E1B' },
+    edge: '#201E1B', floor: '#242220', bg: '#1d1b19', tonMark: '#EEE9DE',
+  },
+  kinbyobu: {
+    name: '金屏風の土俵',
+    top: { paper: '#C9A445', fiber: 0, ring: '#201E1B', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, pat: 'kinpaku', ink: '#8a6d24' },
+    side: { paper: '#a9852f', line: '#201E1B', inset: 0.05, layer: '#7a5e1d', text: '#201E1B' },
+    edge: '#201E1B', floor: '#2a2318', bg: '#211b12', tonMark: '#EEE9DE',
+  },
+});
 
 export const DOHYO_DEFAULT = 'kami';

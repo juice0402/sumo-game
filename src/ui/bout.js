@@ -2,11 +2,13 @@
 // 流れ：墨が横切る → 土俵を1周 → 少し上からの真横で止まる → 静寂 → 拍子木と「勝負」→ そのまま取組 → 決まり手
 import { T } from '../data/text.js';
 import { LOOK } from '../data/look.js';
+import { STAGES } from '../data/stages.js';
 import { createBout, toLocal } from '../sim/battle.js';
 import { decideKimarite } from '../data/kimarite.js';
 import { createStage } from './stage3d.js';
 import { createFx } from './fx.js';
 import { playSfx } from './sound.js';
+import { createAura } from './aura.js';
 
 const TAU = Math.PI * 2;
 // 一定の速さでまわり、最後だけゆっくり止まる（0〜1 → 0〜1）
@@ -21,17 +23,26 @@ function orbitEase(u) {
 const smoother = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * t * (t * (6 * t - 15) + 10); };
 const mix = (a, b, t) => a + (b - a) * t;
 
-export function initBout({ getDrive, getShort, onFoe, onRecut }) {
+export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
   const gl = document.getElementById('bout-gl');
   const cv = document.getElementById('bout-cv');
   const names = document.getElementById('names');
   const cutin = document.getElementById('cutin');
+  const sname = document.getElementById('stagename');
   const resEl = document.getElementById('result');
   const stamp = document.getElementById('r-big');
   const kimaEl = document.getElementById('r-kima');
   const kindEl = document.getElementById('r-kind');
+  const gainEl = document.getElementById('r-gain');
   const fx = createFx(cv);
-  let stage = null, st = null, raf = 0;
+  let stage = null, st = null, raf = 0, curLook = null;
+  const btn = (id) => document.getElementById(id);
+  // 名前：小さい称号の下に四股名
+  function setName(el, who) {
+    el.textContent = '';
+    if (who.sub) { const sm = document.createElement('small'); sm.textContent = who.sub; el.appendChild(sm); }
+    el.appendChild(document.createTextNode(who.name));
+  }
 
   function stop() {
     cancelAnimationFrame(raf);
@@ -39,6 +50,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     st = null;
     cutin.classList.remove('go');
     names.classList.remove('in');
+    sname.classList.remove('in', 'out');
     fx.clear();
   }
 
@@ -56,13 +68,21 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     kindEl.style.top = c[1] + 'px';
     kindEl.style.maxWidth = Math.max(120, (r[0] - l[0]) * 0.86) + 'px';
     kindEl.style.color = stage.look().side.text || '';
+    // 番付・戦績のひとことは、決まりの文のすぐ下に（同じ土俵の横の面・同じ色。11/26 しょーくん「土俵の線とかぶって見づらい」）
+    gainEl.style.left = c[0] + 'px';
+    gainEl.style.top = c[1] + 'px';
+    gainEl.style.color = kindEl.style.color;
   }
 
-  function start(me, foe, seed) {
+  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと,
+  //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ） }
+  function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
-    const bout = createBout({ a: me, b: foe.pts, seed, phys: { drive: getDrive() }, record: true });
-    if (!stage) stage = createStage(gl, bout.phys);
+    gainEl.hidden = true;
+    const S = STAGES[opt.stage] || STAGES.hyojun;
+    const bout = createBout({ a: me, b: foe.pts, seed, phys: Object.assign({ drive: getDrive() }, S.phys), record: true });
+    if (!stage) { stage = createStage(gl, bout.phys); curLook = 'kami'; }
     if (!stage) {
       bout.free();
       const el = document.getElementById('err');
@@ -70,16 +90,41 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
       el.hidden = false;
       return;
     }
-    document.getElementById('n-a').textContent = T.you;
-    document.getElementById('n-b').textContent = foe.name;
+    const look = opt.look || S.look;   // 本場所は、えらんだ土俵スキン（見た目だけ・物理は S.phys のまま）
+    if (curLook !== look) { stage.setDohyo(look); curLook = look; }
+    const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
+    setName(document.getElementById('n-a'), a);
+    setName(document.getElementById('n-b'), b);
+    // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
+    const keiko = !opt.mode || opt.mode === 'keiko';
+    btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
+    btn('b-next').hidden = keiko;
+    btn('b-next').textContent = opt.nextLabel || T.nextBout;
+    btn('b-home').hidden = opt.mode === 'shodohyo';
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
-    stage.setFighters(la, lb);
+    stage.setFighters(la, lb, opt.papers || []);
+    // 気（オーラ・見た目だけ）：力士の中の座標での、まん中と高さ
+    const boxOf = (ol) => {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const p of ol.outline) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+      return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, h: y1 - y0 };
+    };
+    const auras = (opt.auras || []).map((id) => createAura(id));
     const short = !!getShort();
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
     const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
     const goAt = orbitEnd + (short ? 0.1 : LOOK.hush);
+    // 巡業：旋回のあいだに、どの土俵かを右に縦書きで（11/26 しょーくん）。演出を短くでは、立ち合いのあと少しだけ
+    const sn = opt.mode === 'jungyo';
+    if (sn) {
+      document.getElementById('sn-mode').textContent = T.mode.jungyo;
+      document.getElementById('sn-name').textContent = S.name;
+      document.getElementById('sn-note').textContent = S.note;
+    }
     st = {
-      me, foe, seed, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
+      sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
+      me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
+      auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], idle3d: false,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
       t: 0, last: performance.now(), play: false, idx: 0, hold: 0, endHold: 0,
       firstHit: true, prevTouch: 0, prevTon: 0, ended: false, shown: false, went: false, kima: null,
@@ -126,6 +171,15 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     const lastIdx = s.rec.n - 1;
     // 立ち合いまで
     if (!s.went && s.t >= s.orbitStart) names.classList.add('in');
+    if (s.sn && !s.snIn && s.t >= s.snAt) {
+      s.snIn = true;
+      if (s.t < s.snOutAt) {   // タップで旋回を飛ばしたあとなら出さない
+        sname.classList.add('in');
+        playSfx('taiko', { vol: 0.5, rate: 0.8 });
+        playSfx('fude', { vol: 0.35, rate: 1.0 });
+      } else s.snOut = true;
+    }
+    if (s.sn && !s.snOut && s.t >= s.snOutAt) { s.snOut = true; sname.classList.add('out'); }
     if (!s.went && s.t >= s.goAt) {
       s.went = true;
       cutin.classList.add('go');
@@ -164,10 +218,30 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     s.prevTon = ton;
     camera(s);
     fx.step(fdt);
-    stage.render();
+    if (!s.idle3d) stage.render();   // 結果が出て動かなくなったら 3D は描かない（気だけ動かすとき）
+    // 気：力士のまん中（まわっていても）を画面に写して、そのまわりに
+    let auraDraw = null;
+    if (s.auras && s.t > LOOK.inkSec) {
+      auraDraw = [];
+      for (let i = 0; i < 2; i++) {
+        const au = s.auras[i];
+        if (!au) continue;
+        au.step(fdt);
+        const bx = s.boxes[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2], c = Math.cos(rz), sn = Math.sin(rz);
+        const wx = x + bx.cx * c - bx.cy * sn, wy = y + bx.cx * sn + bx.cy * c;
+        const q = stage.project(wx, wy), q2 = stage.project(wx, wy + bx.h / 2);
+        auraDraw.push({ a: au, x: q[0], y: q[1], h: Math.hypot(q2[0] - q[0], q2[1] - q[1]) * 2 });
+      }
+    }
     const r = s.bout.result;
-    const mark = s.ended && r.kind === 'touch' && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
-    fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null });
+    // 朱の丸：体がついた所・俵の外にふれた所（どこで負けたかが見えるように）
+    const mark = s.ended && (r.kind === 'touch' || r.kind === 'out') && r.at ? { x: r.at.x, y: r.at.y - ry, t: s.t - s.endedAt } : null;
+    fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null, auras: auraDraw });
+    // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
+    // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
+    const idle = s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1;
+    if (idle && !auraDraw) { s.sleep = true; return; }
+    s.idle3d = idle;   // 気があるときは、気（2D）だけ動かしつづける
     raf = requestAnimationFrame(frame);
   }
 
@@ -190,22 +264,33 @@ export function initBout({ getDrive, getShort, onFoe, onRecut }) {
     const s = st;
     s.shown = true;
     const r = s.bout.result;
-    const name = (side) => (side === 'a' ? T.you : s.foe.name);
+    const name = (side) => (side === 'a' ? s.a.name : s.b.name);
     stamp.className = 'stamp brush ' + (r.winner === 'a' ? 'win' : r.winner === 'b' ? 'lose' : 'draw');
     stamp.textContent = r.winner === 'a' ? T.win : r.winner === 'b' ? T.lose : T.draw;
     kimaEl.textContent = (s.kima && T.kimarite[s.kima]) || '';
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
     placeKind();
+    // 巡業・本場所：番付や戦績のひとこと
+    if (s.opt.onResult) s.opt.gain = s.opt.onResult(r) || '';
+    gainEl.textContent = s.opt.gain || '';
+    gainEl.hidden = !s.opt.gain;
+    resEl.classList.toggle('has-gain', !gainEl.hidden);   // ひとことがあるときは、決まりの文を少し上へ（2行で横の面のまん中に）
     resEl.hidden = false;
   }
 
   gl.addEventListener('pointerdown', skip);
   cv.addEventListener('pointerdown', skip);
-  document.getElementById('b-again').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed + 1); });
-  document.getElementById('b-replay').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed); });
+  document.getElementById('b-again').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed + 1, st.opt); });
+  document.getElementById('b-next').addEventListener('click', () => { const m = st && st.opt.mode; stop(); if (onNext) onNext(m); });
+  document.getElementById('b-home').addEventListener('click', () => { stop(); if (onHome) onHome(); });
   document.getElementById('b-foe').addEventListener('click', () => { stop(); onFoe(); });
   document.getElementById('b-recut').addEventListener('click', () => { stop(); onRecut(); });
-  window.addEventListener('resize', () => { if (st) layout(); });
+  window.addEventListener('resize', () => {
+    if (!st) return;
+    layout();
+    st.idle3d = false;   // 大きさが変わったら 3D を1こま描きなおす
+    if (st.sleep) { st.sleep = false; st.last = performance.now(); raf = requestAnimationFrame(frame); }
+  });
 
   return { start, stop };
 }

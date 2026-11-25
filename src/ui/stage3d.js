@@ -1,6 +1,7 @@
 // 取組の 2.5D（Three.js）。物理は2Dのまま。z=0 の面に、紙の力士を立てて描くだけ。
 // カメラは土俵にくっつける：描くときの y は「物理の y − 土俵の上の面の y」＝土俵のトンで画面がゆれない。
 import { COL, rand, fiberPattern, polyPath, inkStroke } from './ink.js';
+import { paperFill, patternFill } from './papertex.js';
 import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
 import { LOOK } from '../data/look.js';
 import { PAPER } from '../data/config.js';
@@ -22,20 +23,22 @@ function topCanvas(d, P) {
   const k = N / (2 * P.ringHalf);
   g.fillStyle = d.top.paper;
   g.fillRect(0, 0, N, N);
+  if (d.top.pat) { g.fillStyle = patternFill(g, d.top.pat, d.top.paper, d.top.ink || COL.sumi, k); g.fillRect(0, 0, N, N); }   // 土俵スキンのもよう
   g.globalAlpha = d.top.fiber;
   g.fillStyle = fiberPattern(g);
   g.fillRect(0, 0, N, N);
   g.globalAlpha = 1;
-  const rr = rand(5), r = (0.5 - d.top.ringInset - d.top.ringW / 2) * N, pts = [];
+  // 輪（俵）の外がわを、物理の俵の線（P.tawara）にぴったり合わせる＝見えている輪の外にふれたら負け
+  const sw = d.top.ringW * N * 0.6, rr = rand(5), r = P.tawara * k - sw / 2, pts = [];
   for (let i = 0; i <= 120; i++) {
     const a = (i / 120) * Math.PI * 2 + 0.4, j = 1 + (rr() - 0.5) * 0.008;
     pts.push([N / 2 + Math.cos(a) * r * j, N / 2 + Math.sin(a) * r * j]);
   }
-  inkStroke(g, pts, (p) => p, d.top.ringW * N * 0.6);
+  inkStroke(g, pts, (p) => p, sw, d.top.ring);
   if (d.top.shikiri) {
     for (const s of [-1, 1]) {
       const x = N / 2 + s * d.top.shikiri * k, h = (d.top.shikiriLen * k) / 2;
-      inkStroke(g, [[x, N / 2 - h], [x, N / 2 + h]], (p) => p, 0.022 * k);
+      inkStroke(g, [[x, N / 2 - h], [x, N / 2 + h]], (p) => p, 0.022 * k, d.top.shikiriInk || COL.sumi);
     }
   }
   return c;
@@ -65,19 +68,18 @@ function sideCanvas(d, P) {
 }
 
 // 力士の紙の表：和紙 → すじ → 体と足のさかい（点線）→ 墨のふち
-function paperCanvas(ol, dark, P, box) {
+function paperCanvas(ol, dark, P, box, paper) {
   const k = 520 / box.sx;
   const c = document.createElement('canvas');
   c.width = Math.ceil(box.sx * k); c.height = Math.ceil(box.sy * k);
   const g = c.getContext('2d');
   const tx = (p) => [(p[0] - box.x0) * k, (box.y1 - p[1]) * k];
   polyPath(g, ol.outline, tx);
-  g.fillStyle = dark ? COL.washi2 : COL.washi;
+  g.fillStyle = paperFill(g, paper, k * PAPER.w * ol.s);   // 紙質（福箱・見た目だけ）。紙の幅＝PAPER.w × 物理の倍率
   g.fill();
+  if (dark) { g.fillStyle = 'rgba(32,30,27,0.12)'; g.fill(); }
   g.save();
   g.clip();
-  g.fillStyle = fiberPattern(g);
-  g.fillRect(0, 0, c.width, c.height);
   const yl = P.footH * PAPER.h * ol.s;
   g.setLineDash([0.035 * k, 0.035 * k]);
   g.strokeStyle = 'rgba(32,30,27,0.38)';
@@ -104,6 +106,9 @@ export function createStage(cv, P) {
   }
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // 影は、物が動いたときだけ描きなおす（旋回の間はカメラだけが動くので、影は同じ・11/25）
+  renderer.shadowMap.autoUpdate = false;
+  const shadowDirty = () => { renderer.shadowMap.needsUpdate = true; };
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(LOOK.fov, 1, 0.1, 90);
   const sun = new THREE.DirectionalLight(0xfff6e8, 2.1);
@@ -118,40 +123,44 @@ export function createStage(cv, P) {
   let dohyo = null, fighters = [], base = 10, cssW = 1, cssH = 1;
   const disposables = [];
   const keep = (o) => { disposables.push(o); return o; };
+  const dohyoRes = [];
+  const keepD = (o) => { dohyoRes.push(o); return o; };
 
   // 土俵（項目を読むだけ。見た目の項目を足せば別の土俵になる）
   function setDohyo(id) {
-    if (dohyo) { scene.remove(dohyo); }
+    if (dohyo) { scene.remove(dohyo, dohyo.userData.floor); }   // 床も外す（残すと箱の横の面をかくす）
+    for (const o of dohyoRes.splice(0)) o.dispose();             // 前の土俵の絵と形をすてる（土俵を切りかえても重くならない）
     const d = DOHYO[id] || DOHYO[DOHYO_DEFAULT];
     scene.background = new THREE.Color(d.bg);
     scene.fog = new THREE.Fog(d.bg, base * 0.9, base * 2.2);
     const W = 2 * P.ringHalf, H = P.ringDepth;
-    const side = keep(new THREE.MeshLambertMaterial({ map: keep(makeTex(THREE, sideCanvas(d, P))) }));
-    const topMap = keep(makeTex(THREE, topCanvas(d, P)));
-    const top = keep(new THREE.MeshLambertMaterial({ map: topMap, emissive: 0xffffff, emissiveMap: topMap, emissiveIntensity: LOOK.paperGlow * 0.4 }));
-    const under = keep(new THREE.MeshLambertMaterial({ color: d.floor }));
-    const geo = keep(new THREE.BoxGeometry(W, H, W));
+    const side = keepD(new THREE.MeshLambertMaterial({ map: keepD(makeTex(THREE, sideCanvas(d, P))) }));
+    const topMap = keepD(makeTex(THREE, topCanvas(d, P)));
+    const top = keepD(new THREE.MeshLambertMaterial({ map: topMap, emissive: 0xffffff, emissiveMap: topMap, emissiveIntensity: LOOK.paperGlow * 0.4 }));
+    const under = keepD(new THREE.MeshLambertMaterial({ color: d.floor }));
+    const geo = keepD(new THREE.BoxGeometry(W, H, W));
     const box = new THREE.Mesh(geo, [side, side, top, under, side, side]);
     box.position.y = -H / 2;
     box.castShadow = true;
     box.receiveShadow = true;
-    const edges = new THREE.LineSegments(keep(new THREE.EdgesGeometry(geo)), keep(new THREE.LineBasicMaterial({ color: d.edge })));
+    const edges = new THREE.LineSegments(keepD(new THREE.EdgesGeometry(geo)), keepD(new THREE.LineBasicMaterial({ color: d.edge })));
     box.add(edges);
-    const floor = new THREE.Mesh(keep(new THREE.PlaneGeometry(60, 60)), keep(new THREE.MeshLambertMaterial({ color: d.floor })));
+    const floor = new THREE.Mesh(keepD(new THREE.PlaneGeometry(60, 60)), keepD(new THREE.MeshLambertMaterial({ color: d.floor })));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     dohyo = new THREE.Group();
     dohyo.add(box);
     dohyo.userData = { floor, look: d };
     scene.add(dohyo, floor);
+    shadowDirty();
   }
 
-  function makeFighter(ol, dark) {
+  function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
     const box = { x0: x0 - pad, y1: y1 + pad, sx: x1 - x0 + 2 * pad, sy: y1 - y0 + 2 * pad };
-    const map = makeTex(THREE, paperCanvas(ol, dark, P, box));
+    const map = makeTex(THREE, paperCanvas(ol, dark, P, box, paper));
     const shape = new THREE.Shape(pts.map((p) => new THREE.Vector2(p[0], p[1])));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: LOOK.paperT, bevelEnabled: false, curveSegments: 1 });
     geo.translate(0, 0, -LOOK.paperT / 2);
@@ -166,29 +175,37 @@ export function createStage(cv, P) {
     return mesh;
   }
 
-  function setFighters(la, lb) {
+  // papers：[a の紙質, b の紙質]（data/papers.js の id・見た目だけ）
+  function setFighters(la, lb, papers = []) {
     for (const m of fighters) { scene.remove(m); m.userData.free(); }
-    fighters = [makeFighter(la, false), makeFighter(lb, true)];
+    fighters = [makeFighter(la, false, papers[0]), makeFighter(lb, true, papers[1])];
     scene.add(...fighters);
+    shadowDirty();
   }
 
   // 記録の1こま（a の x・y・回転, b の x・y・回転, 土俵の上の面の y, ふれているか）
   let ry = 0;
   function setFrame(f, o) {
+    if (f[o + 6] !== ry) shadowDirty();
     ry = f[o + 6];
     for (let i = 0; i < 2; i++) {
-      const m = fighters[i];
-      m.position.set(f[o + i * 3], f[o + i * 3 + 1] - ry, 0);
-      m.rotation.z = f[o + i * 3 + 2];
+      const m = fighters[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2];
+      if (x !== m.position.x || y !== m.position.y || rz !== m.rotation.z) shadowDirty();
+      m.position.set(x, y, 0);
+      m.rotation.z = rz;
     }
     dohyo.userData.floor.position.y = -P.ringDepth - ry; // 床は動かない（土俵だけがトンと上がる）
   }
 
   function resize() {
     const r = cv.getBoundingClientRect();
-    cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOOK.maxDpr));
-    renderer.setSize(cssW, cssH, false);
+    const w = Math.max(1, r.width), h = Math.max(1, r.height), pr = Math.min(window.devicePixelRatio || 1, LOOK.maxDpr);
+    // 大きさが同じなら、描く板を作りなおさない（取組のたびに作りなおすと重い・11/25）
+    if (w !== cssW || h !== cssH || pr !== renderer.getPixelRatio()) {
+      cssW = w; cssH = h;
+      if (pr !== renderer.getPixelRatio()) renderer.setPixelRatio(pr);
+      renderer.setSize(cssW, cssH, false);
+    }
     camera.aspect = cssW / cssH;
     const tv = Math.tan((LOOK.fov * D2R) / 2), th = tv * camera.aspect;
     base = Math.max(LOOK.viewHalfW / th, LOOK.viewHalfH / tv);
