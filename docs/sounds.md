@@ -16,6 +16,7 @@
 | sumi | 墨のしぶき | sfx/wyzowl/everyday-props/props-splash（水の音・0.6秒に切った） | 0.63秒 | 7KB | CC0 | Wyzowl |
 | don | えらんだとき・決定のボタン（和太鼓のドン） | — コードで作った音（tools/sfx_synth.py の taiko・長胴） | 1.6秒 | 16KB | C（コードで作った音） | Claude |
 | shu | 画面の札が右からシュッと入る（紙のシュッ） | — コードで作った音（tools/sfx_synth.py の shu） | 0.2秒 | 3KB | C（コードで作った音） | Claude |
+| kin | 本場所のカットインのガキーン（金床を打つ） | sfx/oculus/metal/METLImpt_HammerAnvil_OS_01（頭の無音を切り・おしりに fade out） | 1.31秒 | 14KB | CC BY 4.0（クレジットがいる＝text.js の T.credits に1行） | Oculus VR, LLC |
 
 - ぴったりではないもの：fude（ペンの音）・sumi（水のしぶき）・hyoshigi（ノック）・taiko（洋の大太鼓）。聞いて合わなければ、ほかを koe-irai の catalog から選び直す
-- Oculus（CC BY）の音は使っていない。ゲームのクレジットは text.js の T.credits（CC0 の1行）
+- Oculus（CC BY 4.0）は kin だけ。クレジット画面（text.js の T.credits）に koe-irai の sfx/README.md の1行をそのまま書いた。11/26 しょーくん：カットインは「シュッ2回 → ガキーン（E）」・拍子木のポポンとドンはいらない

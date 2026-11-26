@@ -96,6 +96,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sheet .body{flex:1;overflow-y:auto;padding-bottom:24px}
 .sheet h2{font-size:18px;margin:18px 0 6px}
 .sheet p{margin:4px 0;font-size:14px;color:var(--washi2)}
+#credits{overflow-wrap:anywhere}   /* クレジットの URL で横にはみ出さない */
 .toggles{display:flex;gap:10px;flex-wrap:wrap}.fp{font:700 20px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.06em}
 .fp.same{color:#b9d4a3}.fp.diff{color:#e9a097}
 .scroll{overflow-x:auto}

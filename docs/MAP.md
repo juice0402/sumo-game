@@ -77,7 +77,7 @@
 - 突進は2種類：hop（トンのたびに前へぴょこっと・ふだん）／push（足の踏ん張りに比例して押しつづける）
 
 ## assets/
-- sfx/*.mp3：効果音9つ（koe-irai の sfx/ の7つ＋コードで作った don〔えらんだとき・決定のボタン＝choose.js の DON_VOL〕と shu〔画面の札が入る＝app.js の enter〕・作り直しは `python3 -I tools/sfx_synth.py`・出どころは docs/sounds.md）
+- sfx/*.mp3：効果音10こ（koe-irai の sfx/ の7つ＋カットインの kin〔Oculus・CC BY＝クレジットに1行〕＋コードで作った don〔えらんだとき・決定のボタン＝choose.js の DON_VOL〕と shu〔画面の札が入る＝app.js の enter〕・作り直しは `python3 -I tools/sfx_synth.py`・出どころは docs/sounds.md）
 - art/*.webp：Codex の絵（福箱の箱・紐・開ける演出・紙質のテクスチャ）。一覧と出どころは docs/art.md。切り方 `python3 -I tools/art_cut.py <PNG> <型> <名前…>`（型：row3・himo・fx・tex）
 
 ## 自動で作るファイル（読まない）
