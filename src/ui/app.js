@@ -18,7 +18,7 @@ import { initTools } from './tools.js';
 import { initHeya } from './heya.js';
 import { reset as resetChoose } from './choose.js';
 import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
-import { choose } from './choose.js';
+import { choose, DON_VOL } from './choose.js';
 import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo, shownItems } from '../game/fukubako.js';
 import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
@@ -51,7 +51,7 @@ function titlesAfter(mode, r, kima, foeId) {
 let cur = null;
 const nav = [];
 const onShow = {};
-// 画面を開くと、ボタンやカードが右から順にシュッと入る（筆の音を小さく重ねる）
+// 画面を開くと、ボタンやカードが右から順にシュッと入る（紙のシュッを重ねる・少しずつ大きく高く＝「しししシュッ」・11/26 しょーくん「カードがシュって出る音がメイン」）
 const ENTER = '.hero, .cols > *, .stagecards > *, .sched > *, .rl-col, .actions > *, .note, .drive';
 function enter(el) {
   resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
@@ -61,7 +61,7 @@ function enter(el) {
   items.forEach((c, i) => c.style.setProperty('--i', i));
   el.classList.add('enter');
   const n = Math.min(items.length, 6);
-  for (let i = 0; i < n; i++) setTimeout(() => playSfx('fude', { vol: 0.1, rate: 1.7 + i * 0.06 }), 40 + i * 58);
+  for (let i = 0; i < n; i++) setTimeout(() => playSfx('shu', { vol: 0.3 + i * 0.06, rate: 1 + i * 0.05 }), 40 + i * 58);
 }
 function show(id) {
   for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== id;
@@ -274,6 +274,8 @@ function boot() {
     show('s-meimei');
   });
   document.getElementById('mm-ok').addEventListener('click', home);
+  // 決定のボタンも和太鼓のドン（11/26 しょーくん）。取組・福箱を開ける・切る・名前の引き直しは、それぞれの音があるので入れない
+  for (const id of ['b-start', 'ed-recut', 'ed-done', 'jg-go', 'bz-go', 'mm-ok', 'fk-odds']) document.getElementById(id).addEventListener('click', () => playSfx('don', { vol: DON_VOL }));
   onShow['s-mode'] = () => heya.mode(state);
 
   // 部屋の力士（3枠）と編集

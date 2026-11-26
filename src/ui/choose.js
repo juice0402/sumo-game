@@ -3,6 +3,8 @@
 // 見た目は style.css の「えらんだ瞬間」。もとにもどすのは、画面を開くとき（app.js の enter が reset をよぶ）
 import { playSfx } from './sound.js';
 
+export const DON_VOL = 0.37;   // えらんだときのドンの大きさ（決定のボタンも同じ・app.js）
+
 const HIT2 = 120;      // ド → ドン の間（ms）
 const LEAVE_AT = 190;  // ほかの列がすべりだす
 const STAGGER = 45;    // 1列ごとのずれ
@@ -24,9 +26,9 @@ export function choose(btn, then, short) {
     if (!list.closest('.screen').hidden) reset(list);   // 画面が変わらなかったら、すぐもとへ
   };
   btn.classList.add('chosen');
-  playSfx('taiko', { vol: 0.55, rate: 1.18 });
+  playSfx('don', { vol: DON_VOL });   // 和太鼓のドン（11/26 しょーくん「選択肢を選んだときは和太鼓のドン」）
   if (short || reduced()) { setTimeout(done, 170); return; }
-  setTimeout(() => { btn.classList.add('chosen2'); playSfx('taiko', { vol: 0.95, rate: 0.92 }); }, HIT2);
+  setTimeout(() => btn.classList.add('chosen2'), HIT2);
   // ほかの列は下へ抜ける。えらんだ列に近いものから
   let n = 0;
   items.forEach((c, i) => {

@@ -47,14 +47,19 @@
     <div class="profile hero"><canvas class="aura-cv" id="ed-aura"></canvas><canvas id="ed-cv"></canvas><div class="who"><small id="ed-title"></small><b class="brush" id="ed-name"></b><em id="ed-rec"></em></div></div>
     <!-- 称号と四股名は、くるくる回して選ぶ（ui/roller.js）。真ん中の行が朱の帯 -->
     <div class="roller frame2" id="ed-roller">
-      <div class="rl-tabs" id="ed-tabs"><button type="button" data-t="name" aria-pressed="true">名前</button><button type="button" data-t="mise" aria-pressed="false">見た目</button></div>
-      <div class="rl-heads rl-name"><span class="ti">称号</span><span>上の句</span><span class="tn">つなぎ</span><span>下の句</span></div>
+      <div class="rl-tabs" id="ed-tabs"><button type="button" data-t="name" aria-pressed="true">名前</button><button type="button" data-t="title" aria-pressed="false">称号</button><button type="button" data-t="mise" aria-pressed="false">見た目</button></div>
+      <!-- 名前と称号はページを分ける（11/26 しょーくん・長い語も広い列で読めるように） -->
+      <div class="rl-heads rl-name"><span>上の句</span><span class="tn">つなぎ</span><span>下の句</span></div>
       <div class="rl-body rl-name">
         <div class="rl-band"></div>
-        <div class="rl-col ti" data-g="title"><div class="rl-list brush"></div></div>
         <div class="rl-col" data-g="kami"><div class="rl-list brush"></div></div>
         <div class="rl-col tn" data-g="tsunagi"><div class="rl-list brush"></div></div>
         <div class="rl-col" data-g="shimo"><div class="rl-list brush"></div></div>
+      </div>
+      <div class="rl-heads rl-title" hidden><span>称号</span></div>
+      <div class="rl-body rl-title" hidden>
+        <div class="rl-band"></div>
+        <div class="rl-col" data-g="title"><div class="rl-list brush"></div></div>
       </div>
       <div class="rl-heads rl-mise" hidden><span>紙質</span><span>気</span></div>
       <div class="rl-body rl-mise" hidden>
