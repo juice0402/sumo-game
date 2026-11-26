@@ -178,6 +178,8 @@ function boot() {
   }
   onShow['s-select'] = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
+    // 勝敗とレートは部屋（ユーザー）のもの：本場所は番付・レート・本場所の勝敗、巡業は巡業の勝敗（11/26 しょーくん）
+    rec: match.mode === 'honbasho' ? `${T.rateLine(rankOf(state.rate).name, state.rate)}　${T.rec(state.hon)}` : T.rec(state.jun),
     // 選んだ列に朱の帯をベタッと＋太鼓ドドン、朱の判子「出」をポン → ほかは下へ抜けて取組へ
     onPick(i, btn) {
       if (stamping) return;

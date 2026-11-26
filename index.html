@@ -71,7 +71,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 取組 */
 #s-bout{padding:0}
 #s-bout canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.names{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:space-between;padding:0 max(16px,env(safe-area-inset-left,0px));font-family:"Yuji Syuku",serif;font-size:24px;pointer-events:none}
+.names{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:space-between;gap:12px;padding:0 max(16px,env(safe-area-inset-left,0px));font-family:"Yuji Syuku",serif;font-size:24px;pointer-events:none;container-type:inline-size}
+.names span{white-space:nowrap;font-size:min(24px,calc((50cqw - 6px) / (var(--n,4) * 1.03)))}   /* 左右で同じ大きさ・半分の幅に収める（--n は長いほうの字の数） */
 .names span{opacity:0;transform:translateX(-14px);transition:opacity .45s,transform .45s cubic-bezier(.2,.9,.2,1)}
 .names span:last-child{transform:translateX(14px)}
 .names.in span{opacity:1;transform:none}
@@ -241,6 +242,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
 .selhead b{white-space:nowrap;letter-spacing:.14em;line-height:1;font-size:min(clamp(44px,13vw,58px),calc((100cqh - 16px) / (var(--n,3) * 1.14 + .1)))}
 .selhead span{white-space:nowrap;color:var(--washi2);font-size:min(13px,calc((100cqh - 16px) / (var(--n,12) * 1.02 + .1)))}
+.selhead em{font-style:normal;white-space:nowrap;letter-spacing:.08em;color:var(--kin);font-size:min(15px,calc((100cqh - 16px) / (var(--n,12) * 1.04 + .1)))}   /* 部屋の番付・レート・勝敗（力士の札には出さない） */
 /* 稽古 */
 .me{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:18px;position:relative;border:0;padding:0}
 .me p{writing-mode:vertical-rl;margin:0;--max:44px;--room:calc(100cqh - 52px);font-size:min(var(--max),calc(var(--room) / (var(--n,4) * 1.08 + .1)));color:var(--washi);flex:none;max-height:100%}
@@ -545,7 +547,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
   <section id="s-select" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">力士選出</h1></header>
-    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><span id="sel-stage"></span></div></div>
+    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><em id="sel-rec"></em><span id="sel-stage"></span></div></div>
     <div class="slots frame2 cols tall" id="sel-slots"></div>
     <p class="note">出す力士をえらぶ</p>
   </section>
@@ -717,7 +719,7 @@ const T = {
   fukuDone: 'ぜんぶ持っている',
   fukuOdds: '出る物と確率',
   fukuNote: '中身は見た目だけ・強さは変わらない。持っている物は出ない',
-  fukuOddsNote: 'まず段が決まり、その段の、まだ持っていない物からひとしく1つ。そろった段は出ないので、ほかの段で割りなおす',
+  fukuOddsNote: 'まず段が決まり、その段の、まだ持っていない物からひとしく1つ。そろった段は出ないので、ほかの段で割りなおす。何が入っているかは、開けてのおたのしみ',
   fukuAgain: 'もう一つ',
   fukuClose: 'とじる',
   fukuNew: '手に入れた',
@@ -4058,6 +4060,9 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
+    // 上の名前は、左右で同じ大きさ（長いほうに合わせて、半分の幅に収める・11/26 しょーくん「見切れる」「統一感」）
+    const nLen = (w) => Array.from(w.name || '').length;
+    names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
     const keiko = !opt.mode || opt.mode === 'keiko';
     btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
@@ -4113,12 +4118,14 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
 
   // 本場所のカットイン：名前・番付・称号を入れておく（絵は出す瞬間に描く＝見えないと大きさがはかれない）
   function setVs(me, foePts, a, b, papers, short) {
+    // 東西の名前は同じ大きさ（長いほうに合わせる）
+    const n = String(Math.max(4, Array.from(a.name).length, Array.from(b.name).length));
     const fill = (side, who) => {
       const el = vsEl.querySelector('.vs-' + side);
       el.querySelector('small').textContent = [who.rank, who.sub].filter(Boolean).join('　');
       const nb = el.querySelector('b');
       nb.textContent = who.name;
-      nb.style.setProperty('--n', String(Math.max(2, Array.from(who.name).length)));
+      nb.style.setProperty('--n', n);
     };
     fill('a', a);
     fill('b', b);
@@ -4532,13 +4539,11 @@ function createRoller(col, onPick) {
       kids[i].className = 'rl-item' + (d === 0 ? ' sel' : d === 1 ? ' n1' : d === 2 ? ' n2' : '');
     }
   }
-  // 字の多い語（称号の8字 など）は、列の幅に収まる大きさに
+  // 字の大きさは列でそろえる：いちばん字の多い語（称号の8字 など）が列の幅に収まる大きさ（11/26 しょーくん「統一感」）
   function fit() {
     const w = list.clientWidth;
-    for (const el of list.children) {
-      const n = Array.from(el.textContent).length;
-      el.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / Math.max(1, n)))}px`);
-    }
+    const n = Math.max(1, ...[...list.children].map((el) => Array.from(el.textContent).length));
+    list.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / n))}px`);
   }
   function settleLater() {   // 動きが止まったら、プログラムでまわした分の「だまって」を解く
     clearTimeout(quietT);
@@ -4615,6 +4620,11 @@ function fitText(el, text) {
 }
 // 字の数だけ入れる（大きさは CSS が、入れ物の高さ 100cqh と --n から決める＝どの画面の高さでも1列に収まる）
 function setN(el) { el.style.setProperty('--n', String(Math.max(2, Array.from(el.textContent).length))); }
+// ならんだ字の大きさをそろえる：いちばん字の多いものの --n をみんなに
+function sameSize(els) {
+  const n = Math.max(2, ...[...els].map((e) => Array.from(e.textContent).length));
+  for (const e of els) e.style.setProperty('--n', String(n));
+}
 // 縦の見出し：中の span に字を入れて --n を
 function headText(h1, text) {
   let sp = h1.querySelector('span');
@@ -4625,6 +4635,8 @@ function headText(h1, text) {
 
 // 力士のカード（部屋の力士・力士選出で使う）。番付表の1列＝1力士。opt：{ onPick(i, ボタン), emptyOk }
 // 朱の帯は、はじめはのせない（タップしたときに choose.js でベタッと・11/26 しょーくん）
+// 勝敗とレートは部屋（ユーザー）のもので、力士の札には出さない（11/26 しょーくん「いろんな力士を作りやすく」）
+// 名前の字の大きさは、ならんだ札でそろえる（いちばん長い名前に合わせる・11/26 しょーくん「統一感」）
 function renderSlots(el, slots, opt) {
   el.textContent = '';
   slots.forEach((s, i) => {
@@ -4636,7 +4648,6 @@ function renderSlots(el, slots, opt) {
       b.innerHTML = '<canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span>';
       b.querySelector('small').textContent = titleText(s.title);
       fitText(b.querySelector('b'), shikonaText(s.shikona));
-      b.querySelector('em').textContent = T.rec(s.rec);
     } else {
       b.innerHTML = '<span class="plus brush">＋</span><span class="who"><b class="brush"></b><em></em></span>';
       fitText(b.querySelector('b'), T.slotEmpty);
@@ -4645,6 +4656,7 @@ function renderSlots(el, slots, opt) {
     b.addEventListener('click', () => opt.onPick(i, b));
     el.appendChild(b);
   });
+  sameSize(el.querySelectorAll('.slot:not(.empty) .who b'));
   // 描くのはならべてから（canvas の大きさが決まってから）
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape, false, s.paper); });
 }
@@ -4667,7 +4679,6 @@ function initEdit(cb) {
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
     fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
-    document.getElementById('ed-rec').textContent = T.rec(s.rec);
   }
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
@@ -4764,7 +4775,7 @@ function initEdit(cb) {
   };
 }
 
-return { fitText, setN, headText, renderSlots, initEdit };
+return { fitText, setN, sameSize, headText, renderSlots, initEdit };
 })();
 
 __m['src/ui/choose.js'] = (function () {
@@ -5047,7 +5058,7 @@ const { drawShapeThumb, thumbAuraBox } = __m['src/ui/pick.js'];
 const { auraPreview } = __m['src/ui/aura.js'];
 const { patternFill } = __m['src/ui/papertex.js'];
 const { setupCanvas } = __m['src/ui/ink.js'];
-const { fitText } = __m['src/ui/roster.js'];
+const { fitText, sameSize } = __m['src/ui/roster.js'];
 const { playSfx } = __m['src/ui/sound.js'];
 
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
@@ -5108,6 +5119,7 @@ function initFuku(cb) {
       kinds.appendChild(d);
       fitText(b, SHORT[k] || KINDS[k]);
     }
+    sameSize(kinds.querySelectorAll('b'));   // 種類の名前の字の大きさをそろえる
     const left = fukuOdds(owned).left;
     openBtn.disabled = !left || st.koban < KOBAN.price;
     openBtn.textContent = !left ? T.fukuDone : st.koban < KOBAN.price ? T.fukuShort : T.fukuOpen(KOBAN.price);
@@ -5199,16 +5211,14 @@ function initFuku(cb) {
       sub.textContent = r.items.length ? `${r.items.length}種・1つ ${pct(r.rate / r.items.length)}` : T.fukuDone;
       h.append(stamp, rate, sub);
       sec.appendChild(h);
-      // 四股名の語は、上の句と下の句で分けて（同じ字の語が両方にあるため）
-      const groups = [['上の句', (it) => it.kind === 'word' && it.part === 'kami'], ['下の句', (it) => it.kind === 'word' && it.part === 'shimo']]
-        .concat(KIND_ORDER.slice(1).map((k) => [KINDS[k], (it) => it.kind === k]));
-      for (const [label, f] of groups) {
-        const its = r.items.filter(f);
-        if (!its.length) continue;
+      // 種類ごとの数と確率だけ（名前は出さない＝何が入っているかは開けてのおたのしみ・11/26 しょーくん）
+      for (const k of KIND_ORDER) {
+        const n = r.items.filter((it) => it.kind === k).length;
+        if (!n) continue;
         const p = document.createElement('p');
         const kb = document.createElement('b');
-        kb.textContent = `${label} ${its.length}`;
-        p.append(kb, document.createTextNode(its.map((it) => it.name || T.rollNone).join('・')));
+        kb.textContent = `${KINDS[k]} ${n}`;
+        p.append(kb, document.createTextNode(pct((r.rate * n) / r.items.length)));
         sec.appendChild(p);
       }
       body.appendChild(sec);
@@ -5314,13 +5324,16 @@ function initBanzuke() {
 
 function initSelect() {
   return {
-    // o：{ mode, stage, drawn（抽選したか）, slots, active, onPick(i) }
+    // o：{ mode, stage, drawn（抽選したか）, slots, active, rec（部屋の番付・レート・勝敗のひとこと）, onPick(i) }
     show(o) {
       document.getElementById('sel-mode').textContent = T.mode[o.mode];
       setN(document.getElementById('sel-mode'));
       const S = STAGES[o.stage];
       document.getElementById('sel-stage').textContent = o.drawn ? T.jungyoDraw(S.name) + '・' + S.note : T.stageLine(S.name, S.note);
       setN(document.getElementById('sel-stage'));
+      const rec = document.getElementById('sel-rec');
+      rec.textContent = o.rec || '';
+      setN(rec);
       renderSlots(document.getElementById('sel-slots'), o.slots, { active: o.active, onPick: o.onPick, emptyOk: false });
     },
   };
@@ -5587,6 +5600,8 @@ function boot() {
   }
   onShow['s-select'] = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
+    // 勝敗とレートは部屋（ユーザー）のもの：本場所は番付・レート・本場所の勝敗、巡業は巡業の勝敗（11/26 しょーくん）
+    rec: match.mode === 'honbasho' ? `${T.rateLine(rankOf(state.rate).name, state.rate)}　${T.rec(state.hon)}` : T.rec(state.jun),
     // 選んだ列に朱の帯をベタッと＋太鼓ドドン、朱の判子「出」をポン → ほかは下へ抜けて取組へ
     onPick(i, btn) {
       if (stamping) return;

@@ -10,7 +10,7 @@ import { drawShapeThumb, thumbAuraBox } from './pick.js';
 import { auraPreview } from './aura.js';
 import { patternFill } from './papertex.js';
 import { setupCanvas } from './ink.js';
-import { fitText } from './roster.js';
+import { fitText, sameSize } from './roster.js';
 import { playSfx } from './sound.js';
 
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
@@ -71,6 +71,7 @@ export function initFuku(cb) {
       kinds.appendChild(d);
       fitText(b, SHORT[k] || KINDS[k]);
     }
+    sameSize(kinds.querySelectorAll('b'));   // 種類の名前の字の大きさをそろえる
     const left = fukuOdds(owned).left;
     openBtn.disabled = !left || st.koban < KOBAN.price;
     openBtn.textContent = !left ? T.fukuDone : st.koban < KOBAN.price ? T.fukuShort : T.fukuOpen(KOBAN.price);
@@ -162,16 +163,14 @@ export function initFuku(cb) {
       sub.textContent = r.items.length ? `${r.items.length}種・1つ ${pct(r.rate / r.items.length)}` : T.fukuDone;
       h.append(stamp, rate, sub);
       sec.appendChild(h);
-      // 四股名の語は、上の句と下の句で分けて（同じ字の語が両方にあるため）
-      const groups = [['上の句', (it) => it.kind === 'word' && it.part === 'kami'], ['下の句', (it) => it.kind === 'word' && it.part === 'shimo']]
-        .concat(KIND_ORDER.slice(1).map((k) => [KINDS[k], (it) => it.kind === k]));
-      for (const [label, f] of groups) {
-        const its = r.items.filter(f);
-        if (!its.length) continue;
+      // 種類ごとの数と確率だけ（名前は出さない＝何が入っているかは開けてのおたのしみ・11/26 しょーくん）
+      for (const k of KIND_ORDER) {
+        const n = r.items.filter((it) => it.kind === k).length;
+        if (!n) continue;
         const p = document.createElement('p');
         const kb = document.createElement('b');
-        kb.textContent = `${label} ${its.length}`;
-        p.append(kb, document.createTextNode(its.map((it) => it.name || T.rollNone).join('・')));
+        kb.textContent = `${KINDS[k]} ${n}`;
+        p.append(kb, document.createTextNode(pct((r.rate * n) / r.items.length)));
         sec.appendChild(p);
       }
       body.appendChild(sec);

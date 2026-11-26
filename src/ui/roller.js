@@ -16,13 +16,11 @@ export function createRoller(col, onPick) {
       kids[i].className = 'rl-item' + (d === 0 ? ' sel' : d === 1 ? ' n1' : d === 2 ? ' n2' : '');
     }
   }
-  // 字の多い語（称号の8字 など）は、列の幅に収まる大きさに
+  // 字の大きさは列でそろえる：いちばん字の多い語（称号の8字 など）が列の幅に収まる大きさ（11/26 しょーくん「統一感」）
   function fit() {
     const w = list.clientWidth;
-    for (const el of list.children) {
-      const n = Array.from(el.textContent).length;
-      el.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / Math.max(1, n)))}px`);
-    }
+    const n = Math.max(1, ...[...list.children].map((el) => Array.from(el.textContent).length));
+    list.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / n))}px`);
   }
   function settleLater() {   // 動きが止まったら、プログラムでまわした分の「だまって」を解く
     clearTimeout(quietT);

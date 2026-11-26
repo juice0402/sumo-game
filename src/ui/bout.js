@@ -111,6 +111,9 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
+    // 上の名前は、左右で同じ大きさ（長いほうに合わせて、半分の幅に収める・11/26 しょーくん「見切れる」「統一感」）
+    const nLen = (w) => Array.from(w.name || '').length;
+    names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
     const keiko = !opt.mode || opt.mode === 'keiko';
     btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
@@ -166,12 +169,14 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
 
   // 本場所のカットイン：名前・番付・称号を入れておく（絵は出す瞬間に描く＝見えないと大きさがはかれない）
   function setVs(me, foePts, a, b, papers, short) {
+    // 東西の名前は同じ大きさ（長いほうに合わせる）
+    const n = String(Math.max(4, Array.from(a.name).length, Array.from(b.name).length));
     const fill = (side, who) => {
       const el = vsEl.querySelector('.vs-' + side);
       el.querySelector('small').textContent = [who.rank, who.sub].filter(Boolean).join('　');
       const nb = el.querySelector('b');
       nb.textContent = who.name;
-      nb.style.setProperty('--n', String(Math.max(2, Array.from(who.name).length)));
+      nb.style.setProperty('--n', n);
     };
     fill('a', a);
     fill('b', b);

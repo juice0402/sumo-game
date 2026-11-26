@@ -17,6 +17,11 @@ export function fitText(el, text) {
 }
 // 字の数だけ入れる（大きさは CSS が、入れ物の高さ 100cqh と --n から決める＝どの画面の高さでも1列に収まる）
 export function setN(el) { el.style.setProperty('--n', String(Math.max(2, Array.from(el.textContent).length))); }
+// ならんだ字の大きさをそろえる：いちばん字の多いものの --n をみんなに
+export function sameSize(els) {
+  const n = Math.max(2, ...[...els].map((e) => Array.from(e.textContent).length));
+  for (const e of els) e.style.setProperty('--n', String(n));
+}
 // 縦の見出し：中の span に字を入れて --n を
 export function headText(h1, text) {
   let sp = h1.querySelector('span');
@@ -27,6 +32,8 @@ export function headText(h1, text) {
 
 // 力士のカード（部屋の力士・力士選出で使う）。番付表の1列＝1力士。opt：{ onPick(i, ボタン), emptyOk }
 // 朱の帯は、はじめはのせない（タップしたときに choose.js でベタッと・11/26 しょーくん）
+// 勝敗とレートは部屋（ユーザー）のもので、力士の札には出さない（11/26 しょーくん「いろんな力士を作りやすく」）
+// 名前の字の大きさは、ならんだ札でそろえる（いちばん長い名前に合わせる・11/26 しょーくん「統一感」）
 export function renderSlots(el, slots, opt) {
   el.textContent = '';
   slots.forEach((s, i) => {
@@ -38,7 +45,6 @@ export function renderSlots(el, slots, opt) {
       b.innerHTML = '<canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span>';
       b.querySelector('small').textContent = titleText(s.title);
       fitText(b.querySelector('b'), shikonaText(s.shikona));
-      b.querySelector('em').textContent = T.rec(s.rec);
     } else {
       b.innerHTML = '<span class="plus brush">＋</span><span class="who"><b class="brush"></b><em></em></span>';
       fitText(b.querySelector('b'), T.slotEmpty);
@@ -47,6 +53,7 @@ export function renderSlots(el, slots, opt) {
     b.addEventListener('click', () => opt.onPick(i, b));
     el.appendChild(b);
   });
+  sameSize(el.querySelectorAll('.slot:not(.empty) .who b'));
   // 描くのはならべてから（canvas の大きさが決まってから）
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape, false, s.paper); });
 }
@@ -69,7 +76,6 @@ export function initEdit(cb) {
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
     fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
-    document.getElementById('ed-rec').textContent = T.rec(s.rec);
   }
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };

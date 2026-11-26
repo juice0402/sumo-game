@@ -79,13 +79,16 @@ export function initBanzuke() {
 
 export function initSelect() {
   return {
-    // o：{ mode, stage, drawn（抽選したか）, slots, active, onPick(i) }
+    // o：{ mode, stage, drawn（抽選したか）, slots, active, rec（部屋の番付・レート・勝敗のひとこと）, onPick(i) }
     show(o) {
       document.getElementById('sel-mode').textContent = T.mode[o.mode];
       setN(document.getElementById('sel-mode'));
       const S = STAGES[o.stage];
       document.getElementById('sel-stage').textContent = o.drawn ? T.jungyoDraw(S.name) + '・' + S.note : T.stageLine(S.name, S.note);
       setN(document.getElementById('sel-stage'));
+      const rec = document.getElementById('sel-rec');
+      rec.textContent = o.rec || '';
+      setN(rec);
       renderSlots(document.getElementById('sel-slots'), o.slots, { active: o.active, onPick: o.onPick, emptyOk: false });
     },
   };
