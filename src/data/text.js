@@ -57,6 +57,13 @@ export const T = {
   look: { name: '名前', mise: '見た目' },
   lockedName: (w, t) => (w || t ? '語と称号は福箱から出る（称号は取組でも）' : ''),
   titleGain: '称号を手に入れた',
+  // 称号の手に入れ方（ui/titlelist.js）
+  titleList: '称号の手に入れ方',
+  titleUnknown: '？？？',
+  titleByBout: '取組で手に入る',
+  titleByFuku: '福箱から出る',
+  titleByStart: 'はじめから',
+  titleStartHow: 'さいしょから持っている',
   linkNone: '（なし）',
   retire: '引退',
   retireAgain: 'もう一度で引退',

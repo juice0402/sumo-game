@@ -62,7 +62,7 @@
         <div class="rl-col" data-g="paper"><div class="rl-list brush"></div></div>
         <div class="rl-col" data-g="aura"><div class="rl-list brush"></div></div>
       </div>
-      <p class="rl-lock" id="ed-locked"></p>
+      <p class="rl-lock"><span id="ed-locked"></span><button id="ed-titles" class="rl-link" type="button">称号の手に入れ方</button></p>
     </div>
     <footer class="actions pair">
       <button id="ed-recut" class="seal sub" type="button">切り直す</button>
@@ -160,7 +160,7 @@
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span class="koban" id="fk-koban"></span><h1 class="brush">福箱</h1></header>
     <div class="hero fkhero" id="fk-hero">
       <canvas class="aura-cv" id="fk-fx"></canvas>
-      <div class="fkbox" id="fk-box"><div class="half l"><i class="fuku brush">福</i></div><div class="half r"><i class="fuku brush">福</i></div><span class="slash"></span></div>
+      <canvas class="fkbox" id="fk-box" aria-label="福箱"></canvas>
       <div class="fkreveal" id="fk-reveal" hidden>
         <div class="fkprev"><canvas class="aura-cv" id="fk-aura"></canvas><canvas id="fk-cv"></canvas></div>
         <b class="brush" id="fk-name"></b>
@@ -173,6 +173,11 @@
   <section id="s-odds" class="sheet" hidden>
     <header class="bar"><button id="od-close" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h1 class="brush">出る物と確率</h1></header>
     <div class="body" id="od-list"></div>
+  </section>
+
+  <section id="s-titles" class="sheet" hidden>
+    <header class="bar"><button id="ti-close" class="round" type="button" aria-label="とじる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h1 class="brush">称号の手に入れ方</h1></header>
+    <div class="body" id="ti-list"></div>
   </section>
 
   <section id="s-tools" class="sheet" hidden>

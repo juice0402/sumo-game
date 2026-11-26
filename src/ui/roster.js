@@ -120,6 +120,7 @@ export function initEdit(cb) {
     for (const el of document.querySelectorAll('#ed-roller .rl-name')) el.hidden = t !== 'name';
     for (const el of document.querySelectorAll('#ed-roller .rl-mise')) el.hidden = t !== 'mise';
     document.getElementById('ed-rand').hidden = t !== 'name';
+    document.getElementById('ed-titles').hidden = t !== 'name';
     if (t === 'mise') setMise(); else setRollers();
   }
   for (const b of tabs) b.addEventListener('click', () => { if (b.dataset.t !== tab) setTab(b.dataset.t); });

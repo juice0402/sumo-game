@@ -4,6 +4,7 @@
 // - 物理（Rapier 決定論版）と 3D（Three.js r160 の three.min.js・window.THREE）は node_modules から読み、gzip して base64 で入れる
 //   （wasm も別に gzip。ほどくのは src/ui/unpack.js・11/25 の軽量化：4.39MB → 約1.7MB）
 // - 効果音 assets/sfx/*.mp3 は base64 にして window.SUMO_SFX に入れる（コードには埋めこまない）
+// - 絵 assets/art/*.webp は base64 にして lib-art に入れる（ui/art.js が使うときに1枚ずつ画像にする）
 // - 「指紋」の正しい値を、ここで計算して入れる（道具の画面でくらべる）
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
@@ -72,6 +73,16 @@ if (existsSync(sfxDir)) {
   }
 }
 
+// 絵（assets/art/*.webp・Codex などの絵）。base64 だけを入れ、使うときに ui/art.js が1枚ずつ画像にする
+const artDir = resolve(root, 'assets/art');
+const art = {};
+if (existsSync(artDir)) {
+  for (const f of readdirSync(artDir).sort()) {
+    if (!f.endsWith('.webp')) continue;
+    art[f.slice(0, -5)] = readFileSync(resolve(artDir, f)).toString('base64');
+  }
+}
+
 await RAPIER.init();
 setRapier(RAPIER);
 const info = { fp: fingerprint(), rapier: rapierPkg.version, three: threePkg.version, config: CONFIG_VERSION };
@@ -83,7 +94,8 @@ const page = readFileSync(resolve(root, 'src/ui/page.html'), 'utf8').replace('/*
 const scripts = `<script>window.SUMO_BUILD = ${JSON.stringify(info)};</script>\n<script>\n${bundle}</script>\n`
   + `<script type="text/plain" id="lib-rapier">\n${gz64(Buffer.from(rapierJs))}</script>\n<script type="text/plain" id="lib-wasm">\n${gz64(wasmBin)}</script>\n`
   + `<script type="text/plain" id="lib-three">\n${gz64(Buffer.from(threeJs))}</script>\n`
-  + `<script type="application/json" id="lib-sfx">${JSON.stringify(sfx)}</script>\n`;
+  + `<script type="application/json" id="lib-sfx">${JSON.stringify(sfx)}</script>\n`
+  + `<script type="application/json" id="lib-art">${JSON.stringify(art)}</script>\n`;
 for (const s of [bundle, threeJs, rapierJs]) if (/<\/script/i.test(s)) throw new Error('</script が入っている');
 const content = page.replace('<!--SCRIPTS-->', () => scripts);
 
@@ -103,4 +115,4 @@ ${content.slice(cut)}</body>
 writeFileSync(resolve(root, 'index.html'), html);
 const ai = process.argv.indexOf('--artifact');
 if (ai >= 0) writeFileSync(resolve(process.argv[ai + 1]), content);
-console.log(`index.html ${(html.length / 1e6).toFixed(2)}MB・モジュール ${order.length}・効果音 ${Object.keys(sfx).length}・指紋 ${info.fp}`);
+console.log(`index.html ${(html.length / 1e6).toFixed(2)}MB・モジュール ${order.length}・効果音 ${Object.keys(sfx).length}・絵 ${Object.keys(art).length}・指紋 ${info.fp}`);

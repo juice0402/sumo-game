@@ -1,6 +1,14 @@
-// 紙質と土俵のもようを描く（コードで描く絵＝C・11/26 福箱）。くり返す1枚（タイル）を作っておき、パターンで塗る。
-// 物理にはさわらない（見た目だけ）。
+// 紙質と土俵のもようを描く（11/26 福箱）。くり返す1枚（タイル）を作っておき、パターンで塗る。
+// 紙質に tex があれば Codex のテクスチャ（A）を、なければ・読みこむ前はコードで描くもよう（C）。物理にはさわらない（見た目だけ）。
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
+import { artImage } from './art.js';
+
+// テクスチャ（名前 → 画像）。はじめに loadPaperTextures で読む（タイトルの間に読み終わる）
+const TEX = {};
+export function loadPaperTextures() {
+  const ids = [...new Set(Object.values(PAPERS).map((p) => p.tex).filter(Boolean))];
+  return Promise.all(ids.map((id) => artImage(id).then((im) => { TEX[id] = im; }).catch(() => {})));
+}
 
 // 見た目用の乱数（ink.js と同じ形。ink.js がこのファイルを読むので、ここでは自分で持つ）
 function rand(seed) {
@@ -159,6 +167,7 @@ const PAT = {
 // 紙質で塗るパターン。unitPx：紙の幅（物理の 1・切る紙の 300）が何 px か
 export function paperFill(ctx, id, unitPx) {
   const P = PAPERS[id] || PAPERS[PAPER_DEFAULT];
+  if (P.tex && TEX[P.tex]) return scaled(ctx, TEX[P.tex], (unitPx * (P.texSpan || 0.7)) / SPAN);
   const t = tile('p:' + (PAPERS[id] ? id : PAPER_DEFAULT), P.base, P.fiber == null ? 1 : P.fiber, P.pat, P.ink);
   return scaled(ctx, t, unitPx);
 }
