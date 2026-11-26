@@ -744,6 +744,8 @@ const T = {
   credits: ['効果音：Wyzowl SFX Kit（CC0）・Python で作った音', '"Oculus Audio Pack 01" by Oculus VR, LLC (https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/), licensed under CC BY 4.0'],
   noWasm: 'この画面では物理が動きませんでした。別のブラウザで開いてみてね。',
   venueView: (name) => `会場：${name || '番付どおり'}`,   // 道具の「本場所の会場」（試しだけ）
+  // 懸賞旗の名前（横綱の本場所・作りものの店の名前。本物の会社や商品の名前は入れない）
+  kensho: ['切り絵の紙屋', 'はさみ一番', '和紙問屋', 'のりしろ堂', '折り鶴本舗', '墨と筆の店', '紙ずもう茶屋', 'ちゃんこ紙鍋', '朱印堂', '和紙の里', '千代紙屋', '紙ふうせん'],
   noGL: 'この画面では立体の土俵を描けませんでした。別のブラウザで開いてみてね。',
   // 部屋・力士・巡業・本場所（11/25：レートマッチ＝本場所・おきらくマッチ＝巡業・部屋のボタンは「勝負」。言葉を変えるときはここだけ）
   mode: { jungyo: '巡業', honbasho: '本場所', keiko: '稽古' },
@@ -3478,17 +3480,19 @@ __m['src/data/venue.js'] = (function () {
 //   zab：土俵のまわりの座布団の列（0〜4）／sit：座布団に座っている人の割合（0〜1）
 //   stand：うしろと左右の段の数（0〜4）／fill：段に座っている人の割合
 //   lamp：提灯の数（うしろの列から順に・左右・2列め）／roof：吊り屋根（0 なし・1 あり・2 金のふちどり）
+//   kensho：懸賞旗の数（11/27 しょーくん「宣伝？スポンサーの旗？みたいなやつは横綱のときに出してほしい」）。
+//           呼出が持って土俵のまわりを回り、カメラが真横へ降りる前に消える（取組はかくさない）。名前は data/text.js の T.kensho
 const VENUE = [
-  { zab: 1, sit: 0, stand: 0, fill: 0, lamp: 0, roof: 0 },          // 序ノ口：がらんとした会場
-  { zab: 2, sit: 0.1, stand: 1, fill: 0.08, lamp: 0, roof: 0 },     // 序二段：うしろにちらほら
-  { zab: 2, sit: 0.2, stand: 1, fill: 0.18, lamp: 2, roof: 0 },     // 三段目：提灯が灯る
-  { zab: 3, sit: 0.35, stand: 2, fill: 0.26, lamp: 4, roof: 0 },    // 幕下
-  { zab: 3, sit: 0.55, stand: 2, fill: 0.4, lamp: 8, roof: 1 },     // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
-  { zab: 4, sit: 0.65, stand: 3, fill: 0.5, lamp: 10, roof: 1 },    // 前頭：幕内
-  { zab: 4, sit: 0.75, stand: 3, fill: 0.6, lamp: 13, roof: 1 },    // 小結
-  { zab: 4, sit: 0.85, stand: 3, fill: 0.72, lamp: 16, roof: 1 },   // 関脇
-  { zab: 4, sit: 0.93, stand: 4, fill: 0.85, lamp: 20, roof: 1 },   // 大関
-  { zab: 4, sit: 1, stand: 4, fill: 1, lamp: 34, roof: 2 },         // 横綱：満員・提灯が2列・屋根と幕に金（大きな山）
+  { zab: 1, sit: 0, stand: 0, fill: 0, lamp: 0, roof: 0, kensho: 0 },          // 序ノ口：がらんとした会場
+  { zab: 2, sit: 0.1, stand: 1, fill: 0.08, lamp: 0, roof: 0, kensho: 0 },     // 序二段：うしろにちらほら
+  { zab: 2, sit: 0.2, stand: 1, fill: 0.18, lamp: 2, roof: 0, kensho: 0 },     // 三段目：提灯が灯る
+  { zab: 3, sit: 0.35, stand: 2, fill: 0.26, lamp: 4, roof: 0, kensho: 0 },    // 幕下
+  { zab: 3, sit: 0.55, stand: 2, fill: 0.4, lamp: 8, roof: 1, kensho: 0 },     // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
+  { zab: 4, sit: 0.65, stand: 3, fill: 0.5, lamp: 10, roof: 1, kensho: 0 },    // 前頭：幕内
+  { zab: 4, sit: 0.75, stand: 3, fill: 0.6, lamp: 13, roof: 1, kensho: 0 },    // 小結
+  { zab: 4, sit: 0.85, stand: 3, fill: 0.72, lamp: 16, roof: 1, kensho: 0 },   // 関脇
+  { zab: 4, sit: 0.93, stand: 4, fill: 0.85, lamp: 20, roof: 1, kensho: 0 },   // 大関
+  { zab: 4, sit: 1, stand: 4, fill: 1, lamp: 34, roof: 2, kensho: 12 },   // 横綱：満員・提灯が2列・屋根と幕に金・懸賞旗（大きな山）
 ];
 
 // 置き場所と大きさ（m・床の高さが 0。土俵は半分の幅 1.4・高さ 0.7）と色
@@ -3507,6 +3511,10 @@ const VL = {
   lampSize: 0.44,
   roofHalf: 1.75, roofY: 3.3, curtainH: 0.42,      // 吊り屋根：半分の幅・紫の幕の下のふちの高さ・幕の高さ
   fusaLen: 0.8,                                     // 四房の長さ
+  kenshoD: 1.68, kenshoW: 0.5, kenshoH: 2.0,        // 懸賞旗：土俵のまわりを回る四角の半分の幅・絵（呼出＋旗）の幅と高さ
+  kenshoSpeed: 0.5, kenshoOut: [2.5, 3.2],          // 回る速さ（m/秒）・消えはじめと消えおわり（旋回のはじめからの秒。真横へ降りきる 4 秒より前）
+  kenshoCol: [['#AB392F', '#EEE9DE'], ['#2f4f6f', '#EEE9DE'], ['#e9e2cf', '#201E1B'], ['#3d5a3a', '#EEE9DE'], ['#5b3a6b', '#EEE9DE'], ['#c49a3a', '#201E1B'], ['#1f1d1b', '#d8bd72']],   // 旗の地と字
+  yobidashi: '#2b3140',                              // 呼出の着物
   // 色（紙の切り絵。光る輪・グラデーションは使わない）
   zabCol: ['#6e3b37', '#4f4058', '#6b5a3e'],        // 座布団（くすんだ朱・紫・黄土）
   clothes: ['#8a7d6b', '#6f7a86', '#8b6a62', '#7d8a74', '#9a8f7c', '#6b5d72', '#a49580', '#5f6b78'],   // 観客の着物
@@ -3529,9 +3537,42 @@ __m['src/ui/venue.js'] = (function () {
 // 正面（カメラの側＝+z）のまん中には人を座らせない・段も作らない（力士と、土俵の横の面の字をかくさない）
 const { COL, rand, fiberPattern } = __m['src/ui/ink.js'];
 const { VENUE, VL } = __m['src/data/venue.js'];
+const { T } = __m['src/data/text.js'];
 
 const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 const TAU = Math.PI * 2;
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const BRUSH = '"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",serif';
+
+// 懸賞旗を持つ呼出（横綱）：上に旗（地の色・ふち・名前を縦に）・旗竿・下に呼出（紺の着物）。字は筆の字をコードで書く
+function kenshoCanvas(c, name, bg, ink) {
+  const W = 128, H = 512, g = c.getContext('2d');
+  c.width = W; c.height = H;
+  g.clearRect(0, 0, W, H);
+  g.lineJoin = 'round';
+  g.strokeStyle = COL.sumi; g.lineWidth = 5; g.beginPath(); g.moveTo(W / 2, 14); g.lineTo(W / 2, 372); g.stroke();   // 竿
+  g.strokeStyle = '#8a6e45'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(W / 2, 14); g.lineTo(W / 2, 372); g.stroke();
+  g.fillStyle = COL.sumi; g.fillRect(12, 18, W - 24, 7);   // 横の棒
+  const x0 = 16, x1 = W - 16, y0 = 25, y1 = 268;
+  g.fillStyle = bg; g.fillRect(x0, y0, x1 - x0, y1 - y0);
+  g.save(); g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip();
+  g.globalAlpha = 0.6; g.fillStyle = fiberPattern(g); g.fillRect(x0, y0, x1 - x0, y1 - y0); g.globalAlpha = 1;
+  g.restore();
+  g.strokeStyle = ink; g.globalAlpha = 0.55; g.lineWidth = 2; g.strokeRect(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12); g.globalAlpha = 1;
+  const ch = Array.from(name), room = y1 - y0 - 28, fs = Math.min(64, (room / ch.length) * 0.94);
+  g.fillStyle = ink; g.font = `${fs}px ${BRUSH}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  ch.forEach((t, i) => g.fillText(t, W / 2, y0 + 14 + (room / ch.length) * (i + 0.5)));
+  g.strokeStyle = COL.sumi; g.lineWidth = 3; g.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  // 呼出：頭・着物（下へ広がる）・旗竿を持つ腕
+  const body = () => { g.beginPath(); g.moveTo(W / 2 - 22, 318); g.lineTo(W / 2 + 22, 318); g.lineTo(W / 2 + 36, H - 4); g.lineTo(W / 2 - 36, H - 4); g.closePath(); };
+  g.fillStyle = VL.yobidashi; body(); g.fill(); g.strokeStyle = COL.sumi; g.lineWidth = 3; body(); g.stroke();
+  g.strokeStyle = COL.sumi; g.lineWidth = 11; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(W / 2 - 18, 326); g.lineTo(W / 2 - 4, 352); g.moveTo(W / 2 + 18, 326); g.lineTo(W / 2 + 4, 344); g.stroke();
+  g.strokeStyle = VL.yobidashi; g.lineWidth = 7;
+  g.beginPath(); g.moveTo(W / 2 - 18, 326); g.lineTo(W / 2 - 4, 352); g.moveTo(W / 2 + 18, 326); g.lineTo(W / 2 + 4, 344); g.stroke();
+  g.fillStyle = '#3a332d'; g.beginPath(); g.arc(W / 2, 300, 17, 0, TAU); g.fill(); g.strokeStyle = COL.sumi; g.lineWidth = 3; g.stroke();
+  return c;
+}
 
 function rrect(g, x, y, w, h, r) {
   g.beginPath();
@@ -3784,6 +3825,47 @@ function buildVenue(THREE, lv) {
     }
   }
 
+  // 懸賞旗（横綱）：呼出が持って、土俵のまわりの四角をゆっくり回る。旋回のあいだだけ（stage3d の parade(秒)）。
+  // カメラが真横へ降りる前に、すっと消える（取組と土俵の横の字をかくさない）
+  const parade = new THREE.Group();
+  parade.visible = false;
+  const banners = [];
+  if (V.kensho) {
+    const names = T.kensho || [];
+    for (let i = 0; i < V.kensho; i++) {
+      const [bg, ink] = VL.kenshoCol[i % VL.kenshoCol.length], name = names[i % names.length] || '', c = cv(128, 512);
+      kenshoCanvas(c, name, bg, ink);
+      const map = tex(c), mat = k(new THREE.SpriteMaterial({ map, transparent: true, alphaTest: 0.02 }));
+      // 筆の字がまだ読みこめていなければ、読みこんでから書きなおす
+      if (document.fonts && !document.fonts.check(`40px ${BRUSH}`)) {
+        document.fonts.load(`40px ${BRUSH}`, name).then(() => { kenshoCanvas(c, name, bg, ink); map.needsUpdate = true; }).catch(() => {});
+      }
+      const sp = new THREE.Sprite(mat);
+      sp.center.set(0.5, 0);
+      sp.scale.set(VL.kenshoW, VL.kenshoH, 1);
+      parade.add(sp);
+      banners.push(sp);
+    }
+  }
+  group.add(parade);
+  const Dk = VL.kenshoD, per = 8 * Dk;
+  const onLoop = (s) => {   // うしろ → 右 → 前 → 左 の四角
+    s = ((s % per) + per) % per;
+    const side = Math.floor(s / (2 * Dk)), t = s - side * 2 * Dk - Dk;
+    return side === 0 ? [t, -Dk] : side === 1 ? [Dk, t] : side === 2 ? [-t, Dk] : [-Dk, -t];
+  };
+  // tt：旋回のはじめからの秒（-1 で消す）
+  group.userData.parade = (tt) => {
+    const fade = tt < 0 ? 1 : smooth(VL.kenshoOut[0], VL.kenshoOut[1], tt);
+    parade.visible = banners.length > 0 && fade < 1;
+    if (!parade.visible) return;
+    banners.forEach((sp, i) => {
+      const [x, z] = onLoop((i * per) / banners.length + tt * VL.kenshoSpeed);
+      sp.position.set(x, 0, z);
+      sp.material.opacity = 1 - fade;
+    });
+  };
+
   group.userData.free = () => { for (const o of trash) o.dispose(); };
   return group;
 }
@@ -3961,6 +4043,8 @@ function createStage(cv, P) {
     venue.position.y = dohyo.userData.floor.position.y;
     scene.add(venue);
   }
+  // 懸賞旗（横綱）：tt＝旋回のはじめからの秒・-1 で消す
+  function parade(tt) { if (venue) venue.userData.parade(tt); }
 
   function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
@@ -4039,7 +4123,7 @@ function createStage(cv, P) {
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setVenue, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, parade, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };
@@ -4712,8 +4796,10 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
       const u = Math.min(1, tt / LOOK.orbitSec);
       const d = smoother(LOOK.orbitSec * LOOK.descendFrom, LOOK.orbitSec + LOOK.descendSec, tt);
       stage.view(-TAU * (1 - orbitEase(u)), mix(LOOK.orbitElev, LOOK.elev, d), mix(LOOK.orbitFar, 1, d));
+      stage.parade(tt);   // 横綱の本場所：懸賞旗が土俵のまわりを回る（真横へ降りる前に消える）
     } else {
       stage.view(0, LOOK.elev, 1);
+      stage.parade(-1);
     }
   }
 

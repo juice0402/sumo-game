@@ -36,6 +36,8 @@ export const T = {
   credits: ['効果音：Wyzowl SFX Kit（CC0）・Python で作った音', '"Oculus Audio Pack 01" by Oculus VR, LLC (https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/), licensed under CC BY 4.0'],
   noWasm: 'この画面では物理が動きませんでした。別のブラウザで開いてみてね。',
   venueView: (name) => `会場：${name || '番付どおり'}`,   // 道具の「本場所の会場」（試しだけ）
+  // 懸賞旗の名前（横綱の本場所・作りものの店の名前。本物の会社や商品の名前は入れない）
+  kensho: ['切り絵の紙屋', 'はさみ一番', '和紙問屋', 'のりしろ堂', '折り鶴本舗', '墨と筆の店', '紙ずもう茶屋', 'ちゃんこ紙鍋', '朱印堂', '和紙の里', '千代紙屋', '紙ふうせん'],
   noGL: 'この画面では立体の土俵を描けませんでした。別のブラウザで開いてみてね。',
   // 部屋・力士・巡業・本場所（11/25：レートマッチ＝本場所・おきらくマッチ＝巡業・部屋のボタンは「勝負」。言葉を変えるときはここだけ）
   mode: { jungyo: '巡業', honbasho: '本場所', keiko: '稽古' },

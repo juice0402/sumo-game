@@ -167,6 +167,8 @@ export function createStage(cv, P) {
     venue.position.y = dohyo.userData.floor.position.y;
     scene.add(venue);
   }
+  // 懸賞旗（横綱）：tt＝旋回のはじめからの秒・-1 で消す
+  function parade(tt) { if (venue) venue.userData.parade(tt); }
 
   function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
@@ -245,7 +247,7 @@ export function createStage(cv, P) {
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setVenue, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, parade, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };

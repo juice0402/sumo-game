@@ -236,8 +236,10 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       const u = Math.min(1, tt / LOOK.orbitSec);
       const d = smoother(LOOK.orbitSec * LOOK.descendFrom, LOOK.orbitSec + LOOK.descendSec, tt);
       stage.view(-TAU * (1 - orbitEase(u)), mix(LOOK.orbitElev, LOOK.elev, d), mix(LOOK.orbitFar, 1, d));
+      stage.parade(tt);   // 横綱の本場所：懸賞旗が土俵のまわりを回る（真横へ降りる前に消える）
     } else {
       stage.view(0, LOOK.elev, 1);
+      stage.parade(-1);
     }
   }
 

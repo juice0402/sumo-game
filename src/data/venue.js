@@ -5,17 +5,19 @@
 //   zab：土俵のまわりの座布団の列（0〜4）／sit：座布団に座っている人の割合（0〜1）
 //   stand：うしろと左右の段の数（0〜4）／fill：段に座っている人の割合
 //   lamp：提灯の数（うしろの列から順に・左右・2列め）／roof：吊り屋根（0 なし・1 あり・2 金のふちどり）
+//   kensho：懸賞旗の数（11/27 しょーくん「宣伝？スポンサーの旗？みたいなやつは横綱のときに出してほしい」）。
+//           呼出が持って土俵のまわりを回り、カメラが真横へ降りる前に消える（取組はかくさない）。名前は data/text.js の T.kensho
 export const VENUE = [
-  { zab: 1, sit: 0, stand: 0, fill: 0, lamp: 0, roof: 0 },          // 序ノ口：がらんとした会場
-  { zab: 2, sit: 0.1, stand: 1, fill: 0.08, lamp: 0, roof: 0 },     // 序二段：うしろにちらほら
-  { zab: 2, sit: 0.2, stand: 1, fill: 0.18, lamp: 2, roof: 0 },     // 三段目：提灯が灯る
-  { zab: 3, sit: 0.35, stand: 2, fill: 0.26, lamp: 4, roof: 0 },    // 幕下
-  { zab: 3, sit: 0.55, stand: 2, fill: 0.4, lamp: 8, roof: 1 },     // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
-  { zab: 4, sit: 0.65, stand: 3, fill: 0.5, lamp: 10, roof: 1 },    // 前頭：幕内
-  { zab: 4, sit: 0.75, stand: 3, fill: 0.6, lamp: 13, roof: 1 },    // 小結
-  { zab: 4, sit: 0.85, stand: 3, fill: 0.72, lamp: 16, roof: 1 },   // 関脇
-  { zab: 4, sit: 0.93, stand: 4, fill: 0.85, lamp: 20, roof: 1 },   // 大関
-  { zab: 4, sit: 1, stand: 4, fill: 1, lamp: 34, roof: 2 },         // 横綱：満員・提灯が2列・屋根と幕に金（大きな山）
+  { zab: 1, sit: 0, stand: 0, fill: 0, lamp: 0, roof: 0, kensho: 0 },          // 序ノ口：がらんとした会場
+  { zab: 2, sit: 0.1, stand: 1, fill: 0.08, lamp: 0, roof: 0, kensho: 0 },     // 序二段：うしろにちらほら
+  { zab: 2, sit: 0.2, stand: 1, fill: 0.18, lamp: 2, roof: 0, kensho: 0 },     // 三段目：提灯が灯る
+  { zab: 3, sit: 0.35, stand: 2, fill: 0.26, lamp: 4, roof: 0, kensho: 0 },    // 幕下
+  { zab: 3, sit: 0.55, stand: 2, fill: 0.4, lamp: 8, roof: 1, kensho: 0 },     // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
+  { zab: 4, sit: 0.65, stand: 3, fill: 0.5, lamp: 10, roof: 1, kensho: 0 },    // 前頭：幕内
+  { zab: 4, sit: 0.75, stand: 3, fill: 0.6, lamp: 13, roof: 1, kensho: 0 },    // 小結
+  { zab: 4, sit: 0.85, stand: 3, fill: 0.72, lamp: 16, roof: 1, kensho: 0 },   // 関脇
+  { zab: 4, sit: 0.93, stand: 4, fill: 0.85, lamp: 20, roof: 1, kensho: 0 },   // 大関
+  { zab: 4, sit: 1, stand: 4, fill: 1, lamp: 34, roof: 2, kensho: 12 },   // 横綱：満員・提灯が2列・屋根と幕に金・懸賞旗（大きな山）
 ];
 
 // 置き場所と大きさ（m・床の高さが 0。土俵は半分の幅 1.4・高さ 0.7）と色
@@ -34,6 +36,10 @@ export const VL = {
   lampSize: 0.44,
   roofHalf: 1.75, roofY: 3.3, curtainH: 0.42,      // 吊り屋根：半分の幅・紫の幕の下のふちの高さ・幕の高さ
   fusaLen: 0.8,                                     // 四房の長さ
+  kenshoD: 1.68, kenshoW: 0.5, kenshoH: 2.0,        // 懸賞旗：土俵のまわりを回る四角の半分の幅・絵（呼出＋旗）の幅と高さ
+  kenshoSpeed: 0.5, kenshoOut: [2.5, 3.2],          // 回る速さ（m/秒）・消えはじめと消えおわり（旋回のはじめからの秒。真横へ降りきる 4 秒より前）
+  kenshoCol: [['#AB392F', '#EEE9DE'], ['#2f4f6f', '#EEE9DE'], ['#e9e2cf', '#201E1B'], ['#3d5a3a', '#EEE9DE'], ['#5b3a6b', '#EEE9DE'], ['#c49a3a', '#201E1B'], ['#1f1d1b', '#d8bd72']],   // 旗の地と字
+  yobidashi: '#2b3140',                              // 呼出の着物
   // 色（紙の切り絵。光る輪・グラデーションは使わない）
   zabCol: ['#6e3b37', '#4f4058', '#6b5a3e'],        // 座布団（くすんだ朱・紫・黄土）
   clothes: ['#8a7d6b', '#6f7a86', '#8b6a62', '#7d8a74', '#9a8f7c', '#6b5d72', '#a49580', '#5f6b78'],   // 観客の着物

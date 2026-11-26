@@ -4,9 +4,42 @@
 // 正面（カメラの側＝+z）のまん中には人を座らせない・段も作らない（力士と、土俵の横の面の字をかくさない）
 import { COL, rand, fiberPattern } from './ink.js';
 import { VENUE, VL } from '../data/venue.js';
+import { T } from '../data/text.js';
 
 const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 const TAU = Math.PI * 2;
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const BRUSH = '"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",serif';
+
+// 懸賞旗を持つ呼出（横綱）：上に旗（地の色・ふち・名前を縦に）・旗竿・下に呼出（紺の着物）。字は筆の字をコードで書く
+function kenshoCanvas(c, name, bg, ink) {
+  const W = 128, H = 512, g = c.getContext('2d');
+  c.width = W; c.height = H;
+  g.clearRect(0, 0, W, H);
+  g.lineJoin = 'round';
+  g.strokeStyle = COL.sumi; g.lineWidth = 5; g.beginPath(); g.moveTo(W / 2, 14); g.lineTo(W / 2, 372); g.stroke();   // 竿
+  g.strokeStyle = '#8a6e45'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(W / 2, 14); g.lineTo(W / 2, 372); g.stroke();
+  g.fillStyle = COL.sumi; g.fillRect(12, 18, W - 24, 7);   // 横の棒
+  const x0 = 16, x1 = W - 16, y0 = 25, y1 = 268;
+  g.fillStyle = bg; g.fillRect(x0, y0, x1 - x0, y1 - y0);
+  g.save(); g.beginPath(); g.rect(x0, y0, x1 - x0, y1 - y0); g.clip();
+  g.globalAlpha = 0.6; g.fillStyle = fiberPattern(g); g.fillRect(x0, y0, x1 - x0, y1 - y0); g.globalAlpha = 1;
+  g.restore();
+  g.strokeStyle = ink; g.globalAlpha = 0.55; g.lineWidth = 2; g.strokeRect(x0 + 6, y0 + 6, x1 - x0 - 12, y1 - y0 - 12); g.globalAlpha = 1;
+  const ch = Array.from(name), room = y1 - y0 - 28, fs = Math.min(64, (room / ch.length) * 0.94);
+  g.fillStyle = ink; g.font = `${fs}px ${BRUSH}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  ch.forEach((t, i) => g.fillText(t, W / 2, y0 + 14 + (room / ch.length) * (i + 0.5)));
+  g.strokeStyle = COL.sumi; g.lineWidth = 3; g.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  // 呼出：頭・着物（下へ広がる）・旗竿を持つ腕
+  const body = () => { g.beginPath(); g.moveTo(W / 2 - 22, 318); g.lineTo(W / 2 + 22, 318); g.lineTo(W / 2 + 36, H - 4); g.lineTo(W / 2 - 36, H - 4); g.closePath(); };
+  g.fillStyle = VL.yobidashi; body(); g.fill(); g.strokeStyle = COL.sumi; g.lineWidth = 3; body(); g.stroke();
+  g.strokeStyle = COL.sumi; g.lineWidth = 11; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(W / 2 - 18, 326); g.lineTo(W / 2 - 4, 352); g.moveTo(W / 2 + 18, 326); g.lineTo(W / 2 + 4, 344); g.stroke();
+  g.strokeStyle = VL.yobidashi; g.lineWidth = 7;
+  g.beginPath(); g.moveTo(W / 2 - 18, 326); g.lineTo(W / 2 - 4, 352); g.moveTo(W / 2 + 18, 326); g.lineTo(W / 2 + 4, 344); g.stroke();
+  g.fillStyle = '#3a332d'; g.beginPath(); g.arc(W / 2, 300, 17, 0, TAU); g.fill(); g.strokeStyle = COL.sumi; g.lineWidth = 3; g.stroke();
+  return c;
+}
 
 function rrect(g, x, y, w, h, r) {
   g.beginPath();
@@ -258,6 +291,47 @@ export function buildVenue(THREE, lv) {
       group.add(sp);
     }
   }
+
+  // 懸賞旗（横綱）：呼出が持って、土俵のまわりの四角をゆっくり回る。旋回のあいだだけ（stage3d の parade(秒)）。
+  // カメラが真横へ降りる前に、すっと消える（取組と土俵の横の字をかくさない）
+  const parade = new THREE.Group();
+  parade.visible = false;
+  const banners = [];
+  if (V.kensho) {
+    const names = T.kensho || [];
+    for (let i = 0; i < V.kensho; i++) {
+      const [bg, ink] = VL.kenshoCol[i % VL.kenshoCol.length], name = names[i % names.length] || '', c = cv(128, 512);
+      kenshoCanvas(c, name, bg, ink);
+      const map = tex(c), mat = k(new THREE.SpriteMaterial({ map, transparent: true, alphaTest: 0.02 }));
+      // 筆の字がまだ読みこめていなければ、読みこんでから書きなおす
+      if (document.fonts && !document.fonts.check(`40px ${BRUSH}`)) {
+        document.fonts.load(`40px ${BRUSH}`, name).then(() => { kenshoCanvas(c, name, bg, ink); map.needsUpdate = true; }).catch(() => {});
+      }
+      const sp = new THREE.Sprite(mat);
+      sp.center.set(0.5, 0);
+      sp.scale.set(VL.kenshoW, VL.kenshoH, 1);
+      parade.add(sp);
+      banners.push(sp);
+    }
+  }
+  group.add(parade);
+  const Dk = VL.kenshoD, per = 8 * Dk;
+  const onLoop = (s) => {   // うしろ → 右 → 前 → 左 の四角
+    s = ((s % per) + per) % per;
+    const side = Math.floor(s / (2 * Dk)), t = s - side * 2 * Dk - Dk;
+    return side === 0 ? [t, -Dk] : side === 1 ? [Dk, t] : side === 2 ? [-t, Dk] : [-Dk, -t];
+  };
+  // tt：旋回のはじめからの秒（-1 で消す）
+  group.userData.parade = (tt) => {
+    const fade = tt < 0 ? 1 : smooth(VL.kenshoOut[0], VL.kenshoOut[1], tt);
+    parade.visible = banners.length > 0 && fade < 1;
+    if (!parade.visible) return;
+    banners.forEach((sp, i) => {
+      const [x, z] = onLoop((i * per) / banners.length + tt * VL.kenshoSpeed);
+      sp.position.set(x, 0, z);
+      sp.material.opacity = 1 - fade;
+    });
+  };
 
   group.userData.free = () => { for (const o of trash) o.dispose(); };
   return group;
