@@ -225,6 +225,15 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ladder li span{writing-mode:horizontal-tb;margin-top:auto;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
 .ladder li.on b,.ladder li.on span{color:var(--washi)}
 .foot .actions{padding-top:4px}
+/* 土俵えらび（本場所の土俵スキン・11/26）：上に大きな挿し絵、下に持っている土俵の列（いまの土俵＝朱の帯）。えらぶと朱ベタッ＋ドドン → 番付へ */
+.dyhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px}
+.dyhero .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.dyhero .who b{--max:48px;--room:calc(100cqh - 34px)}
+.dyhero .who small{font-size:13px;letter-spacing:.2em}
+.dyhero canvas{width:min(54cqw,220px);height:min(40.5cqw,165px,100cqh);flex:none}
+.dylist>*{gap:8px}
+.dylist b{--max:30px;--room:calc(100cqh - 72px)}
+.dylist canvas{width:min(92%,64px);height:40px;flex:none;margin-top:auto}
 /* 力士選出 */
 .selhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:stretch;gap:26px;padding-top:8px}
 .selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
@@ -314,7 +323,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes vsDriftB{from{transform:rotate(-8deg) translateX(10px)}to{transform:rotate(-8deg) translateX(-12px)}}
 .vs-who{position:absolute;height:34vh;writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-shadow:2px 2px 0 var(--sumi)}
 .vs-a .vs-who{right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 16px);animation:vsDriftL calc(2.2s * var(--k)) linear both}
-.vs-b .vs-who{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);animation:vsDriftR calc(2.2s * var(--k)) linear both}
+.vs-b .vs-who{align-items:flex-end;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);animation:vsDriftR calc(2.2s * var(--k)) linear both}
 @keyframes vsDriftL{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
 @keyframes vsDriftR{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
 .vs-who b{--max:clamp(46px,14vw,70px);--room:calc(34vh - 4px);color:var(--washi);line-height:1.05;clip-path:inset(0 -10% 100% -10%);animation:inkdown calc(.34s * var(--k)) calc(.16s * var(--k)) cubic-bezier(.3,.7,.3,1) both}

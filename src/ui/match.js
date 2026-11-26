@@ -2,10 +2,11 @@
 import { T } from '../data/text.js';
 import { STAGES } from '../data/stages.js';
 import { DOHYO } from '../data/dohyo.js';
+import { drawDohyoSwatch } from './fuku.js';
 import { BANZUKE } from '../data/banzuke.js';
 import { schedule, slotLeftMin } from '../game/jungyo.js';
 import { rankOf, nextRank } from '../game/rating.js';
-import { renderSlots, headText, fitText, setN } from './roster.js';
+import { renderSlots, headText, fitText, setN, sameSize } from './roster.js';
 
 function hhmm(ms) { const d = new Date(ms); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; }
 
@@ -73,6 +74,32 @@ export function initBanzuke() {
         ol.appendChild(li);
       }
       document.getElementById('bz-world').textContent = T.worldLater;
+    },
+  };
+}
+
+// 土俵えらび（本場所の土俵スキン）：o：{ own（持っている土俵の key）, cur（いまの key）, onPick(key, ボタン) }
+const dohyoLabel = (key) => DOHYO[key].name.replace(/の(土俵|箱)$/, '');
+export function initDohyoPick() {
+  return {
+    show(o) {
+      document.getElementById('dy-name').textContent = DOHYO[o.cur].name;
+      setN(document.getElementById('dy-name'));
+      const list = document.getElementById('dy-list');
+      list.textContent = '';
+      for (const key of o.own) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = key === o.cur ? 'on' : '';
+        b.innerHTML = '<b class="brush fit"></b><canvas></canvas>';
+        b.querySelector('b').textContent = dohyoLabel(key);
+        b.addEventListener('click', () => o.onPick(key, b));
+        list.appendChild(b);
+      }
+      sameSize(list.querySelectorAll('b'));
+      // 絵はならべてから（大きさが決まってから）
+      drawDohyoSwatch(document.getElementById('dy-cv'), o.cur);
+      list.querySelectorAll('canvas').forEach((cv, i) => drawDohyoSwatch(cv, o.own[i]));
     },
   };
 }

@@ -194,6 +194,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     // 絵は動きを止めた形の大きさで描く（傾けたまま測ると、まわりの四角が大きくなって絵がのびる）→ 動きをはじめる
     vsEl.classList.add('in', 'measure');
     if (vsEl._draw) vsEl._draw();
+    vsFit();
     void vsEl.offsetWidth;
     vsEl.classList.remove('measure');
     // 東がシュッ → 西がシュッ →「対」がドン
@@ -202,6 +203,24 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     setTimeout(() => { if (st === s) playSfx('kami', { vol: 0.7, rate: 1.3 }); }, 100 * k);
     setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.4, rate: 1.2 }); } }, 180 * k);
     setTimeout(() => { if (st === s && !s.vsOut) { playSfx('taiko', { vol: 0.95, rate: 0.75 }); playSfx('hyoshigi', { vol: 0.35, rate: 1.4 }); } }, 330 * k);
+  }
+  // 東西の名前が斜めの切れ目にかからないように、実際の字の高さをはかって小さくする（11/26 しょーくん「上の名前の下が切れる」）。
+  // 切れ目は左ほど低いので、東（上）は名前の左のはしで、西（下）は名前の右のはしでくらべる。東西は同じ大きさのまま
+  function vsFit() {
+    const box = vsEl.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const cut = (x) => box.top + box.height * (0.58 - 0.16 * (x - box.left) / box.width);   // 斜めの切れ目（CSS の clip-path と同じ 58%→42%）
+    const na = vsEl.querySelector('.vs-a b'), nb = vsEl.querySelector('.vs-b b');
+    na.style.fontSize = nb.style.fontSize = '';
+    const ra = na.getBoundingClientRect(), rb = nb.getBoundingClientRect();
+    const gap = 14;
+    const sa = ra.height > 0 ? Math.min(1, (cut(ra.left) - gap - ra.top) / ra.height) : 1;
+    const sb = rb.height > 0 ? Math.min(1, (rb.bottom - (cut(rb.right) + gap)) / rb.height) : 1;
+    const s = Math.max(0.3, Math.min(sa, sb));
+    if (s < 1) {
+      const px = parseFloat(getComputedStyle(na).fontSize) * s;
+      na.style.fontSize = nb.style.fontSize = px.toFixed(1) + 'px';
+    }
   }
   function vsLeave() {
     st.vsOut = true;

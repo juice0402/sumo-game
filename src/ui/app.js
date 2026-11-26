@@ -23,7 +23,7 @@ import { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } f
 import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
-import { initJungyo, initBanzuke, initSelect } from './match.js';
+import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
 
@@ -307,7 +307,7 @@ function boot() {
     openSelect('jungyo', true);
   });
   const banzuke = initBanzuke();
-  // 本場所の土俵（福箱の土俵スキン）：押すたびに、持っている土俵を順に。1つだけなら出さない
+  // 本場所の土俵（福箱の土俵スキン）：押すと土俵えらびの画面（挿し絵つき）へ。1つだけなら出さない
   const bzDohyo = document.getElementById('bz-dohyo');
   const paintDohyo = () => {
     const own = ownedDohyo(state);
@@ -315,12 +315,18 @@ function boot() {
     bzDohyo.hidden = own.length < 2;
     bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
   };
-  bzDohyo.addEventListener('click', () => {
-    const own = ownedDohyo(state);
-    state.dohyo = own[(own.indexOf(state.dohyo) + 1) % own.length];
-    save();
-    paintDohyo();
-    playSfx('kami', { vol: 0.5 });
+  bzDohyo.addEventListener('click', () => go('s-dohyo'));
+  const dohyoPick = initDohyoPick();
+  onShow['s-dohyo'] = () => dohyoPick.show({
+    own: ownedDohyo(state), cur: state.dohyo,
+    // えらんだ列に朱の帯をベタッと＋ドドン → 番付へもどる（いまの土俵をもう一度えらんだら、そのままもどる）
+    onPick(key, btn) {
+      if (key === state.dohyo) { back(); return; }
+      for (const b of btn.parentElement.children) b.classList.remove('on');
+      state.dohyo = key;
+      save();
+      choose(btn, back, state.short);
+    },
   });
   onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
   document.getElementById('bz-go').addEventListener('click', () => {

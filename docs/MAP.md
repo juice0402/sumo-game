@@ -49,10 +49,10 @@
 | （縦の字の大きさ） | 番付表の縦の字は、入れ物（見出し h1・主役 .hero・列 .cols>*・土俵巡業の札 に container-type:size）の高さ 100cqh と字の数 --n から大きさを決める＝どの画面の高さでも1列に収まる。字を入れるときは roster.js の fitText・setN・headText（見出し）で --n を。ならんだ物（力士の札・福箱の帯・取組の上の名前・カットインの東西・くるくるの列）は、いちばん長いものに合わせて同じ大きさ（roster.js の sameSize など・11/26「統一感」） |
 | ui/roller.js | くるくる（たての一覧を指でまわし、真ん中の行に止める＝scroll-snap）。createRoller(列, onPick) → set(語, いまの id)・roll(id)。真ん中は横いっぱいの朱の帯（style.css「くるくる」） |
 | ui/fuku.js | 福箱の画面（箱をゆらす → 朱の筆で切る → 紙がさける → 中身・段の判子）と「出る物と確率」・土俵の小さな見本 drawDohyoSwatch |
-| ui/match.js | 土俵巡業の予定・番付（本場所）・力士選出（相手は取組まで「？」） |
+| ui/match.js | 土俵巡業の予定・番付（本場所）・土俵えらび（initDohyoPick：番付の「土俵：○○」から・挿し絵つき・本場所の土俵スキン）・力士選出（相手は取組まで「？」・上に部屋の番付・レート・勝敗） |
 | ui/cut.js | 切る画面（show(形, { demo }) で、はじめての人に人の形 OTEHON を型抜きの点線で出す。描いている間も消さない・はじまりは朱の丸と「ここから」・向きの矢じるし） |
 | ui/pick.js | 稽古：相手をえらぶ画面（CPU 5体・全員と取る ●○） |
-| ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title） |
+| ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える・東西の名前は vsFit で斜めの切れ目にかからない大きさに）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title） |
 | ui/stage3d.js | 2.5D（Three.js）：紙の箱の土俵（setDohyo で切りかえ・前の床と絵は外す）・紙の力士（厚み・影）・カメラ（旋回と真横）・project（描く座標→画面） |
 | ui/fx.js | 上にのせる2Dの演出：はじまりの墨の筆・墨のしぶき・集中線・トンの合図・体がついた所 |
 | ui/unpack.js | 重いもの（lib-rapier・lib-wasm・lib-three）を base64 → gzip からもどす。unpackLib(id)・gunzip（古いブラウザ用・tools/test.mjs で zlib とくらべる） |

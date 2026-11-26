@@ -237,6 +237,15 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ladder li span{writing-mode:horizontal-tb;margin-top:auto;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
 .ladder li.on b,.ladder li.on span{color:var(--washi)}
 .foot .actions{padding-top:4px}
+/* 土俵えらび（本場所の土俵スキン・11/26）：上に大きな挿し絵、下に持っている土俵の列（いまの土俵＝朱の帯）。えらぶと朱ベタッ＋ドドン → 番付へ */
+.dyhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px}
+.dyhero .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.dyhero .who b{--max:48px;--room:calc(100cqh - 34px)}
+.dyhero .who small{font-size:13px;letter-spacing:.2em}
+.dyhero canvas{width:min(54cqw,220px);height:min(40.5cqw,165px,100cqh);flex:none}
+.dylist>*{gap:8px}
+.dylist b{--max:30px;--room:calc(100cqh - 72px)}
+.dylist canvas{width:min(92%,64px);height:40px;flex:none;margin-top:auto}
 /* 力士選出 */
 .selhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:stretch;gap:26px;padding-top:8px}
 .selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
@@ -326,7 +335,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes vsDriftB{from{transform:rotate(-8deg) translateX(10px)}to{transform:rotate(-8deg) translateX(-12px)}}
 .vs-who{position:absolute;height:34vh;writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-shadow:2px 2px 0 var(--sumi)}
 .vs-a .vs-who{right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 16px);animation:vsDriftL calc(2.2s * var(--k)) linear both}
-.vs-b .vs-who{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);animation:vsDriftR calc(2.2s * var(--k)) linear both}
+.vs-b .vs-who{align-items:flex-end;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);animation:vsDriftR calc(2.2s * var(--k)) linear both}
 @keyframes vsDriftL{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
 @keyframes vsDriftR{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
 .vs-who b{--max:clamp(46px,14vw,70px);--room:calc(34vh - 4px);color:var(--washi);line-height:1.05;clip-path:inset(0 -10% 100% -10%);animation:inkdown calc(.34s * var(--k)) calc(.16s * var(--k)) cubic-bezier(.3,.7,.3,1) both}
@@ -538,6 +547,14 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="myrank hero"><b class="brush" id="bz-rank"></b><div class="info"><em id="bz-rate"></em><span id="bz-rec"></span><span id="bz-next"></span></div></div>
     <ol class="ladder frame2 cols" id="bz-ladder"></ol>
     <div class="foot"><p class="note" id="bz-world"></p><footer class="actions"><button id="bz-go" class="seal" type="button">本場所の取組へ</button></footer></div>
+  </section>
+
+  <!-- 本場所の土俵（福箱の土俵スキン）をえらぶ（11/26 しょーくん「押したら切り替えだとわかりにくい・切り替え画面と挿し絵」） -->
+  <section id="s-dohyo" class="screen v" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">土俵</h1></header>
+    <div class="hero dyhero"><canvas id="dy-cv"></canvas><div class="who"><small>いまの土俵</small><b class="brush fit" id="dy-name"></b></div></div>
+    <div class="dylist frame2 cols" id="dy-list"></div>
+    <p class="note">本場所で使う土俵の見た目・強さは変わらない</p>
   </section>
 
   <section id="s-select" class="screen v" hidden>
@@ -4135,6 +4152,7 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     // 絵は動きを止めた形の大きさで描く（傾けたまま測ると、まわりの四角が大きくなって絵がのびる）→ 動きをはじめる
     vsEl.classList.add('in', 'measure');
     if (vsEl._draw) vsEl._draw();
+    vsFit();
     void vsEl.offsetWidth;
     vsEl.classList.remove('measure');
     // 東がシュッ → 西がシュッ →「対」がドン
@@ -4143,6 +4161,24 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     setTimeout(() => { if (st === s) playSfx('kami', { vol: 0.7, rate: 1.3 }); }, 100 * k);
     setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.4, rate: 1.2 }); } }, 180 * k);
     setTimeout(() => { if (st === s && !s.vsOut) { playSfx('taiko', { vol: 0.95, rate: 0.75 }); playSfx('hyoshigi', { vol: 0.35, rate: 1.4 }); } }, 330 * k);
+  }
+  // 東西の名前が斜めの切れ目にかからないように、実際の字の高さをはかって小さくする（11/26 しょーくん「上の名前の下が切れる」）。
+  // 切れ目は左ほど低いので、東（上）は名前の左のはしで、西（下）は名前の右のはしでくらべる。東西は同じ大きさのまま
+  function vsFit() {
+    const box = vsEl.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const cut = (x) => box.top + box.height * (0.58 - 0.16 * (x - box.left) / box.width);   // 斜めの切れ目（CSS の clip-path と同じ 58%→42%）
+    const na = vsEl.querySelector('.vs-a b'), nb = vsEl.querySelector('.vs-b b');
+    na.style.fontSize = nb.style.fontSize = '';
+    const ra = na.getBoundingClientRect(), rb = nb.getBoundingClientRect();
+    const gap = 14;
+    const sa = ra.height > 0 ? Math.min(1, (cut(ra.left) - gap - ra.top) / ra.height) : 1;
+    const sb = rb.height > 0 ? Math.min(1, (rb.bottom - (cut(rb.right) + gap)) / rb.height) : 1;
+    const s = Math.max(0.3, Math.min(sa, sb));
+    if (s < 1) {
+      const px = parseFloat(getComputedStyle(na).fontSize) * s;
+      na.style.fontSize = nb.style.fontSize = px.toFixed(1) + 'px';
+    }
   }
   function vsLeave() {
     st.vsOut = true;
@@ -5220,10 +5256,11 @@ __m['src/ui/match.js'] = (function () {
 const { T } = __m['src/data/text.js'];
 const { STAGES } = __m['src/data/stages.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
+const { drawDohyoSwatch } = __m['src/ui/fuku.js'];
 const { BANZUKE } = __m['src/data/banzuke.js'];
 const { schedule, slotLeftMin } = __m['src/game/jungyo.js'];
 const { rankOf, nextRank } = __m['src/game/rating.js'];
-const { renderSlots, headText, fitText, setN } = __m['src/ui/roster.js'];
+const { renderSlots, headText, fitText, setN, sameSize } = __m['src/ui/roster.js'];
 
 function hhmm(ms) { const d = new Date(ms); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; }
 
@@ -5295,6 +5332,32 @@ function initBanzuke() {
   };
 }
 
+// 土俵えらび（本場所の土俵スキン）：o：{ own（持っている土俵の key）, cur（いまの key）, onPick(key, ボタン) }
+const dohyoLabel = (key) => DOHYO[key].name.replace(/の(土俵|箱)$/, '');
+function initDohyoPick() {
+  return {
+    show(o) {
+      document.getElementById('dy-name').textContent = DOHYO[o.cur].name;
+      setN(document.getElementById('dy-name'));
+      const list = document.getElementById('dy-list');
+      list.textContent = '';
+      for (const key of o.own) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = key === o.cur ? 'on' : '';
+        b.innerHTML = '<b class="brush fit"></b><canvas></canvas>';
+        b.querySelector('b').textContent = dohyoLabel(key);
+        b.addEventListener('click', () => o.onPick(key, b));
+        list.appendChild(b);
+      }
+      sameSize(list.querySelectorAll('b'));
+      // 絵はならべてから（大きさが決まってから）
+      drawDohyoSwatch(document.getElementById('dy-cv'), o.cur);
+      list.querySelectorAll('canvas').forEach((cv, i) => drawDohyoSwatch(cv, o.own[i]));
+    },
+  };
+}
+
 function initSelect() {
   return {
     // o：{ mode, stage, drawn（抽選したか）, slots, active, rec（部屋の番付・レート・勝敗のひとこと）, onPick(i) }
@@ -5312,7 +5375,7 @@ function initSelect() {
   };
 }
 
-return { initJungyo, initBanzuke, initSelect };
+return { initJungyo, initBanzuke, initDohyoPick, initSelect };
 })();
 
 __m['src/ui/btnart.js'] = (function () {
@@ -5418,7 +5481,7 @@ const { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } = 
 const { afterBout } = __m['src/game/titles.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
 const { initFuku } = __m['src/ui/fuku.js'];
-const { initJungyo, initBanzuke, initSelect } = __m['src/ui/match.js'];
+const { initJungyo, initBanzuke, initSelect, initDohyoPick } = __m['src/ui/match.js'];
 const { unlockAudio, setMuted, playSfx, sfxReady } = __m['src/ui/sound.js'];
 const { applyButtonArt } = __m['src/ui/btnart.js'];
 
@@ -5702,7 +5765,7 @@ function boot() {
     openSelect('jungyo', true);
   });
   const banzuke = initBanzuke();
-  // 本場所の土俵（福箱の土俵スキン）：押すたびに、持っている土俵を順に。1つだけなら出さない
+  // 本場所の土俵（福箱の土俵スキン）：押すと土俵えらびの画面（挿し絵つき）へ。1つだけなら出さない
   const bzDohyo = document.getElementById('bz-dohyo');
   const paintDohyo = () => {
     const own = ownedDohyo(state);
@@ -5710,12 +5773,18 @@ function boot() {
     bzDohyo.hidden = own.length < 2;
     bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
   };
-  bzDohyo.addEventListener('click', () => {
-    const own = ownedDohyo(state);
-    state.dohyo = own[(own.indexOf(state.dohyo) + 1) % own.length];
-    save();
-    paintDohyo();
-    playSfx('kami', { vol: 0.5 });
+  bzDohyo.addEventListener('click', () => go('s-dohyo'));
+  const dohyoPick = initDohyoPick();
+  onShow['s-dohyo'] = () => dohyoPick.show({
+    own: ownedDohyo(state), cur: state.dohyo,
+    // えらんだ列に朱の帯をベタッと＋ドドン → 番付へもどる（いまの土俵をもう一度えらんだら、そのままもどる）
+    onPick(key, btn) {
+      if (key === state.dohyo) { back(); return; }
+      for (const b of btn.parentElement.children) b.classList.remove('on');
+      state.dohyo = key;
+      save();
+      choose(btn, back, state.short);
+    },
   });
   onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
   document.getElementById('bz-go').addEventListener('click', () => {
