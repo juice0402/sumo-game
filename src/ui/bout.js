@@ -116,10 +116,10 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
     const keiko = !opt.mode || opt.mode === 'keiko';
-    btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
+    btn('b-again').hidden = !keiko; btn('r-sub').hidden = !keiko;
     btn('b-next').hidden = keiko;
     btn('b-next').textContent = opt.nextLabel || T.nextBout;
-    btn('b-home').hidden = opt.mode === 'shodohyo';
+    btn('b-home').style.visibility = opt.mode === 'shodohyo' ? 'hidden' : '';   // 初土俵は部屋へを出さないが、場所は空けておく（主のボタンが動かない）
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
     stage.setFighters(la, lb, opt.papers || []);
     // 気（オーラ・見た目だけ）：力士の中の座標での、まん中と高さ

@@ -36,13 +36,13 @@
 | sim/table.js | 相性表の集計 |
 | sim/bench.js | 指紋用の決まった3番 |
 | sim/rng.js | シードつき乱数・FNV-1a |
-| game/save.js | 保存（キー `sumo-proto-v1` のまま中身を足す：力士3枠 slots・active・rate・hon・jun・words＝手に入れた語（前からいる力士の語は持っていることにする）・koban・kobanDay・items（福箱の紙質・気・土俵）・dohyo（本場所の土俵）・力士ごとの paper・aura・titles＝手に入れた称号（前からいる力士の称号は持っていることにする）・streak・keikoWon。試作①②の shape は1枠目へ）。道具の「はじめての流れを見る」用に、いまの保存を `sumo-proto-v1-bak` へ1つだけ取っておく（stashSave・unstashSave） |
+| game/save.js | 保存（キー `sumo-proto-v1` のまま中身を足す：力士3枠 slots・active・rate・hon・jun・words＝手に入れた語（前からいる力士の語は持っていることにする）・koban・kobanDay・items（福箱の紙質・気・土俵）・dohyo（本場所の土俵）・力士ごとの paper・aura・titles＝手に入れた称号（前からいる力士の称号は持っていることにする）・streak・keikoWon・unlockAll〔道具の「ぜんぶ持っている」・はじめは入〕。試作①②の shape は1枠目へ）。道具の「はじめての流れを見る」用に、いまの保存を `sumo-proto-v1-bak` へ1つだけ取っておく（stashSave・unstashSave） |
 | game/names.js | 四股名と称号（id → 字・ランダム・正しいか）。randomShikona(rng, has)：has＝持っている語の Set → その中から（自分）／なし → 相手用。ownedWords(state.words) |
 | game/rating.js | 番付（rankOf・nextRank）・Elo（eloDelta）・仮の相手のレート |
 | game/jungyo.js | 土俵巡業の予定（時刻 → 枠 → 2つの土俵・世界で同じ）・取組前の抽選 |
 | game/foe.js | 巡業・本場所の仮の相手（CPU の形＋ランダムな四股名・称号・近いレート） |
 | game/titles.js | 実績の称号（11/26）：afterBout(state, { mode, winner, kima, foeId, hour }) → 新しく手に入れた称号の id（連勝 streak・稽古で勝った CPU keikoWon も数える）・ownedTitles |
-| game/fukubako.js | 福箱のしくみ：FUKU_ITEMS（出る物ぜんぶ）・fukuOdds（いまの確率・そろった段は割りなおす）・drawFuku（持っていない物だけ）・addItem・ownedPapers/Auras/Dohyo・kobanFor（取組の小判） |
+| game/fukubako.js | 福箱のしくみ：FUKU_ITEMS（出る物ぜんぶ）・fukuOdds（いまの確率・そろった段は割りなおす）・drawFuku（持っていない物だけ）・addItem・ownedPapers/Auras/Dohyo（2つめの引数で持ち物の Set を渡せる）・kobanFor（取組の小判）・shownItems（道具の「ぜんぶ持っている」＝state.unlockAll のとき、えらぶ画面だけぜんぶ持っていることに。福箱と保存は本当の持ち物） |
 | ui/app.js | はじまり（物理の用意・画面のつなぎ・もどる）：タイトル → 相撲部屋 →「勝負」→ 巡業／本場所／稽古 → 力士選出 → 取組。はじめての流れ（startIntro）：空の部屋 → お手本つきで切る → 初土俵（釣鐘・戦績に数えない）→ 四股名をさずかる（s-meimei）→ 部屋 |
 | ui/heya.js | タイトル・相撲部屋（小判・メニュー：勝負・力士をつくる・福箱。番付は 勝負 → 本場所 の中）・勝負（巡業／本場所／稽古）。土俵巡業の予定は 勝負 → 巡業 で見る。部屋の自作力士がときどきぴょこっと跳ねる（hopLater・たまに2回）。まわりに気（auraPreview） |
 | ui/choose.js | えらんだ瞬間の動き（部屋と勝負のメニュー）：朱の筆の帯をベタッと＋太鼓「ドドン」（taiko を2回）→ ほかの列は下へ抜けて消える → 次の画面。もとにもどすのは app.js の enter（reset）。演出を短く・動きを減らす設定では短く |
@@ -56,7 +56,7 @@
 | ui/match.js | 土俵巡業の予定・番付（本場所）・土俵えらび（initDohyoPick：番付の「土俵：○○」から・挿し絵つき・本場所の土俵スキン）・力士選出（相手は取組まで「？」・上に部屋の番付・レート・勝敗） |
 | ui/cut.js | 切る画面（show(形, { demo }) で、はじめての人に人の形 OTEHON を型抜きの点線で出す。描いている間も消さない・はじまりは朱の丸と「ここから」・向きの矢じるし） |
 | ui/pick.js | 稽古：相手をえらぶ画面（CPU 5体・全員と取る ●○） |
-| ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える・東西の名前は vsFit で斜めの切れ目にかからない大きさに）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title） |
+| ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える・東西の名前は vsFit で斜めの切れ目にかからない大きさに）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title）。結果のボタンはいちばん下に「部屋へ｜次の取組（稽古はもう一番）」を同じ幅で横に（.r-pair・初土俵は部屋へを visibility で隠して場所は残す）・稽古だけその上に相手をかえる・切り直す（#r-sub） |
 | ui/stage3d.js | 2.5D（Three.js）：紙の箱の土俵（setDohyo で切りかえ・前の床と絵は外す）・紙の力士（厚み・影）・カメラ（旋回と真横）・project（描く座標→画面） |
 | ui/fx.js | 上にのせる2Dの演出：はじまりの墨の筆・墨のしぶき・集中線・トンの合図・体がついた所 |
 | ui/unpack.js | 重いもの（lib-rapier・lib-wasm・lib-three）を base64 → gzip からもどす。unpackLib(id)・gunzip（古いブラウザ用・tools/test.mjs で zlib とくらべる） |

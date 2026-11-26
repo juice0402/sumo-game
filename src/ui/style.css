@@ -257,6 +257,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .result .gain{position:absolute;transform:translate(-50%,3px);width:max-content;margin:0;text-align:center;font-size:14px;line-height:1.3;color:var(--sumi);font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;animation:kindin .45s .7s forwards}
 .result.has-gain .kind{transform:translate(-50%,-100%)}   /* 決まりの文の下が横の面のまん中 → その下にひとこと */
 .result .gain+.row{margin-top:auto}
+/* 結果のボタン：いちばん下に「部屋へ｜次の取組」を同じ幅で横に（11/26 しょーくん「横並び・レイアウトがずれないように」）。稽古の相手をかえる・切り直すはその上 */
+.result .r-pair{width:100%;max-width:400px;margin-top:auto;padding:0}
+.result .r-sub{margin-top:auto}
+.result .r-sub:not([hidden])+.r-pair{margin-top:6px}
 
 /* ===== 動き（11/25 しょーくん「右から、しししシュッ」・できるだけカッコよく）=====
    ひとつの流れにまとめる：見出しが筆で上から書かれる → 主役が入る → 表の列が右から順に飛びこむ（少し行きすぎて戻る）→ ボタン */

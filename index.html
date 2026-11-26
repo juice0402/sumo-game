@@ -269,6 +269,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .result .gain{position:absolute;transform:translate(-50%,3px);width:max-content;margin:0;text-align:center;font-size:14px;line-height:1.3;color:var(--sumi);font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;animation:kindin .45s .7s forwards}
 .result.has-gain .kind{transform:translate(-50%,-100%)}   /* 決まりの文の下が横の面のまん中 → その下にひとこと */
 .result .gain+.row{margin-top:auto}
+/* 結果のボタン：いちばん下に「部屋へ｜次の取組」を同じ幅で横に（11/26 しょーくん「横並び・レイアウトがずれないように」）。稽古の相手をかえる・切り直すはその上 */
+.result .r-pair{width:100%;max-width:400px;margin-top:auto;padding:0}
+.result .r-sub{margin-top:auto}
+.result .r-sub:not([hidden])+.r-pair{margin-top:6px}
 
 /* ===== 動き（11/25 しょーくん「右から、しししシュッ」・できるだけカッコよく）=====
    ひとつの流れにまとめる：見出しが筆で上から書かれる → 主役が入る → 表の列が右から順に飛びこむ（少し行きすぎて戻る）→ ボタン */
@@ -620,8 +624,9 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
       <div class="kind" id="r-kind"></div>
       <div class="gain" id="r-gain" hidden></div>
-      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button></div>
-      <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button><button id="b-home" class="ghost" type="button">部屋へ</button></div>
+      <!-- いちばん下に「部屋へ｜次の取組（稽古はもう一番）」を同じ幅で横に並べる（11/26 しょーくん）。稽古だけ、その上に相手をかえる・切り直す -->
+      <div class="row r-sub" id="r-sub"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button></div>
+      <div class="actions pair r-pair"><button id="b-home" class="seal sub" type="button">部屋へ</button><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button></div>
     </div>
   </section>
 
@@ -657,9 +662,10 @@ button{font:inherit;color:inherit;cursor:pointer}
       <h1 class="brush">道具</h1>
     </header>
     <div class="body">
-      <h2>小判</h2>
+      <h2>小判と持ち物</h2>
       <p>福箱をためすための小判（試作だけ）。</p>
-      <div class="toggles"><button id="b-koban" class="ghost" type="button">小判 +1000</button></div>
+      <div class="toggles"><button id="b-koban" class="ghost" type="button">小判 +1000</button><button id="b-unlock" class="ghost" type="button" aria-pressed="true">ぜんぶ持っている</button></div>
+      <p>ぜんぶ持っている：力士の編集・土俵えらびで、紙質・気・土俵・称号・四股名の語をぜんぶえらべる（試しだけ・福箱と保存の持ち物は変わらない）</p>
       <h2>はじめての流れ</h2>
       <p>いまの力士と番付を取っておいて、まっさらな相撲部屋から見なおす（試作だけ）。</p>
       <div class="toggles"><button id="b-intro" class="ghost" type="button">はじめての流れを見る</button><button id="b-unstash" class="ghost" type="button" hidden>前の保存にもどす</button></div>
@@ -1954,12 +1960,13 @@ function cleanSlot(s) {
 }
 
 function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
+  const st = { drive: 'hop', mute: false, short: false, unlockAll: true, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
     st.mute = d.mute === true;
     st.short = d.short === true;
+    st.unlockAll = d.unlockAll !== false;   // 道具の「ぜんぶ持っている」（試しだけ・はじめは入）
     if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
     else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
     if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
@@ -1987,7 +1994,7 @@ function saveState(st) {
   const cur = st.slots[st.active];
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
+      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short, unlockAll: st.unlockAll,
       slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
       koban: st.koban, kobanDay: st.kobanDay, items: st.items, dohyo: st.dohyo,
       titles: st.titles, streak: st.streak, keikoWon: st.keikoWon,
@@ -4227,10 +4234,10 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
     const keiko = !opt.mode || opt.mode === 'keiko';
-    btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
+    btn('b-again').hidden = !keiko; btn('r-sub').hidden = !keiko;
     btn('b-next').hidden = keiko;
     btn('b-next').textContent = opt.nextLabel || T.nextBout;
-    btn('b-home').hidden = opt.mode === 'shodohyo';
+    btn('b-home').style.visibility = opt.mode === 'shodohyo' ? 'hidden' : '';   // 初土俵は部屋へを出さないが、場所は空けておく（主のボタンが動かない）
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
     stage.setFighters(la, lb, opt.papers || []);
     // 気（オーラ・見た目だけ）：力士の中の座標での、まん中と高さ
@@ -5083,7 +5090,7 @@ const { SHIKONA, SHIKONA_START } = __m['src/data/shikona.js'];
 const { PAPERS, PAPER_DEFAULT } = __m['src/data/papers.js'];
 const { AURAS, AURA_DEFAULT } = __m['src/data/auras.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
-const { TITLE_START } = __m['src/data/titles.js'];
+const { TITLE_START, TITLES } = __m['src/data/titles.js'];
 const { wordText, titleText } = __m['src/game/names.js'];
 
 // 出る物ぜんぶ：{ id, kind, tier, name }
@@ -5118,11 +5125,15 @@ function kindName(kind) { return KINDS[kind] || ''; }
 function ownedItems(state) {
   return new Set([...SHIKONA_START, TITLE_START, PAPER_DEFAULT, AURA_DEFAULT, ...(state.words || []), ...(state.titles || []), ...(state.items || [])]);
 }
-function ownedPapers(state) { const o = ownedItems(state); return Object.keys(PAPERS).filter((id) => o.has(id)); }
-function ownedAuras(state) { const o = ownedItems(state); return Object.keys(AURAS).filter((id) => o.has(id)); }
+// 道具の「ぜんぶ持っている」（試しだけ・11/26）：えらぶ画面（力士の編集・土俵えらび）だけ、ぜんぶ持っていることにする。
+// 福箱（出る物・確率・かぶりなし）と保存はいつも本当の持ち物（ownedItems）
+function shownItems(state) {
+  return state.unlockAll ? new Set([...ownedItems(state), ...FUKU_ITEMS.map((it) => it.id), ...TITLES.map((t) => t.id)]) : ownedItems(state);
+}
+function ownedPapers(state, o = ownedItems(state)) { return Object.keys(PAPERS).filter((id) => o.has(id)); }
+function ownedAuras(state, o = ownedItems(state)) { return Object.keys(AURAS).filter((id) => o.has(id)); }
 // 本場所で使える土俵（data/dohyo.js の key）：いつもの紙の箱＋手に入れた土俵スキン
-function ownedDohyo(state) {
-  const o = ownedItems(state);
+function ownedDohyo(state, o = ownedItems(state)) {
   return ['kami', ...FUKU_ITEMS.filter((it) => it.kind === 'dohyo' && o.has(it.id)).map((it) => it.id.slice(2))];
 }
 
@@ -5169,7 +5180,7 @@ function todayKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-return { FUKU_ITEMS, itemName, fukuItem, tierOf, kindName, ownedItems, ownedPapers, ownedAuras, ownedDohyo, fukuOdds, drawFuku, addItem, kobanFor, todayKey };
+return { FUKU_ITEMS, itemName, fukuItem, tierOf, kindName, ownedItems, shownItems, ownedPapers, ownedAuras, ownedDohyo, fukuOdds, drawFuku, addItem, kobanFor, todayKey };
 })();
 
 __m['src/game/titles.js'] = (function () {
@@ -6005,7 +6016,7 @@ const { initHeya } = __m['src/ui/heya.js'];
 const { reset: resetChoose } = __m['src/ui/choose.js'];
 const { renderSlots, initEdit, fitText, headText, setN } = __m['src/ui/roster.js'];
 const { choose } = __m['src/ui/choose.js'];
-const { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } = __m['src/game/fukubako.js'];
+const { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo, shownItems } = __m['src/game/fukubako.js'];
 const { afterBout } = __m['src/game/titles.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
 const { initFuku } = __m['src/ui/fuku.js'];
@@ -6272,12 +6283,12 @@ function boot() {
       }, state.short);
     },
   });
-  const titleList = initTitleList({ getOwned: () => ownedItems(state) });
+  const titleList = initTitleList({ getOwned: () => shownItems(state) });
   document.getElementById('ed-titles').addEventListener('click', () => titleList.open());
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
-    getOwned: () => ownedItems(state),
-    getMise: () => ({ papers: ownedPapers(state), auras: ownedAuras(state) }),
+    getOwned: () => shownItems(state),
+    getMise: () => ({ papers: ownedPapers(state, shownItems(state)), auras: ownedAuras(state, shownItems(state)) }),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
     onRetire(i) {
@@ -6301,7 +6312,7 @@ function boot() {
   // 本場所の土俵（福箱の土俵スキン）：押すと土俵えらびの画面（挿し絵つき）へ。1つだけなら出さない
   const bzDohyo = document.getElementById('bz-dohyo');
   const paintDohyo = () => {
-    const own = ownedDohyo(state);
+    const own = ownedDohyo(state, shownItems(state));
     if (!own.includes(state.dohyo)) state.dohyo = 'kami';
     bzDohyo.hidden = own.length < 2;
     bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
@@ -6309,7 +6320,7 @@ function boot() {
   bzDohyo.addEventListener('click', () => go('s-dohyo'));
   const dohyoPick = initDohyoPick();
   onShow['s-dohyo'] = () => dohyoPick.show({
-    own: ownedDohyo(state), cur: state.dohyo,
+    own: ownedDohyo(state, shownItems(state)), cur: state.dohyo,
     // えらんだ列に朱の帯をベタッと＋ドドン → 番付へもどる（いまの土俵をもう一度えらんだら、そのままもどる）
     onPick(key, btn) {
       if (key === state.dohyo) { back(); return; }
@@ -6356,6 +6367,7 @@ function boot() {
   };
   toggle('b-mute', 'mute', () => setMuted(state.mute));
   toggle('b-short', 'short');
+  toggle('b-unlock', 'unlockAll');
   document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
