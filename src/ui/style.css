@@ -139,7 +139,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cols b,.fit{font-size:min(var(--max,32px),calc(var(--room,230px) / (var(--n,4) * 1.08 + .1)));letter-spacing:.06em;line-height:1.1;white-space:nowrap}
 .cols small,.cols span,.cols em{flex:none}
 /* いまの・主のもの＝縦の朱の帯 */
-.cols>.on,.ladder li.on{background:var(--b-shuv) center/88% 100% no-repeat;border-left-color:transparent}
+.cols>.on,.ladder li.on{background:var(--b-shuv) center/100% 100% no-repeat;border-left-color:transparent}   /* 朱の帯は列いっぱい（字が帯に乗り切るように・11/26） */
 .cols>.on+*{border-left-color:var(--line)}
 .who{display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:4px}
 .who small{font-size:12px;color:var(--kin);line-height:1.3}
@@ -171,11 +171,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 #s-meimei.enter #mm-name{animation:inkdown .7s .35s cubic-bezier(.3,.7,.3,1) both}
 #s-meimei.enter .meihan{animation:hanko .34s 1.12s cubic-bezier(.2,.9,.2,1) both}
 /* 勝負 */
-.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:18px 0 14px}
-.modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(44px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 50px) / 1.1))}
+.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:18px 0 14px}
+.modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(40px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 62px) / 1.1))}
 .modecard span{white-space:nowrap;letter-spacing:.08em;line-height:1.3;color:var(--washi2);font-size:min(13px,calc((100cqh - 32px) / (var(--n,12) * 1.08 + .1)))}
 .modecard small{white-space:nowrap;line-height:1.3;font-size:12px;color:var(--kin)}   /* 力士の札の称号と同じ：右に金の小さい字 */
-.modecard.main{flex-grow:1.9}
 /* 力士の列（部屋の力士・選出） */
 .slots{overflow:hidden}
 .slot{position:relative}
@@ -280,7 +279,7 @@ button{font:inherit;color:inherit;cursor:pointer}
    はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は下へ抜けて消える */
 .screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
 .screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
-.cols>.chosen::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--b-shuv) center/88% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
+.cols>.chosen::before{content:"";position:absolute;inset:0 -7%;z-index:-1;background:var(--b-shuv) center/100% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
 .cols>.chosen :is(span,small){color:var(--washi)}
 .screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
 .cols.leaving{animation:jolt .2s .12s both}
@@ -453,3 +452,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .odds h2 small{font-size:12px;color:var(--washi2);font-weight:500}
 .sheet .odds p{font-size:13px;line-height:1.75}
 .odds p b{color:var(--kin);font-weight:500;margin-right:8px;font-size:12px;letter-spacing:.1em}
+
+/* 縦の列の上をそろえる（11/26 しょーくん「上が揃ってない」）：筆の字（Yuji Syuku）は字の上に少しすきまがあるので、
+   となりの小さい字（Zen Kaku）と見た目の上がそろうように、大きい筆の字だけ少し上へ */
+.screen.v b.brush,.vs-who b,.stagename b,.ttl-gain b{margin-top:-.1em}
+/* 福箱：箱とボタンのまん中をそろえる（下の帯をなくしたので、ボタンも見出しの左の中だけで・11/26 しょーくん「ずれて見える」） */
+#s-fuku>.actions{grid-column:1}
+#s-fuku>.actions.pair .seal{font-size:16px;letter-spacing:.04em}
