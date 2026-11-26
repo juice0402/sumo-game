@@ -55,7 +55,6 @@ export const T = {
   dohyoPick: (name) => `土俵：${name}`,
   lockedLook: () => '見た目は福箱から出る',   // いくつあるかは出さない（11/26）
   look: { name: '名前', mise: '見た目' },
-  lockedName: (w, t) => (w || t ? '語と称号は福箱から出る（称号は取組でも）' : ''),
   titleGain: '称号を手に入れた',
   // 称号の手に入れ方（ui/titlelist.js）
   titleList: '称号の手に入れ方',

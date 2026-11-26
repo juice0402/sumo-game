@@ -3,14 +3,14 @@
 // 粒の絵は Codex の部品（A・assets/art/ki-*・福箱の fx-wisp・fx-leaf・fx-glint）。読みこむ前は、コードの線と四角（C）で描く。
 // 自然に見せるくふう（11/26 しょーくん「もっと自然に」）：粒の半分ほどは力士のうしろ（力士の形でかくす）・大きさと速さはばらばら・
 // ふわっと出てすっと消える・煙はひろがりながら上でゆっくり・花びらと紙は左右にゆれて裏返りながら落ちる・火の粉はまたたいて小さくなる・
-// 稲妻は2度光る・疾風は力士のまわりを奥と手前でぐるっと回る。
+// 稲妻は2度光る・疾風は横からの突風が力士の手前と奥をすりぬける（11/26「端でターンするのが変」→ 回らない）。
 import { AURAS } from '../data/auras.js';
 import { artImages } from './art.js';
 
 const MAX = 110;
 const R = Math.random;   // 見た目だけなので Math.random でよい
 const KI_IDS = ['ki-petal1', 'ki-petal2', 'ki-petal3', 'ki-conf-shu', 'ki-conf-ai', 'ki-conf-kin', 'ki-conf-midori', 'ki-conf-kinari',
-  'ki-ember1', 'ki-ember2', 'ki-bolt1', 'ki-bolt2', 'ki-wind1', 'ki-wind2', 'ki-gold', 'ki-steam', 'fx-wisp', 'fx-leaf1', 'fx-leaf2', 'fx-glint'];
+  'ki-ember1', 'ki-ember2', 'ki-bolt1', 'ki-bolt2', 'ki-wind1', 'ki-wind2', 'ki-steam', 'fx-wisp', 'fx-leaf1', 'fx-leaf2', 'fx-glint'];
 const CONF = ['ki-conf-shu', 'ki-conf-ai', 'ki-conf-kin', 'ki-conf-midori', 'ki-conf-kinari'];   // data/auras.js の紙吹雪の colors と同じ順
 let KI = null, kiLoad = null;
 function loadKi() { if (!kiLoad) kiLoad = artImages(KI_IDS).then((m) => { KI = m; }).catch(() => { kiLoad = null; }); }
@@ -39,7 +39,8 @@ function sprite(ctx, im, x, y, hh, rot = 0, sx = 1) {   // まん中 (x, y)・�
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 // 種類ごとの出る数（1秒）と、うしろに回る割合
-const KIND = { wisp: [9, 0.7], petal: [7, 0.5], confetti: [9, 0.45], spark: [18, 0.35], bolt: [4, 0.5], wind: [3.2, 0], gold: [14, 0.45] };
+// 光る物（火の粉・稲妻・金の粉ときらめき）は、明るい紙の上に重ねると穴のように見えるので、いつも力士のうしろ
+const KIND = { wisp: [9, 0.6], petal: [7, 0.5], confetti: [9, 0.45], spark: [18, 1], bolt: [2.5, 1], wind: [4, 0.5], gold: [14, 0.45] };
 
 export function createAura(id) {
   const A = AURAS[id];
@@ -52,17 +53,17 @@ export function createAura(id) {
   function spawn() {
     const k = A.kind, side = R() < 0.5 ? -1 : 1;
     const p = { t: 0, ph: R() * 6.28, f1: 1.2 + R() * 1.6, f2: 0.6 + R() * 1.2, s: 0.75 + R() * 0.55, pick: R(), back: R() < backRate, vu: 0, vv: 0 };
-    if (k === 'wisp') Object.assign(p, { u: side * (0.12 + R() * 0.33), v: 0.05 + R() * 0.35, vu: side * 0.03, vv: -(0.22 + R() * 0.16), life: 1.8 + R() * 0.8, rot: (R() - 0.5) * 0.6, vr: (R() - 0.5) * 0.4 });
-    else if (k === 'petal') Object.assign(p, { u: (R() - 0.5) * 1.4, v: -0.8 + R() * 0.35, vu: 0.05 + R() * 0.05, vv: 0.13 + R() * 0.08, life: 2.6 + R() * 0.8, rot: R() * 6.28, amp: 0.08 + R() * 0.07 });
-    else if (k === 'confetti') Object.assign(p, { u: (R() - 0.5) * 1.4, v: -0.85 + R() * 0.3, vu: (R() - 0.5) * 0.08, vv: 0.2 + R() * 0.12, life: 2.2 + R() * 0.6, rot: R() * 6.28, amp: 0.05 + R() * 0.05, c: A.colors[Math.floor(R() * A.colors.length)] });
+    if (k === 'wisp') Object.assign(p, { u: side * (0.15 + R() * 0.25), v: -0.15 + R() * 0.35, vu: side * 0.04, vv: -(0.2 + R() * 0.14), life: 2 + R() * 0.8, rot: (R() - 0.5) * 0.5, vr: (R() - 0.5) * 0.3, puff: R() < 0.25 });   // 肩やわきから立ちのぼる（ふわっとした湯気は4つに1つ）
+    else if (k === 'petal') Object.assign(p, { u: (R() - 0.5) * 1.5, v: -0.95 + R() * 0.35, vu: 0.04 + R() * 0.05, vv: 0.24 + R() * 0.08, life: 3.8 + R() * 0.8, rot: R() * 6.28, amp: 0.08 + R() * 0.07 });   // 上から力士の足もとまで
+    else if (k === 'confetti') Object.assign(p, { u: (R() - 0.5) * 1.5, v: -0.95 + R() * 0.3, vu: (R() - 0.5) * 0.08, vv: 0.3 + R() * 0.1, life: 3.4 + R() * 0.6, rot: R() * 6.28, amp: 0.05 + R() * 0.05, c: A.colors[Math.floor(R() * A.colors.length)] });
     else if (k === 'spark') Object.assign(p, { u: side * (0.05 + R() * 0.4), v: 0.25 + R() * 0.25, vu: side * (0.02 + R() * 0.1), vv: -(0.55 + R() * 0.45), life: 0.7 + R() * 0.6, big: R() < 0.3 });
     else if (k === 'bolt') Object.assign(p, { u: (R() - 0.5) * 0.8, v: (R() - 0.5) * 0.9, vv: -0.05, life: 0.25 + R() * 0.15, tiny: true });
-    else if (k === 'wind') Object.assign(p, { r: 0.55 + R() * 0.2, a0: R() * 6.28, life: 0.8 + R() * 0.4, dir: side, hv: (R() - 0.5) * 0.7 });
+    else if (k === 'wind') Object.assign(p, { dir: side, hv: (R() - 0.5) * 0.7, arc: (R() - 0.5) * 0.16, life: 0.55 + R() * 0.3 });   // 横からの突風（左右どちらから来るか・高さ・ゆるい弧）
     else if (k === 'gold') {
       const q = R();
-      if (q < 0.16) Object.assign(p, { leaf: true, u: (R() - 0.5) * 1.2, v: -0.7 + R() * 0.3, vu: 0.03, vv: 0.12 + R() * 0.05, life: 2.6, rot: R() * 6.28, amp: 0.06 });
-      else if (q < 0.26) Object.assign(p, { star: true, u: (R() - 0.5) * 1.0, v: (R() - 0.5) * 1.0, life: 0.45 });
-      else Object.assign(p, { u: side * R() * 0.45, v: 0.1 + R() * 0.4, vu: side * 0.02, vv: -(0.12 + R() * 0.1), life: 1.8 + R() * 0.6 });
+      if (q < 0.16) Object.assign(p, { leaf: true, u: (R() - 0.5) * 1.3, v: -0.9 + R() * 0.3, vu: 0.03, vv: 0.16 + R() * 0.05, life: 3.2, rot: R() * 6.28, amp: 0.06 });   // 金箔：前もうしろもひらひら
+      else if (q < 0.3) Object.assign(p, { star: true, back: true, u: (R() - 0.5) * 1.1, v: (R() - 0.5) * 1.1, life: 0.5 });   // きらっ
+      else Object.assign(p, { back: true, u: side * (0.1 + R() * 0.4), v: -0.1 + R() * 0.5, vu: side * 0.02, vv: -(0.1 + R() * 0.08), life: 1.8 + R() * 0.6 });   // 金の粉（小さなまたたき）
     }
     parts.push(p);
   }
@@ -71,13 +72,14 @@ export function createAura(id) {
     let u = su, v = -0.55;
     pts.push([u, v]);
     for (let i = 0; i < 5; i++) { u += s * (0.02 + R() * 0.05) * (i % 2 ? -1 : 1.6); v += 0.16 + R() * 0.05; pts.push([u, v]); }
-    parts.push({ boltPts: pts, su, sv: -0.05 + R() * 0.1, sc: 0.8 + R() * 0.35, s, t: 0, life: 0.34, back: R() < 0.5 });
+    parts.push({ boltPts: pts, su: s * (0.32 + R() * 0.16), sv: -0.05 + R() * 0.1, sc: 0.8 + R() * 0.35, s, t: 0, life: 0.34, back: true });   // 稲妻は力士のうしろ
   }
 
   // 1つの粒を描く（Codex の絵）
   function drawOne(ctx, p, cx, cy, h, alpha) {
     const k = A.kind, age = p.t / p.life;
-    const fade = smooth(0, 0.18, age) * (1 - smooth(0.6, 1, age));
+    // ふわっと出てすっと消える（落ちてくる花びら・紙・金箔は、足もとまで見えるよう消えはじめをおそく）
+    const fade = p.amp ? smooth(0, 0.08, age) * (1 - smooth(0.85, 1, age)) : smooth(0, 0.18, age) * (1 - smooth(0.6, 1, age));
     ctx.globalAlpha = alpha * fade;
     if (p.boltPts) {   // 2度光る（ピカッ → 消えかけて → もう一度）
       const a = age < 0.12 ? 1 : age < 0.22 ? 0.25 : age < 0.4 ? 0.9 : (0.9 * (1 - age)) / 0.6;
@@ -89,9 +91,9 @@ export function createAura(id) {
     }
     const x = cx + (p.u || 0) * h, y = cy + (p.v || 0) * h;
     if (k === 'wisp') {
-      const white = A.color === '#EEE9DE', id = p.pick < 0.55 ? 'fx-wisp' : 'ki-steam';
-      ctx.globalAlpha = alpha * fade * (white ? 0.5 : 0.45);
-      sprite(ctx, white ? KI[id] : tint(id, A.color), x, y, h * (id === 'fx-wisp' ? 0.24 : 0.14) * p.s * (0.6 + 0.9 * age), p.rot + p.vr * p.t);
+      const white = A.color === '#EEE9DE', id = p.puff ? 'ki-steam' : 'fx-wisp';
+      ctx.globalAlpha = alpha * fade * (p.puff ? 0.28 : white ? 0.5 : 0.42);
+      sprite(ctx, white ? KI[id] : tint(id, A.color), x, y, h * (p.puff ? 0.2 : 0.24) * p.s * (0.6 + (p.puff ? 1.4 : 0.9) * age), p.rot + p.vr * p.t);
     } else if (k === 'petal' || (k === 'gold' && p.leaf)) {
       const im = k === 'petal' ? KI['ki-petal' + (1 + Math.floor(p.pick * 3))] : KI[p.pick < 0.6 ? 'fx-leaf1' : 'fx-leaf2'];
       sprite(ctx, im, x, y, h * (k === 'petal' ? 0.07 : 0.08) * p.s, p.rot, Math.cos(p.t * p.f2 * 3 + p.ph));
@@ -103,30 +105,30 @@ export function createAura(id) {
       ctx.globalAlpha = alpha * fade * (0.7 + 0.3 * Math.sin(p.t * 35 + p.ph));
       sprite(ctx, KI[p.big ? 'ki-ember1' : 'ki-ember2'], x, y, h * (p.big ? 0.1 : 0.05) * p.s * (1 - 0.5 * age), Math.atan2(p.vv, p.vu) + Math.PI / 2);
       ctx.globalCompositeOperation = 'source-over';
-    } else if (k === 'bolt') {
+    } else if (k === 'bolt') {   // 体のまわりの小さなパチッ（ほぼたて向き）
       ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = alpha * fade * 0.6;
-      sprite(ctx, KI['ki-bolt2'], x, y, h * 0.1 * p.s, p.ph, p.pick < 0.5 ? -1 : 1);
+      ctx.globalAlpha = alpha * fade * 0.55;
+      sprite(ctx, KI['ki-bolt2'], x, y, h * 0.07 * p.s, (p.pick - 0.5) * 0.6, p.pick < 0.5 ? -1 : 1);
       ctx.globalCompositeOperation = 'source-over';
-    } else if (k === 'wind') {   // 力士のまわりを回る筆の風（奥は小さく）
-      const a = p.a0 + p.dir * age * 1.9, rx = p.r * h * 0.6, ry = p.r * h * 0.16, far = Math.sin(a) < 0;
-      const tx = -Math.sin(a) * rx * p.dir, ty = Math.cos(a) * ry * p.dir;
-      ctx.globalAlpha = alpha * Math.sin(age * Math.PI) * (far ? 0.45 : 0.7);
-      const im = KI[p.pick < 0.5 ? 'ki-wind1' : 'ki-wind2'];
+    } else if (k === 'wind') {   // 横からの突風：片方から入って、力士の手前か奥をすりぬけて反対へ抜ける（向きは変えない）
+      const e = age * age * (3 - 2 * age), u = p.dir * (-1.05 + 2.1 * e), lift = p.arc * Math.sin(age * Math.PI);
+      const im = KI[p.pick < 0.5 ? 'ki-wind1' : 'ki-wind2'], hh = h * 0.11 * p.s * (p.back ? 0.88 : 1);
+      ctx.globalAlpha = alpha * Math.sin(age * Math.PI) * (p.back ? 0.5 : 0.75);
       ctx.save();
-      ctx.translate(cx + Math.cos(a) * rx, cy + p.hv * h + Math.sin(a) * ry);
-      ctx.rotate(Math.atan2(ty, tx));
-      const hh = h * 0.12 * (far ? 0.85 : 1), w = ((hh * im.width) / im.height) * (0.7 + 0.6 * age);
+      ctx.translate(cx + u * h, cy + (p.hv - lift) * h);
+      ctx.rotate(-p.dir * p.arc * Math.cos(age * Math.PI) * 1.4);
+      const w = ((hh * im.width) / im.height) * (0.8 + 0.5 * Math.sin(age * Math.PI));
+      ctx.scale(p.dir, 1);
       ctx.drawImage(im, -w / 2, -hh / 2, w, hh);
       ctx.restore();
     } else if (k === 'gold') {
       ctx.globalCompositeOperation = 'lighter';
       if (p.star) { ctx.globalAlpha = alpha * Math.sin(age * Math.PI); sprite(ctx, KI['fx-glint'], x, y, h * 0.14 * Math.sin(age * Math.PI)); }
-      else { ctx.globalAlpha = alpha * fade * (0.6 + 0.4 * Math.sin(p.t * 12 + p.ph)); sprite(ctx, KI['ki-gold'], x, y, h * 0.09 * p.s, p.ph); }
+      else { const tw = Math.max(0, Math.sin(p.t * (6 + p.f1 * 3) + p.ph)); ctx.globalAlpha = alpha * fade * tw; sprite(ctx, KI['fx-glint'], x, y, h * 0.05 * p.s * (0.6 + 0.4 * tw)); }
       ctx.globalCompositeOperation = 'source-over';
     }
   }
-  const isBack = (p) => (A.kind === 'wind' && !p.boltPts ? Math.sin(p.a0 + p.dir * (p.t / p.life) * 1.9) < 0 : p.back);
+  const isBack = (p) => p.back;
 
   // 絵を読みこむ前：コードの線と四角
   function drawPlain(ctx, cx, cy, h, alpha) {
@@ -141,9 +143,9 @@ export function createAura(id) {
         p.boltPts.forEach(([u, v], i) => (i ? ctx.lineTo(cx + u * h, cy + v * h) : ctx.moveTo(cx + u * h, cy + v * h)));
         ctx.stroke();
       } else if (A.kind === 'wind') {
-        const a = p.a0 + p.dir * age * 1.9;
+        const u = p.dir * (-1.05 + 2.1 * age);
         ctx.lineWidth = h * 0.018;
-        ctx.beginPath(); ctx.ellipse(cx, cy + p.hv * h, p.r * h * 0.6, p.r * h * 0.16, 0, a, a + p.dir * 0.9, p.dir < 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + (u - p.dir * 0.25) * h, cy + p.hv * h); ctx.lineTo(cx + u * h, cy + p.hv * h); ctx.stroke();
       } else {
         const s = h * (A.kind === 'wisp' ? 0.05 : 0.025) * p.s;
         ctx.fillRect(cx + p.u * h - s / 2, cy + p.v * h - s / 2, s, s);
