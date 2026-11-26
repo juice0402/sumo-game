@@ -30,7 +30,8 @@ export function thumbAuraBox(auraCv, cv, pts) {
     const a = auraCv.getBoundingClientRect(), c = cv.getBoundingClientRect(), b = thumbBox(cv, pts);
     if (!c.width) return null;
     const k = c.width / (cv.clientWidth || 1);   // 跳ねる動き（transform）で大きさが変わる分
-    return { x: c.left - a.left + b.x * k, y: c.top - a.top + b.y * k, h: b.h * k };
+    // mask：力士の絵の canvas の場所（うしろの気の粒を、力士の形でかくす）
+    return { x: c.left - a.left + b.x * k, y: c.top - a.top + b.y * k, h: b.h * k, mask: { img: cv, x: c.left - a.left, y: c.top - a.top, w: c.width, h: c.height } };
   };
 }
 

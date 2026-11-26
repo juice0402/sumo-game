@@ -10,6 +10,11 @@
 | fuku-knot1・fuku-knot2・fuku-knot3・fuku-tassel・fuku-cord | 福箱の紐：紫の組紐の飾り結び（結んだ・ゆるんだ・ほどけた）・房・まっすぐな紐（くり返しの長さ 60px×4 で切った） | A | Codex・2026-11-26 | requests/sumo/fukubako-himo.md（枝 art/sumo-fukubako-himo） |
 | fx-smoke・fx-wisp・fx-ray・fx-leaf1・fx-leaf2・fx-glint | 福箱を開ける演出：白い煙・煙の筋・光の筋・金箔2つ・きらめき（黒の地を明るさですけさせた） | A | Codex・2026-11-26 | requests/sumo/fukubako-fx.md（枝 art/sumo-fukubako-fx） |
 | tex-washi・tex-kinpaku・tex-suminagashi | 紙質のテクスチャ：和紙・金箔・墨流し（つなぎ目なし・2×2 で確かめた・448px に小さく） | A | Codex・2026-11-26 | requests/sumo/kamishitsu-1.md の1〜3段（枝 art/sumo-kamishitsu-1） |
+| tex-hanshi・tex-wara・tex-sakura・tex-wakakusa・tex-ai | 紙質のテクスチャ：半紙・藁半紙・桜・若草・藍（藁半紙〜藍は色だけ data/papers.js の地の色に合わせた＝`tint=#…`・繊維の明るさはそのまま） | A | Codex・2026-11-26 | requests/sumo/kamishitsu-2.md の1〜5段（枝 art/sumo-kamishitsu-2） |
+| tex-asanoha・tex-seigaiha・tex-ichimatsu・tex-shinbun・tex-kira | 紙質のテクスチャ：麻の葉・青海波・市松・新聞紙・雲母刷り（青海波は `--period` でくり返しの長さに切った。麻の葉は線がずれていくので、2周期ぶん 314×524 をつなぎ目がいちばん目立たない所 (388,396) から切った。藁半紙・青海波・新聞紙・麻の葉は 384px・品質62〜66） | A | Codex・2026-11-26 | requests/sumo/kamishitsu-3.md の1〜5段（枝 art/sumo-kamishitsu-3） |
+
+| ki-petal1〜3・ki-conf-shu・ki-conf-ai・ki-conf-kin・ki-conf-midori・ki-conf-kinari | 気の粒：桜の花びら3つ・和紙の紙吹雪5色（緑の地を抜いた・`grid --cols 4`） | A | Codex・2026-11-26 | requests/sumo/ki-1.md（枝 art/sumo-ki-1） |
+| ki-ember1・ki-ember2・ki-bolt1・ki-bolt2・ki-wind1・ki-wind2・ki-steam | 気の粒：火の粉2つ・筆の稲妻2つ・疾風の筆の筋2つ・湯気（金の粉 ki-gold は糸のように見えたので使わず、金の気は福箱のきらめきで）（黒の地を明るさですけさせた・`fx --cols 4`） | A | Codex・2026-11-26 | requests/sumo/ki-2.md（枝 art/sumo-ki-2） |
 
 - ほかの絵（番付表の画面・筆・土俵・紙のもよう）はコードで描く C
-- 紙質のテクスチャはこれから何日かに分けて頼む（のこり10種：半紙・藁半紙・桜・若草・藍・麻の葉・青海波・市松・新聞紙・雲母刷り）。テクスチャがない紙質はコードのもよう
+- 紙質13種はぜんぶ Codex のテクスチャ（読みこむ前はコードのもよう）

@@ -2,7 +2,7 @@
 import { T } from '../data/text.js';
 import { SHIKONA } from '../data/shikona.js';
 import { TITLES } from '../data/titles.js';
-import { shikonaText, titleText, wordText, randomShikona } from '../game/names.js';
+import { shikonaText, titleText, wordText } from '../game/names.js';
 import { PAPERS } from '../data/papers.js';
 import { AURAS } from '../data/auras.js';
 import { drawShapeThumb, thumbAuraBox } from './pick.js';
@@ -119,7 +119,6 @@ export function initEdit(cb) {
     for (const b of tabs) b.setAttribute('aria-pressed', String(b.dataset.t === t));
     for (const el of document.querySelectorAll('#ed-roller .rl-name')) el.hidden = t !== 'name';
     for (const el of document.querySelectorAll('#ed-roller .rl-mise')) el.hidden = t !== 'mise';
-    document.getElementById('ed-rand').hidden = t !== 'name';
     document.getElementById('ed-titles').hidden = t !== 'name';
     if (t === 'mise') setMise(); else setRollers();
   }
@@ -134,21 +133,9 @@ export function initEdit(cb) {
   function setRollers() {
     const s = cb.getSlot(idx), has = cb.getOwned();
     for (const g in rollers) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
-    const locked = SHIKONA.kami.filter((w) => !has.has(w.id)).length + SHIKONA.shimo.filter((w) => !has.has(w.id)).length;
-    const lockedT = TITLES.filter((t) => !has.has(t.id)).length;
-    document.getElementById('ed-locked').textContent = T.lockedName(locked, lockedT);
+    document.getElementById('ed-locked').textContent = '';   // 名前のときは「称号の手に入れ方」だけ（11/26 しょーくん「左の説明はいらない」）
   }
 
-  // おまかせ：3つのドラムがスロットのようにまわって止まる
-  document.getElementById('ed-rand').addEventListener('click', () => {
-    const s = cb.getSlot(idx);
-    s.shikona = randomShikona(Math.random, cb.getOwned());
-    rollers.kami.roll(s.shikona[0]);
-    rollers.tsunagi.roll(s.shikona[1]);
-    rollers.shimo.roll(s.shikona[2]);
-    paintName();
-    cb.onChange(idx);
-  });
   document.getElementById('ed-recut').addEventListener('click', () => cb.onRecut(idx));
   document.getElementById('ed-done').addEventListener('click', () => { clearTimeout(saveT); cb.onChange(idx); cb.onDone(); });
   // 引退は2回押す（確かめの窓は、試しのページの中では出せないことがあるため）

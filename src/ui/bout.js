@@ -149,7 +149,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       vs, vsAt, vsOutAt: vsAt + vsLen - (short ? 0.14 : 0.22), vsEnd: vsAt + vsLen, vsIn: false, vsOut: false, vsGone: false,
       sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
-      auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], idle3d: false,
+      auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], outlines: [la.outline, lb.outline], idle3d: false,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
       t: 0, last: performance.now(), play: false, idx: 0, hold: 0, endHold: 0,
       firstHit: true, prevTouch: 0, prevTon: 0, ended: false, shown: false, went: false, kima: null,
@@ -323,7 +323,10 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
         const bx = s.boxes[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2], c = Math.cos(rz), sn = Math.sin(rz);
         const wx = x + bx.cx * c - bx.cy * sn, wy = y + bx.cx * sn + bx.cy * c;
         const q = stage.project(wx, wy), q2 = stage.project(wx, wy + bx.h / 2);
-        auraDraw.push({ a: au, x: q[0], y: q[1], h: Math.hypot(q2[0] - q[0], q2[1] - q[1]) * 2 });
+        // 紙の形を画面に写す（うしろの気の粒を、力士の形でかくす）
+        const ol = s.outlines[i], poly = new Array(ol.length);
+        for (let j = 0; j < ol.length; j++) { const p = ol[j]; poly[j] = stage.project(x + p[0] * c - p[1] * sn, y + p[0] * sn + p[1] * c); }
+        auraDraw.push({ a: au, x: q[0], y: q[1], h: Math.hypot(q2[0] - q[0], q2[1] - q[1]) * 2, poly });
       }
     }
     const r = s.bout.result;
