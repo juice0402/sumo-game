@@ -23,6 +23,8 @@ import { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } f
 import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
+import { loadPaperTextures } from './papertex.js';
+import { initTitleList } from './titlelist.js';
 import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
@@ -94,6 +96,7 @@ function loadLibs() {
         const el = document.getElementById('lib-sfx');
         if (el) { window.SUMO_SFX = JSON.parse(el.textContent); el.remove(); sfxReady(); }
       } catch (e) { /* 音なしで続ける */ }
+      loadPaperTextures();   // 紙質のテクスチャ（Codex の絵・タイトルの間に読む。読む前はコードのもよう）
     })
     .then(() => run('lib-rapier'))
     .then(() => pause().then(() => unpackLib('lib-wasm')))
@@ -283,6 +286,8 @@ function boot() {
       }, state.short);
     },
   });
+  const titleList = initTitleList({ getOwned: () => ownedItems(state) });
+  document.getElementById('ed-titles').addEventListener('click', () => titleList.open());
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
     getOwned: () => ownedItems(state),

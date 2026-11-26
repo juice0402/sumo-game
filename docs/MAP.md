@@ -4,7 +4,7 @@
 
 ## ビルドと点検
 - はじめに `npm ci`（物理 @dimforge/rapier2d-deterministic-compat 0.21.0 と 3D の three 0.160.1。three は UMD の build/three.min.js をそのまま入れて window.THREE）
-- `node tools/build.mjs [--artifact 出力.html]` → index.html（約1.75MB。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。`--artifact` は試しのページ用（head なし）
+- `node tools/build.mjs [--artifact 出力.html]` → index.html（約1.75MB。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。絵 assets/art/*.webp は base64 で絵ごとの script（`art-<名前>`）に入り、ui/art.js が使うときに1枚ずつ画像にする（画像にしたら script は消す）。`--artifact` は試しのページ用（head なし）
 - `node tools/test.mjs` → だめな所だけ出して最後に「OK（指紋 ……）」
 - `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--write]` → 相性表（`--write` で docs/balance.md）
 - `node tools/bout-sheet.mjs <左id> <右id> [シード] [出力.svg] [--set key=value]` → 1番をこま割りの絵に（物理の調整用。`rsvg-convert` で png に）
@@ -21,7 +21,8 @@
 | data/titles.js | 称号（「id:字」・27こ）と手に入れ方：はじめから TITLE_START・実績 TITLE_ACH（12こ・説明と数字 TITLE_NUM・番付 TITLE_RANK）・のこり14こは福箱（data/fukubako.js の FUKU_TIERS.title） |
 | data/banzuke.js | 番付の帯とレート（仮：1500 で序ノ口・100 ごと・2400 で横綱・Elo K=32） |
 | data/fukubako.js | 福箱の決まりと数字（小判：勝ち30・負け10・その日の初勝利+100・箱300／段：並70・上20・特上9・極1／称号・紙質・気・土俵の段・語の段）。中身は見た目だけ・小判や箱は入れない |
-| data/papers.js | 力士の紙質（地の色・すじ・もよう）。PAPER_DEFAULT＝和紙 |
+| data/papers.js | 力士の紙質（地の色・すじ・もよう・tex＝Codex のテクスチャの名前と texSpan）。PAPER_DEFAULT＝和紙 |
+| data/fukuart.js | 福箱の絵（Codex）の名前と寸法（上の面のかど・結び目・本体とふたの位置・紐と房の倍率） |
 | data/auras.js | 気（オーラ）の種類と色。AURA_DEFAULT＝なし |
 | data/look.js | 演出の数字（旋回・カメラ・紙の厚み・スロー）。物理にさわらないので CONFIG_VERSION は上げない |
 | data/kimarite.js | 決まり手（取組の記録から決める・見た目だけ）。数字は KIMARITE |
@@ -48,7 +49,10 @@
 | ui/roster.js | 部屋の力士（3枠のカード renderSlots）・力士の編集（称号｜上の句・つなぎ・下の句をくるくるで選ぶ・まわすと名前がそのまま変わる・保存は止まって0.3秒後・おまかせはスロットのようにまわる・切り直す・引退は2回押す）。「名前／見た目」の切りかえ：見た目＝紙質と気のくるくる（持っている物だけ） |
 | （縦の字の大きさ） | 番付表の縦の字は、入れ物（見出し h1・主役 .hero・列 .cols>*・土俵巡業の札 に container-type:size）の高さ 100cqh と字の数 --n から大きさを決める＝どの画面の高さでも1列に収まる。字を入れるときは roster.js の fitText・setN・headText（見出し）で --n を。ならんだ物（力士の札・福箱の帯・取組の上の名前・カットインの東西・くるくるの列）は、いちばん長いものに合わせて同じ大きさ（roster.js の sameSize など・11/26「統一感」） |
 | ui/roller.js | くるくる（たての一覧を指でまわし、真ん中の行に止める＝scroll-snap）。createRoller(列, onPick) → set(語, いまの id)・roll(id)。真ん中は横いっぱいの朱の帯（style.css「くるくる」） |
-| ui/fuku.js | 福箱の画面（箱をゆらす → 朱の筆で切る → 紙がさける → 中身・段の判子）と「出る物と確率」・土俵の小さな見本 drawDohyoSwatch |
+| ui/fuku.js | 福箱の画面（箱は ui/fukubox.js → 中身・段の判子）と「出る物と確率」・土俵の小さな見本 drawDohyoSwatch |
+| ui/fukubox.js | 福箱の箱（11/26・Codex の絵）：金の漆の箱に紫の組紐（まっすぐな紐の絵を箱の面に沿った線に並べ、箱の形で切る）。play：ゆれる → 結び目がゆるむ → 紐が結び目へ引かれて落ちる → ふたが抜ける → 光の筋・煙・金箔・きらめき（PERIOD の end で中身・fxEnd で止まる）。段では変えない |
+| ui/titlelist.js | 称号の手に入れ方（編集の「称号の手に入れ方」から・シート s-titles）：持っている＝名前、持っていない＝？？？。取組の実績は条件、福箱は段だけ |
+| ui/art.js | 絵（script の art-<名前>）を使うときに1枚ずつ blob URL の画像に・decode でほどいてから渡す（artImage・artImages） |
 | ui/match.js | 土俵巡業の予定・番付（本場所）・土俵えらび（initDohyoPick：番付の「土俵：○○」から・挿し絵つき・本場所の土俵スキン）・力士選出（相手は取組まで「？」・上に部屋の番付・レート・勝敗） |
 | ui/cut.js | 切る画面（show(形, { demo }) で、はじめての人に人の形 OTEHON を型抜きの点線で出す。描いている間も消さない・はじまりは朱の丸と「ここから」・向きの矢じるし） |
 | ui/pick.js | 稽古：相手をえらぶ画面（CPU 5体・全員と取る ●○） |
@@ -59,7 +63,7 @@
 | ui/sound.js | 効果音（Web Audio）。unlockAudio（最初のタップ）・playSfx・setMuted |
 | ui/tools.js | 道具（指紋・相性表・動きの切りかえ）。音と演出の切りかえと「はじめての流れを見る／前の保存にもどす」は app.js |
 | ui/ink.js | 墨・和紙の描きかた |
-| ui/papertex.js | 紙質と土俵のもようのタイル（paperFill・patternFill）。見た目だけ |
+| ui/papertex.js | 紙質と土俵のもようのタイル（paperFill・patternFill）。紙質に tex があれば Codex のテクスチャ（loadPaperTextures でタイトルの間に読む）、なければ・読む前はコードのもよう。見た目だけ |
 | ui/aura.js | 気を描く（createAura：取組の fx の上・auraPreview：部屋・編集・福箱の見本）。見た目だけ |
 | ui/btnart.js | ボタンの絵（朱の筆の帯・和紙の筆の帯・字の下の筆の線・筆の輪）を SVG で作って CSS の変数 --b-… に入れる。ピルの形にしない |
 | ui/page.html・ui/style.css | 画面のもと・見た目。部屋などの画面は案A「番付表」（`.screen.v`＝右に縦の見出し・`.hero`・`.frame2`＝二重の罫・`.cols`＝右から縦の列・`.fit`＝字の数で大きさを合わせる・いまの／主＝縦の朱の帯）。動き：画面を開くと app.js の enter が `--i` をふって、列が右から順にシュッと入る（筆の音つき）・選出は朱の判子「出」 |
@@ -74,10 +78,13 @@
 
 ## assets/
 - sfx/*.mp3：効果音7つ（koe-irai の sfx/・出どころは docs/sounds.md）
+- art/*.webp：Codex の絵（福箱の箱・紐・開ける演出・紙質のテクスチャ）。一覧と出どころは docs/art.md。切り方 `python3 -I tools/art_cut.py <PNG> <型> <名前…>`（型：row3・himo・fx・tex）
 
 ## 自動で作るファイル（読まない）
 - index.html・docs/balance.md・node_modules/・package-lock.json
 
 ## 軽さの記録（code-rules C・CPU ×4 の headless Chrome・3回の中ほど）
+- 11/26 福箱の絵（Codex 17枚）を足して index.html 1.84 → 2.51MB → 同じ日の軽量化で 2.28MB：絵を品質74〜76・すけ具合70で入れなおし、結び目・房・紐は描く大きさに合わせて小さく（490 → 316KB）・テクスチャは 448px 品質70。絵は1枚ずつの script（大きな JSON を読まない・画像にしたら消す）・decode してから描く・福箱は待ちの箱を先に、開ける演出の絵はあとから読む・福箱の canvas は細かさ2倍まで。開ける動き（CPU ×4）：1こま 約28 → 約20ms・固まり 2〜9回（最大110ms）→ 2回（最大70ms）・JS のメモリ 22 → 21MB
+- 中身の内わけ（2.28MB）：物理の wasm 1.23MB・絵 0.42MB・ゲームのコード 0.26MB・three 0.22MB・効果音 0.07MB・物理の JS 0.05MB・CSS 0.04MB（wasm を別ファイルにするかは工房に入れる前に司令塔と相談）
 - 11/25 軽量化：index.html 4.39 → 1.75MB／タイトルが出るまで 約1000 → 約650ms／物理と3Dの用意まで 約1050 → 約850ms／いちばん長い固まり 約220 → 約140ms／メモリ 17 → 11MB／旋回中の1こまの描画 22 → 12回（影は物が動いたときだけ）／結果が出てからの描画 毎秒約240回 → 0（大きさが変わったら1こまだけ）
 - fps は headless だと画面描きがソフト（SwiftShader）なので目安にならない。くらべるのは描画の回数と固まりの長さ

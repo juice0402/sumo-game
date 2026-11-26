@@ -1,5 +1,5 @@
 // 福箱の画面（11/26 しょーくん）：小判で買って開ける・出る物と確率の一覧。
-// 開け方は「和紙で包んだ箱をゆらす（太鼓）→ 朱の筆で切る → 紙が左右にさける → 中身」。スロットやパチンコには似せない（game-art-rule.md）
+// 開け方は「金の漆の箱がゆれる（太鼓）→ 紫の組紐がしゅるっとほどける → ふたが浮いて抜ける → 中身」（11/26・箱は ui/fukubox.js）。スロットやパチンコには似せない（game-art-rule.md）
 // 引いた物は、動きの前に保存する（とちゅうで閉じてもなくならない）。中身は見た目だけ。
 import { T } from '../data/text.js';
 import { KOBAN, KINDS } from '../data/fukubako.js';
@@ -12,6 +12,7 @@ import { patternFill } from './papertex.js';
 import { setupCanvas } from './ink.js';
 import { fitText } from './roster.js';
 import { playSfx } from './sound.js';
+import { createFukuBox } from './fukubox.js';
 
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
 const pct = (x) => `${x.toFixed(2)}%`;
@@ -41,12 +42,14 @@ export function initFuku(cb) {
   const $ = (id) => document.getElementById(id);
   const box = $('fk-box'), reveal = $('fk-reveal'), openBtn = $('fk-open');
   const cv = $('fk-cv'), auraCv = $('fk-aura'), fxCv = $('fk-fx');
+  const fbox = createFukuBox(box);
   let busy = false, prev = null, fx = null, timers = [];
   const later = (ms, f) => timers.push(setTimeout(f, ms));
   function stopAll() {
     timers.forEach(clearTimeout); timers = [];
     if (prev) { prev.stop(); prev = null; }
     if (fx) { fx.stop(); fx = null; }
+    fbox.stop();
     busy = false;
   }
   function shape(st) { const s = st.slots[st.active]; return s ? s.shape : OTEHON.pts; }
@@ -84,19 +87,14 @@ export function initFuku(cb) {
     busy = true;
     reveal.hidden = true;
     box.hidden = false;
-    box.className = 'fkbox';
-    void box.offsetWidth;
-    const short = cb.getShort && cb.getShort();
-    const t0 = short ? 0 : 900;
-    if (!short) {   // ゆれる・太鼓3つ
-      box.classList.add('shake');
-      [0, 300, 600].forEach((ms, i) => later(ms, () => playSfx('taiko', { vol: 0.45 + i * 0.12, rate: 1 + i * 0.04 })));
-    }
-    later(t0, () => { box.classList.add('cut'); playSfx('sumi', { vol: 0.7 }); });
-    later(t0 + 200, () => { box.classList.add('open'); playSfx('kami', { vol: 0.85 }); });
-    later(t0 + 560, () => {
-      box.hidden = true;
-      reveal.hidden = false;
+    const short = (cb.getShort && cb.getShort()) || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const { P, done } = fbox.play(short);
+    if (!short) [0, 300, 600].forEach((ms, i) => later(ms, () => playSfx('taiko', { vol: 0.45 + i * 0.12, rate: 1 + i * 0.04 })));   // ゆれる・太鼓3つ
+    later(P.p0, () => playSfx('kami', { vol: 0.7, rate: 1.15 }));   // 紐がしゅるっ
+    later(P.l0, () => playSfx('sumi', { vol: 0.6 }));               // ふたが抜ける
+    done.then(() => {
+      if (!busy) return;
+      reveal.hidden = false;   // 箱はうすれながら、煙と金箔がうしろに少し残る（ui/fukubox.js）
       reveal.classList.remove('in');
       void reveal.offsetWidth;
       reveal.classList.add('in');
@@ -165,8 +163,8 @@ export function initFuku(cb) {
       stopAll();
       sheet.hidden = true;
       box.hidden = false;
-      box.className = 'fkbox';
       reveal.hidden = true;
+      fbox.idle();
       paint();
     },
   };
