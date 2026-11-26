@@ -91,7 +91,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
 
   // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub, rank }）,
   //        onResult(結果, 決まり手)→ひとこと か { text, titles（新しく手に入れた称号の字） },
-  //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ） }
+  //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ）,
+  //        venue（本場所の会場の飾り＝番付の順 0〜9・なしは -1） }
   function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
@@ -108,6 +109,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     }
     const look = opt.look || S.look;   // 本場所は、えらんだ土俵スキン（見た目だけ・物理は S.phys のまま）
     if (curLook !== look) { stage.setDohyo(look); curLook = look; }
+    stage.setVenue(typeof opt.venue === 'number' ? opt.venue : -1);   // 本場所の会場の飾り（番付で増える・見た目だけ）
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);

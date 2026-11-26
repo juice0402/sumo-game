@@ -5,6 +5,7 @@ import { paperFill, patternFill } from './papertex.js';
 import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
 import { LOOK } from '../data/look.js';
 import { PAPER } from '../data/config.js';
+import { buildVenue } from './venue.js';
 
 const D2R = Math.PI / 180;
 
@@ -155,6 +156,18 @@ export function createStage(cv, P) {
     shadowDirty();
   }
 
+  // 本場所の会場の飾り（ui/venue.js・見た目だけ）。lv＝番付の順（0 序ノ口〜9 横綱）・-1 なし。同じ番付なら作りなおさない
+  let venue = null, venueLv = -1;
+  function setVenue(lv) {
+    if (lv === venueLv) return;
+    if (venue) { scene.remove(venue); venue.userData.free(); venue = null; }
+    venueLv = lv;
+    if (lv < 0) return;
+    venue = buildVenue(THREE, lv);
+    venue.position.y = dohyo.userData.floor.position.y;
+    scene.add(venue);
+  }
+
   function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -195,6 +208,7 @@ export function createStage(cv, P) {
       m.rotation.z = rz;
     }
     dohyo.userData.floor.position.y = -P.ringDepth - ry; // 床は動かない（土俵だけがトンと上がる）
+    if (venue) venue.position.y = -P.ringDepth - ry;      // 会場の飾りも床といっしょ
   }
 
   function resize() {
@@ -231,7 +245,7 @@ export function createStage(cv, P) {
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };
