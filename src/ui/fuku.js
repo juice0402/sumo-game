@@ -5,7 +5,7 @@ import { T } from '../data/text.js';
 import { KOBAN, KINDS } from '../data/fukubako.js';
 import { DOHYO } from '../data/dohyo.js';
 import { OTEHON } from '../data/cpu-shapes.js';
-import { FUKU_ITEMS, fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } from '../game/fukubako.js';
+import { fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } from '../game/fukubako.js';
 import { drawShapeThumb, thumbAuraBox } from './pick.js';
 import { auraPreview } from './aura.js';
 import { patternFill } from './papertex.js';
@@ -13,8 +13,7 @@ import { setupCanvas } from './ink.js';
 import { fitText } from './roster.js';
 import { playSfx } from './sound.js';
 
-const KIND_ORDER = ['word', 'paper', 'aura', 'dohyo'];
-const SHORT = { word: '四股名' };   // 下の帯は短く
+const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
 const pct = (x) => `${x.toFixed(2)}%`;
 
 // 土俵の小さな見本（上の面・墨の輪・仕切り線と、横の面）
@@ -56,21 +55,7 @@ export function initFuku(cb) {
   function paint() {
     const st = cb.getState(), owned = ownedItems(st);
     $('fk-koban').textContent = T.koban(st.koban);
-    // 種類ごとの、持っている数／ぜんぶ（そろえても、ごほうびはない＝コンプガチャにしない）
-    const kinds = $('fk-kinds');
-    kinds.textContent = '';
-    for (const k of KIND_ORDER) {
-      const all = FUKU_ITEMS.filter((it) => it.kind === k);
-      const d = document.createElement('div');
-      const b = document.createElement('b');
-      b.className = 'brush';
-      const n = document.createElement('span');   // 「12／64」：数字は縦中横で
-      const num = (x) => { const i = document.createElement('i'); i.textContent = String(x); return i; };
-      n.append(num(all.filter((it) => owned.has(it.id)).length), '／', num(all.length));
-      d.append(b, n);
-      kinds.appendChild(d);
-      fitText(b, SHORT[k] || KINDS[k]);
-    }
+    // 福箱の画面は、箱と「出る物と確率」「開ける」だけ（持っている数・ぜんぶの数は出さない＝開けてのおたのしみ・11/26 しょーくん）
     const left = fukuOdds(owned).left;
     openBtn.disabled = !left || st.koban < KOBAN.price;
     openBtn.textContent = !left ? T.fukuDone : st.koban < KOBAN.price ? T.fukuShort : T.fukuOpen(KOBAN.price);
@@ -145,9 +130,6 @@ export function initFuku(cb) {
     const { rows } = fukuOdds(ownedItems(cb.getState()));
     const body = $('od-list');
     body.textContent = '';
-    const note = (t) => { const p = document.createElement('p'); p.textContent = t; body.appendChild(p); };
-    note(T.fukuNote);
-    note(T.fukuOddsNote);
     for (const r of rows) {
       const sec = document.createElement('section');
       sec.className = 'odds';
@@ -162,16 +144,14 @@ export function initFuku(cb) {
       sub.textContent = r.items.length ? `${r.items.length}種・1つ ${pct(r.rate / r.items.length)}` : T.fukuDone;
       h.append(stamp, rate, sub);
       sec.appendChild(h);
-      // 四股名の語は、上の句と下の句で分けて（同じ字の語が両方にあるため）
-      const groups = [['上の句', (it) => it.kind === 'word' && it.part === 'kami'], ['下の句', (it) => it.kind === 'word' && it.part === 'shimo']]
-        .concat(KIND_ORDER.slice(1).map((k) => [KINDS[k], (it) => it.kind === k]));
-      for (const [label, f] of groups) {
-        const its = r.items.filter(f);
-        if (!its.length) continue;
+      // 種類ごとの数と確率だけ（名前は出さない＝何が入っているかは開けてのおたのしみ・11/26 しょーくん）
+      for (const k of KIND_ORDER) {
+        const n = r.items.filter((it) => it.kind === k).length;
+        if (!n) continue;
         const p = document.createElement('p');
         const kb = document.createElement('b');
-        kb.textContent = `${label} ${its.length}`;
-        p.append(kb, document.createTextNode(its.map((it) => it.name || T.rollNone).join('・')));
+        kb.textContent = `${KINDS[k]} ${n}`;
+        p.append(kb, document.createTextNode(pct((r.rate * n) / r.items.length)));
         sec.appendChild(p);
       }
       body.appendChild(sec);

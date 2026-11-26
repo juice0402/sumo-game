@@ -4,7 +4,8 @@ import { SHIKONA, SHIKONA_START } from '../data/shikona.js';
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
 import { AURAS, AURA_DEFAULT } from '../data/auras.js';
 import { DOHYO } from '../data/dohyo.js';
-import { wordText } from './names.js';
+import { TITLE_START } from '../data/titles.js';
+import { wordText, titleText } from './names.js';
 
 // 出る物ぜんぶ：{ id, kind, tier, name }
 export const FUKU_ITEMS = [];
@@ -15,7 +16,7 @@ for (const g of ['kami', 'shimo']) {
     if (tier) FUKU_ITEMS.push({ id: w.id, kind: 'word', tier, name: wordText(w.id), part: g });
   }
 }
-for (const kind of ['paper', 'aura', 'dohyo']) {
+for (const kind of ['title', 'paper', 'aura', 'dohyo']) {
   for (const tier in FUKU_TIERS[kind]) {
     for (const id of FUKU_TIERS[kind][tier]) FUKU_ITEMS.push({ id, kind, tier, name: itemName(id, kind) });
   }
@@ -27,6 +28,7 @@ export function itemName(id, kind = BY_ID[id] && BY_ID[id].kind) {
   if (kind === 'paper') return PAPERS[id] ? PAPERS[id].name : '';
   if (kind === 'aura') return AURAS[id] ? AURAS[id].name : '';
   if (kind === 'dohyo') { const d = DOHYO[id.slice(2)]; return d ? d.name : ''; }
+  if (kind === 'title') return titleText(id);
   return wordText(id);
 }
 export function fukuItem(id) { return BY_ID[id] || null; }
@@ -35,7 +37,7 @@ export function kindName(kind) { return KINDS[kind] || ''; }
 
 // 持っている物（はじめから持っている物＋手に入れた物）
 export function ownedItems(state) {
-  return new Set([...SHIKONA_START, PAPER_DEFAULT, AURA_DEFAULT, ...(state.words || []), ...(state.items || [])]);
+  return new Set([...SHIKONA_START, TITLE_START, PAPER_DEFAULT, AURA_DEFAULT, ...(state.words || []), ...(state.titles || []), ...(state.items || [])]);
 }
 export function ownedPapers(state) { const o = ownedItems(state); return Object.keys(PAPERS).filter((id) => o.has(id)); }
 export function ownedAuras(state) { const o = ownedItems(state); return Object.keys(AURAS).filter((id) => o.has(id)); }
@@ -69,9 +71,10 @@ export function drawFuku(owned, rng = Math.random) {
   return row.items[Math.floor(rng() * row.items.length)];
 }
 
-// 手に入れる（語は words、ほかは items）
+// 手に入れる（語は words、称号は titles、ほかは items）
 export function addItem(state, it) {
   if (it.kind === 'word') { if (!state.words.includes(it.id)) state.words.push(it.id); }
+  else if (it.kind === 'title') { if (!state.titles.includes(it.id)) state.titles.push(it.id); }
   else if (!state.items.includes(it.id)) state.items.push(it.id);
 }
 

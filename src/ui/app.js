@@ -19,10 +19,11 @@ import { initHeya } from './heya.js';
 import { reset as resetChoose } from './choose.js';
 import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
 import { choose } from './choose.js';
-import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo } from '../game/fukubako.js';
+import { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } from '../game/fukubako.js';
+import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
-import { initJungyo, initBanzuke, initSelect } from './match.js';
+import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
 
@@ -39,6 +40,10 @@ const save = () => saveState(state);
 const activeSlot = () => state.slots[state.active];
 const hasRikishi = () => state.slots.some(Boolean);
 const who = (s) => ({ name: shikonaText(s.shikona), sub: titleText(s.title) });
+// 取組のあと：実績の称号（11/26 しょーくん「C」）。新しく手に入れた称号の字を返す
+function titlesAfter(mode, r, kima, foeId) {
+  return afterBout(state, { mode, winner: r.winner, kima, foeId, hour: new Date().getHours() }).map(titleText);
+}
 
 // 画面の行き来（もどるボタンは1つ前へ）
 let cur = null;
@@ -140,7 +145,11 @@ function boot() {
     onFight(foe) {
       show('s-bout');
       const me = activeSlot();
-      bout.start(me.shape, foe, state.seed++, { mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura] });
+      bout.start(me.shape, foe, state.seed++, {
+        mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura],
+        // 稽古は戦績・小判なし。称号（研究熱心など）だけ
+        onResult(r, kima) { const t = titlesAfter('keiko', r, kima, foe.id); save(); return { text: '', titles: t }; },
+      });
     },
     onBack: back,
   });
@@ -169,6 +178,8 @@ function boot() {
   }
   onShow['s-select'] = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
+    // 勝敗とレートは部屋（ユーザー）のもの：本場所は番付・レート・本場所の勝敗、巡業は巡業の勝敗（11/26 しょーくん）
+    rec: match.mode === 'honbasho' ? `${T.rateLine(rankOf(state.rate).name, state.rate)}　${T.rec(state.hon)}` : T.rec(state.jun),
     // 選んだ列に朱の帯をベタッと＋太鼓ドドン、朱の判子「出」をポン → ほかは下へ抜けて取組へ
     onPick(i, btn) {
       if (stamping) return;
@@ -186,10 +197,12 @@ function boot() {
     const m = match;
     show('s-bout');
     bout.start(me.shape, foe, state.seed++, {
-      mode: m.mode, stage: m.stage, a: who(me), b: who(foe),
+      mode: m.mode, stage: m.stage,
+      // 本場所はカットインに番付も（相手の番付は仮のレートから）
+      a: Object.assign(who(me), { rank: rankOf(state.rate).name }), b: Object.assign(who(foe), { rank: rankOf(foe.rate).name }),
       papers: [me.paper, foe.paper], auras: [me.aura, foe.aura],
       look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
-      onResult(r) {
+      onResult(r, kima) {
         addRec(me.rec, r.winner);
         // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
         const kb = kobanFor(state, r.winner, todayKey());
@@ -199,14 +212,16 @@ function boot() {
           const d = eloDelta(state.rate, foe.rate, r.winner === 'a' ? 1 : r.winner ? 0 : 0.5);
           state.rate += d;
           addRec(state.hon, r.winner);
+          const titles = titlesAfter('honbasho', r, kima);
           save();
           const after = rankOf(state.rate);
           const move = after.min > before.min ? '　' + T.promote(after.name) : after.min < before.min ? '　' + T.demote(after.name) : '';
-          return T.rateGain(after.name, state.rate, d) + move + kbText;
+          return { text: T.rateGain(after.name, state.rate, d) + move + kbText, titles };
         }
         addRec(state.jun, r.winner);
+        const titles = titlesAfter('jungyo', r, kima);
         save();
-        return `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}` + kbText;
+        return { text: `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}` + kbText, titles };
       },
     });
   }
@@ -270,7 +285,7 @@ function boot() {
   });
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
-    getOwned: () => ownedWords(state.words),
+    getOwned: () => ownedItems(state),
     getMise: () => ({ papers: ownedPapers(state), auras: ownedAuras(state) }),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
@@ -292,7 +307,7 @@ function boot() {
     openSelect('jungyo', true);
   });
   const banzuke = initBanzuke();
-  // 本場所の土俵（福箱の土俵スキン）：押すたびに、持っている土俵を順に。1つだけなら出さない
+  // 本場所の土俵（福箱の土俵スキン）：押すと土俵えらびの画面（挿し絵つき）へ。1つだけなら出さない
   const bzDohyo = document.getElementById('bz-dohyo');
   const paintDohyo = () => {
     const own = ownedDohyo(state);
@@ -300,12 +315,18 @@ function boot() {
     bzDohyo.hidden = own.length < 2;
     bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
   };
-  bzDohyo.addEventListener('click', () => {
-    const own = ownedDohyo(state);
-    state.dohyo = own[(own.indexOf(state.dohyo) + 1) % own.length];
-    save();
-    paintDohyo();
-    playSfx('kami', { vol: 0.5 });
+  bzDohyo.addEventListener('click', () => go('s-dohyo'));
+  const dohyoPick = initDohyoPick();
+  onShow['s-dohyo'] = () => dohyoPick.show({
+    own: ownedDohyo(state), cur: state.dohyo,
+    // えらんだ列に朱の帯をベタッと＋ドドン → 番付へもどる（いまの土俵をもう一度えらんだら、そのままもどる）
+    onPick(key, btn) {
+      if (key === state.dohyo) { back(); return; }
+      for (const b of btn.parentElement.children) b.classList.remove('on');
+      state.dohyo = key;
+      save();
+      choose(btn, back, state.short);
+    },
   });
   onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
   document.getElementById('bz-go').addEventListener('click', () => {
@@ -320,7 +341,7 @@ function boot() {
   // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
   const unstashBtn = document.getElementById('b-unstash');
   const paintStash = () => { unstashBtn.hidden = !hasStash(); };
-  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo'];
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo', 'titles', 'streak', 'keikoWon'];
   document.getElementById('b-intro').addEventListener('click', () => {
     stashSave();
     Object.assign(state, freshProgress());

@@ -9,12 +9,13 @@ const svgOf = (w, h, body, keep) =>
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'${keep ? '' : " preserveAspectRatio='none'"}>${body}</svg>`;
 
 // 筆でひと塗りした帯（左は筆を置いたかすれ、右は毛先がすっと抜ける・上下に細い毛のすじ）
-function brushBand(color, seed) {
-  const r = rand(seed), W = 240, H = 64, top = [], bot = [];
+// m：上下のすきま（ふつう9・小さくすると太い帯）
+function brushBand(color, seed, m = 9) {
+  const r = rand(seed), W = 240, H = 64, top = [], bot = [], k = m / 9;
   for (let i = 0; i <= 12; i++) {
     const x = 16 + (i / 12) * (W - 40), tail = i > 9 ? (i - 9) * 2 : 0;
-    top.push([x, 9 + Math.sin(i * 0.9) * 1.6 + r() * 2.4 + tail]);
-    bot.push([x, H - 8 - Math.sin(i * 0.7 + 1) * 1.6 - r() * 2.4 - tail * 1.1]);
+    top.push([x, m + (Math.sin(i * 0.9) * 1.6 + r() * 2.4 + tail) * k]);
+    bot.push([x, H - m + 1 - (Math.sin(i * 0.7 + 1) * 1.6 + r() * 2.4 + tail * 1.1) * k]);
   }
   let d = `M${n1(top[0][0])},${n1(top[0][1])}`;
   for (const p of top.slice(1)) d += `L${n1(p[0])},${n1(p[1])}`;

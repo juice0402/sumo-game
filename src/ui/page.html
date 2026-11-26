@@ -40,7 +40,6 @@
   <section id="s-roster" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">部屋の力士</h1></header>
     <div class="slots frame2 cols tall" id="roster-slots"></div>
-    <p class="note">出られるのは、この3体から1体</p>
   </section>
 
   <section id="s-edit" class="screen v" hidden>
@@ -85,9 +84,17 @@
     <div class="foot"><p class="note" id="bz-world"></p><footer class="actions"><button id="bz-go" class="seal" type="button">本場所の取組へ</button></footer></div>
   </section>
 
+  <!-- 本場所の土俵（福箱の土俵スキン）をえらぶ（11/26 しょーくん「押したら切り替えだとわかりにくい・切り替え画面と挿し絵」） -->
+  <section id="s-dohyo" class="screen v" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">土俵</h1></header>
+    <div class="hero dyhero"><canvas id="dy-cv"></canvas><div class="who"><small>いまの土俵</small><b class="brush fit" id="dy-name"></b></div></div>
+    <div class="dylist frame2 cols" id="dy-list"></div>
+    <p class="note">本場所で使う土俵の見た目・強さは変わらない</p>
+  </section>
+
   <section id="s-select" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">力士選出</h1></header>
-    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><span id="sel-stage"></span></div></div>
+    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><em id="sel-rec"></em><span id="sel-stage"></span></div></div>
     <div class="slots frame2 cols tall" id="sel-slots"></div>
     <p class="note">出す力士をえらぶ</p>
   </section>
@@ -129,6 +136,14 @@
     <canvas id="bout-cv"></canvas>
     <div class="names" id="names"><span id="n-a"></span><span id="n-b"></span></div>
     <div class="stagename" id="stagename"><small id="sn-mode"></small><b class="brush" id="sn-name"></b><span id="sn-note"></span></div>
+    <div class="vs" id="vs" aria-hidden="true">
+      <div class="vs-side vs-a"><div class="vs-lines"></div><canvas></canvas><div class="vs-who"><span class="vs-col"><i class="vs-dir">東</i><em>ひがぁしぃ</em></span><small></small><b class="brush fit"></b></div></div>
+      <div class="vs-side vs-b"><div class="vs-lines"></div><canvas></canvas><div class="vs-who"><span class="vs-col"><i class="vs-dir">西</i><em>にぃしぃ</em></span><small></small><b class="brush fit"></b></div></div>
+      <svg class="vs-rule" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="58" x2="100" y2="42"/></svg>
+      <svg class="vs-slash" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="58" x2="100" y2="42"/></svg>
+      <div class="vs-tai brush">対</div>
+    </div>
+    <div class="ttl-gain" id="r-title"></div>
     <div class="cutin" id="cutin"><div class="band"></div><div class="word brush">勝負<small>FIGHT</small></div></div>
     <div class="result" id="result" hidden>
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
@@ -152,7 +167,6 @@
         <span class="fkmeta"><i class="hanko brush" id="fk-tier"></i><small id="fk-kind"></small><em id="fk-new"></em></span>
       </div>
     </div>
-    <div class="fkkinds frame2 cols" id="fk-kinds"></div>
     <footer class="actions pair"><button id="fk-odds" class="seal sub" type="button">出る物と確率</button><button id="fk-open" class="seal" type="button"></button></footer>
   </section>
 

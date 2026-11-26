@@ -71,7 +71,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 取組 */
 #s-bout{padding:0}
 #s-bout canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.names{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:space-between;padding:0 max(16px,env(safe-area-inset-left,0px));font-family:"Yuji Syuku",serif;font-size:24px;pointer-events:none}
+.names{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:space-between;gap:12px;padding:0 max(16px,env(safe-area-inset-left,0px));font-family:"Yuji Syuku",serif;font-size:24px;pointer-events:none;container-type:inline-size}
+.names span{white-space:nowrap;font-size:min(24px,calc((50cqw - 6px) / (var(--n,4) * 1.03)))}   /* 左右で同じ大きさ・半分の幅に収める（--n は長いほうの字の数） */
 .names span{opacity:0;transform:translateX(-14px);transition:opacity .45s,transform .45s cubic-bezier(.2,.9,.2,1)}
 .names span:last-child{transform:translateX(14px)}
 .names.in span{opacity:1;transform:none}
@@ -140,17 +141,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .screen.v>.hero{grid-column:1;grid-row:2;min-height:0;container-type:size}
 .screen.v>.frame2{grid-column:1/3;grid-row:3}
 .screen.v>:is(.actions,.note,.foot,.drive){grid-column:1/3;grid-row:4}
-.frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 14px}
+.frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 0}
 .cols{display:flex;flex-direction:row-reverse;align-items:stretch;height:clamp(200px,36vh,300px)}
 .cols.tall{height:clamp(280px,56vh,460px)}
-.cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:16px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
+.cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:28px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
 .cols>*{container-type:size}
 .cols>*:last-child{border-left:0}
 .cols>button:active{background-color:rgba(238,233,222,.06)}
 .cols b,.fit{font-size:min(var(--max,32px),calc(var(--room,230px) / (var(--n,4) * 1.08 + .1)));letter-spacing:.06em;line-height:1.1;white-space:nowrap}
 .cols small,.cols span,.cols em{flex:none}
 /* いまの・主のもの＝縦の朱の帯 */
-.cols>.on,.ladder li.on{background:var(--b-shuv) center/88% 100% no-repeat;border-left-color:transparent}
+.cols>.on,.ladder li.on{background:var(--b-shuv) center/100% 100% no-repeat;border-left-color:transparent}   /* 朱の帯は列いっぱい（字が帯に乗り切るように・11/26） */
 .cols>.on+*{border-left-color:var(--line)}
 .who{display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:4px}
 .who small{font-size:12px;color:var(--kin);line-height:1.3}
@@ -164,7 +165,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mine .who small{font-size:14px}
 .mine .who em{font-size:14px;color:var(--kin)}
 .mine canvas{width:84px;height:110px;align-self:flex-end;flex:none}
-.menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
+.menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:28px 0 16px;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
 .menu .seal svg{width:20px;height:20px}
 .menu .lbl{white-space:nowrap;letter-spacing:.32em;font-size:min(30px,calc((100cqh - 32px) / (var(--n,4) * 1.32 + .1)))}   /* どの項目も同じ大きさ（--n はいちばん長い字の数）・32px は上の印とすきま */
 #s-home .menu{height:clamp(240px,42vh,330px)}
@@ -182,11 +183,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 #s-meimei.enter #mm-name{animation:inkdown .7s .35s cubic-bezier(.3,.7,.3,1) both}
 #s-meimei.enter .meihan{animation:hanko .34s 1.12s cubic-bezier(.2,.9,.2,1) both}
 /* 勝負 */
-.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:18px 0 14px}
-.modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(44px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 50px) / 1.1))}
+.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:28px 0 14px}
+.modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(40px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 62px) / 1.1))}
 .modecard span{white-space:nowrap;letter-spacing:.08em;line-height:1.3;color:var(--washi2);font-size:min(13px,calc((100cqh - 32px) / (var(--n,12) * 1.08 + .1)))}
 .modecard small{white-space:nowrap;line-height:1.3;font-size:12px;color:var(--kin)}   /* 力士の札の称号と同じ：右に金の小さい字 */
-.modecard.main{flex-grow:1.9}
 /* 力士の列（部屋の力士・選出） */
 .slots{overflow:hidden}
 .slot{position:relative}
@@ -202,7 +202,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 力士の編集 */
 .profile{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:20px;position:relative}
 .profile .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
-.profile .who b{--max:56px;--room:calc(100cqh - 52px)}   /* 左下の「おまかせ」にかからない */
+.profile .who b{--max:56px;--room:calc(100cqh - 64px)}   /* 左下の「おまかせ」にかからない */
 .profile .who small{font-size:14px}
 .profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
 #ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
@@ -231,19 +231,29 @@ button{font:inherit;color:inherit;cursor:pointer}
 .myrank .info{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--washi2);max-height:100%}
 .myrank em{font-style:normal;font-size:16px;color:var(--kin);text-combine-upright:none}
 .ladder{list-style:none;padding:0;height:clamp(180px,30vh,240px)}
-.ladder li{padding:12px 0 8px;gap:6px}
+.ladder li{padding:24px 0 8px;gap:6px}
 .ladder li b{--max:21px;--room:150px;color:var(--washi2)}
 .ladder li span{writing-mode:horizontal-tb;margin-top:auto;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
 .ladder li.on b,.ladder li.on span{color:var(--washi)}
 .foot .actions{padding-top:4px}
+/* 土俵えらび（本場所の土俵スキン・11/26）：上に大きな挿し絵、下に持っている土俵の列（いまの土俵＝朱の帯）。えらぶと朱ベタッ＋ドドン → 番付へ */
+.dyhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:22px}
+.dyhero .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
+.dyhero .who b{--max:48px;--room:calc(100cqh - 34px)}
+.dyhero .who small{font-size:13px;letter-spacing:.2em}
+.dyhero canvas{width:min(54cqw,220px);height:min(40.5cqw,165px,100cqh);flex:none}
+.dylist>*{gap:8px}
+.dylist b{--max:30px;--room:calc(100cqh - 72px)}
+.dylist canvas{width:min(92%,64px);height:40px;flex:none;margin-top:auto}
 /* 力士選出 */
 .selhero{display:flex;flex-direction:row-reverse;justify-content:center;align-items:stretch;gap:26px;padding-top:8px}
 .selhead{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:10px;max-height:100%}
 .selhead b{white-space:nowrap;letter-spacing:.14em;line-height:1;font-size:min(clamp(44px,13vw,58px),calc((100cqh - 16px) / (var(--n,3) * 1.14 + .1)))}
 .selhead span{white-space:nowrap;color:var(--washi2);font-size:min(13px,calc((100cqh - 16px) / (var(--n,12) * 1.02 + .1)))}
+.selhead em{font-style:normal;white-space:nowrap;letter-spacing:.08em;color:var(--kin);font-size:min(15px,calc((100cqh - 16px) / (var(--n,12) * 1.04 + .1)))}   /* 部屋の番付・レート・勝敗（力士の札には出さない） */
 /* 稽古 */
 .me{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:18px;position:relative;border:0;padding:0}
-.me p{writing-mode:vertical-rl;margin:0;--max:44px;--room:calc(100cqh - 52px);font-size:min(var(--max),calc(var(--room) / (var(--n,4) * 1.08 + .1)));color:var(--washi);flex:none;max-height:100%}
+.me p{writing-mode:vertical-rl;margin:0;--max:44px;--room:calc(100cqh - 64px);font-size:min(var(--max),calc(var(--room) / (var(--n,4) * 1.08 + .1)));color:var(--washi);flex:none;max-height:100%}
 .me canvas{width:76px;height:100px;align-self:flex-end}
 #b-all{position:absolute;left:0;bottom:0}
 .foes{display:flex;grid-template-columns:none;overflow:hidden;padding:0;gap:0}
@@ -281,7 +291,7 @@ button{font:inherit;color:inherit;cursor:pointer}
    はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は下へ抜けて消える */
 .screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
 .screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
-.cols>.chosen::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--b-shuv) center/88% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
+.cols>.chosen::before{content:"";position:absolute;inset:0 -28%;z-index:-1;background:var(--b-shuv) center/100% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
 .cols>.chosen :is(span,small){color:var(--washi)}
 .screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
 .cols.leaving{animation:jolt .2s .12s both}
@@ -298,6 +308,70 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes hop{0%{transform:none}14%{transform:scale(1.1,.86)}40%{transform:translateY(-20px) scale(.94,1.08) rotate(-3deg)}64%{transform:translateY(0) scale(1.12,.85)}80%{transform:scale(.97,1.04)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.mine canvas.hop,.mine canvas.hop2,.cols.leaving{animation:none}}
 
+/* 本場所の取組：はじめに格闘ゲームのような対戦のカットイン（11/26 しょーくん「相撲らしからぬスピード感とスタイリッシュ」）。
+   斜めに2つに割った墨の板が左右からシュッ（少し行きすぎて戻る）→ 斜めの金の罫と朱の太刀筋 →「対」の朱の丸がドン → 板の中はゆっくり流れる → 左右へ抜けて消える。
+   上＝東（自分・左から）・下＝西（相手・右から）。長さは --k 倍（演出を短くで .6）。画面のゆれ・フラッシュは入れない */
+.vs{position:absolute;inset:0;pointer-events:none;overflow:hidden;--k:1}
+.vs:not(.in){display:none}
+.vs.short{--k:.6}
+.vs.measure,.vs.measure *{animation:none!important}
+.vs-side{position:absolute;inset:0;overflow:hidden}
+.vs-a{background:var(--sumi);clip-path:polygon(0 0,100% 0,100% 42%,0 58%);animation:vsInL calc(.24s * var(--k)) cubic-bezier(.2,1.25,.35,1) both}
+.vs-b{background:var(--sumi2);clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%);animation:vsInR calc(.24s * var(--k)) calc(.1s * var(--k)) cubic-bezier(.2,1.25,.35,1) both}
+@keyframes vsInL{from{transform:translateX(-106%)}to{transform:none}}
+@keyframes vsInR{from{transform:translateX(106%)}to{transform:none}}
+.vs-lines{position:absolute;top:0;bottom:0;left:0;width:200%}
+.vs-lines svg{display:block;width:100%;height:100%}
+.vs-lines line{stroke:var(--washi);vector-effect:non-scaling-stroke}
+.vs-a .vs-lines{animation:vsRunR .42s linear infinite}
+.vs-b .vs-lines{animation:vsRunL .42s linear infinite}
+@keyframes vsRunR{from{transform:translateX(-50%)}to{transform:none}}
+@keyframes vsRunL{from{transform:none}to{transform:translateX(-50%)}}
+#s-bout .vs-side canvas{position:absolute;inset:auto;width:60%;height:50%;touch-action:auto}   /* #s-bout canvas（全面）より強く */
+#s-bout .vs-a canvas{left:-6%;top:5%;animation:vsDriftA calc(2.2s * var(--k)) linear both}
+#s-bout .vs-b canvas{right:-6%;bottom:5%;animation:vsDriftB calc(2.2s * var(--k)) linear both}
+@keyframes vsDriftA{from{transform:rotate(8deg) translateX(-10px)}to{transform:rotate(8deg) translateX(12px)}}   /* 相手のほうへ前のめり */
+@keyframes vsDriftB{from{transform:rotate(-8deg) translateX(10px)}to{transform:rotate(-8deg) translateX(-12px)}}
+.vs-who{position:absolute;height:34vh;writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-shadow:2px 2px 0 var(--sumi)}
+.vs-a .vs-who{right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 16px);animation:vsDriftL calc(2.2s * var(--k)) linear both}
+.vs-b .vs-who{align-items:flex-end;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);animation:vsDriftR calc(2.2s * var(--k)) linear both}
+@keyframes vsDriftL{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
+@keyframes vsDriftR{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
+.vs-who b{--max:clamp(46px,14vw,70px);--room:calc(34vh - 4px);color:var(--washi);line-height:1.05;clip-path:inset(0 -10% 100% -10%);animation:inkdown calc(.34s * var(--k)) calc(.16s * var(--k)) cubic-bezier(.3,.7,.3,1) both}
+.vs-b .vs-who b{animation-delay:calc(.26s * var(--k))}
+.vs-who small{font-size:12px;letter-spacing:.2em;color:var(--kin);animation:rise calc(.3s * var(--k)) calc(.3s * var(--k)) both}
+.vs-col{display:flex;align-items:center;gap:8px;animation:rise calc(.3s * var(--k)) calc(.22s * var(--k)) both}
+.vs-dir{display:inline-grid;place-items:center;width:30px;height:30px;font:400 20px/1 "Yuji Syuku",serif;font-style:normal;writing-mode:horizontal-tb;background:var(--shu);color:var(--washi);border-radius:3px;text-shadow:none}
+.vs-b .vs-dir{background:none;border:1.5px solid var(--kin);color:var(--kin)}
+.vs-col em{font-style:normal;font-size:12px;letter-spacing:.12em;color:var(--washi2)}
+.vs-rule,.vs-slash{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.vs-rule line,.vs-slash line{vector-effect:non-scaling-stroke}
+.vs-rule line{stroke:var(--kin);stroke-width:1.5}
+.vs-slash line{stroke:var(--shu);stroke-width:9}
+.vs-rule{clip-path:inset(0 100% 0 0);animation:vsDraw calc(.16s * var(--k)) calc(.14s * var(--k)) cubic-bezier(.3,.7,.3,1) forwards}
+.vs-slash{clip-path:inset(0 0 0 100%);animation:vsDrawL calc(.12s * var(--k)) calc(.26s * var(--k)) cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes vsDraw{to{clip-path:inset(0 0 0 0)}}
+@keyframes vsDrawL{to{clip-path:inset(0 0 0 0)}}
+.vs-tai{position:absolute;left:50%;top:50%;width:clamp(96px,30vw,132px);aspect-ratio:1;border-radius:50%;background:var(--shu);display:grid;place-items:center;font-size:clamp(56px,17vw,78px);line-height:1;color:var(--washi);text-shadow:3px 3px 0 var(--sumi);opacity:0;animation:vsTai calc(.3s * var(--k)) calc(.3s * var(--k)) cubic-bezier(.2,1.3,.3,1) both}
+@keyframes vsTai{0%{opacity:0;transform:translate(-50%,-50%) scale(2.6) rotate(-24deg)}55%{opacity:1;transform:translate(-50%,-50%) scale(.9) rotate(4deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}}
+.vs.out .vs-a{animation:vsOutL calc(.22s * var(--k)) cubic-bezier(.55,0,.85,.35) both}
+.vs.out .vs-b{animation:vsOutR calc(.22s * var(--k)) cubic-bezier(.55,0,.85,.35) both}
+.vs.out .vs-tai{animation:vsTaiOut calc(.2s * var(--k)) cubic-bezier(.55,0,.85,.35) both}
+.vs.out .vs-rule,.vs.out .vs-slash{animation:vsFade calc(.14s * var(--k)) both}
+@keyframes vsOutL{to{transform:translateX(-106%) skewX(8deg)}}
+@keyframes vsOutR{to{transform:translateX(106%) skewX(8deg)}}
+@keyframes vsTaiOut{from{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}to{opacity:0;transform:translate(-50%,-50%) scale(1.5) rotate(-4deg)}}
+@keyframes vsFade{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 0 0);opacity:0}}
+@media (prefers-reduced-motion:reduce){.vs *,.vs .vs-side{animation-duration:.01s!important;animation-delay:0s!important}.vs .vs-lines{animation:none!important}}
+
+/* 取組で称号を手に入れたとき（11/26）：結果の右に縦書き＋金の罫（巡業の土俵の名前と同じ形） */
+.ttl-gain{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 86px);writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:12px;pointer-events:none;text-shadow:3px 3px 0 var(--sumi)}
+.ttl-gain:not(.in){display:none}
+.ttl-gain::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1px solid var(--kin);transform-origin:top;animation:snrule .45s .9s cubic-bezier(.3,.7,.3,1) both}
+.ttl-gain small{font-size:13px;letter-spacing:.3em;color:var(--kin);animation:rise .4s 1.2s both}
+.ttl-gain b{font-size:clamp(28px,8vw,38px);letter-spacing:.12em;line-height:1.05;color:var(--washi);clip-path:inset(0 -10% 100% -10%);animation:inkdown .6s 1s cubic-bezier(.3,.7,.3,1) both}
+.ttl-gain b+b{animation-delay:1.25s}
+
 /* 巡業の取組：旋回のあいだに土俵の名前（11/26 しょーくん「どの土俵かわからない・かっこよく」）。
    番付表の見出しと同じく、右に縦書き＋金の罫。罫が上から引かれ → 名前を筆で上から → 「巡業」と土俵のくせ → 右へ抜けて消える */
 .stagename{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 86px);writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:12px;pointer-events:none;text-shadow:3px 3px 0 var(--sumi)}
@@ -313,7 +387,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* ===== くるくる（力士の編集・ui/roller.js。11/26 しょーくん「スプラの二つ名みたいにロールして選べる」）=====
    横に 称号｜上の句・つなぎ・下の句 のドラム。指で上下にまわすと真ん中の行に止まり、そこに横いっぱいの朱の筆の帯。
    真ん中は和紙の字で大きく、上下は遠いほどうすく */
-.roller{--row:34px;margin:10px 0 12px}
+.roller{--row:34px}
 .rl-heads,.rl-body{display:flex}
 .rl-heads span,.rl-col{flex:1.25 1 0;min-width:0}
 .rl-heads .ti,.rl-col.ti{flex-grow:1.5}
@@ -341,11 +415,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rl-tabs button{background:none;border:0;padding:6px 8px 12px;min-height:40px;font-size:14px;letter-spacing:.24em;color:var(--dim)}
 .rl-tabs button[aria-pressed=true]{background:var(--b-lineshu) center bottom 4px/100% 6px no-repeat;color:var(--washi)}
 .rl-mise .rl-col+.rl-col{border-left:3px double var(--line)}
-#s-fuku .fkkinds{height:clamp(132px,24vh,180px)}
-.fkkinds>div{gap:8px;padding:12px 0 10px}
-.fkkinds b{--max:22px;--room:calc(100cqh - 56px)}
-.fkkinds span{font-size:12px;color:var(--washi2)}
-.fkkinds span i{font-style:normal;text-combine-upright:all}
 .fkhero{position:relative;display:grid;place-items:center}
 .fkbox{position:relative;width:min(66cqw,62cqh);aspect-ratio:1/.92}
 .fkbox .half{position:absolute;top:0;bottom:0;width:50%;overflow:hidden;background:var(--washi2);border:1.5px solid var(--sumi3)}
@@ -370,14 +439,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes fktearR{to{transform:translateX(46%) rotate(16deg);opacity:0}}
 .fkreveal{position:absolute;inset:0;display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:18px;z-index:2}
 .fkreveal>b{writing-mode:vertical-rl;--max:60px;--room:calc(100cqh - 24px);letter-spacing:.08em;line-height:1.1;white-space:nowrap}
-.fkreveal[data-kind=word]>b{--max:92px}
+.fkreveal:is([data-kind=word],[data-kind=title])>b{--max:92px}
 .fkreveal[data-tier=tokujo]>b{background:var(--b-shuv) center/100% 100% no-repeat;padding:14px 6px}
 .fkreveal[data-tier=kiwami]>b{color:var(--kin)}
 .fkmeta{writing-mode:vertical-rl;display:flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.12em;color:var(--washi2);max-height:100%}
 .fkmeta em{font-style:normal;color:var(--kin)}
 .hanko{display:inline-grid;place-items:center;border:2px solid currentColor;border-radius:4px;font-style:normal;padding:5px 3px;font-size:20px;line-height:1.05;letter-spacing:0;transform:rotate(-6deg)}
 .fkprev{position:relative;width:min(34cqw,38cqh);aspect-ratio:3/4;flex:none}
-.fkreveal[data-kind=word] .fkprev{display:none}
+.fkreveal:is([data-kind=word],[data-kind=title]) .fkprev{display:none}
 .fkreveal[data-kind=dohyo] .fkprev{aspect-ratio:4/3;width:min(46cqw,42cqh)}
 .fkprev #fk-cv{display:block;width:100%;height:100%}
 .fkprev .aura-cv{position:absolute;inset:-25%;width:150%;height:150%;pointer-events:none;z-index:1}
@@ -395,6 +464,23 @@ button{font:inherit;color:inherit;cursor:pointer}
 .odds h2 small{font-size:12px;color:var(--washi2);font-weight:500}
 .sheet .odds p{font-size:13px;line-height:1.75}
 .odds p b{color:var(--kin);font-weight:500;margin-right:8px;font-size:12px;letter-spacing:.1em}
+
+/* 縦の列の上をそろえる（11/26 しょーくん「上が揃ってない」）：筆の字（Yuji Syuku）は字の上に少しすきまがあるので、
+   となりの小さい字（Zen Kaku）と見た目の上がそろうように、大きい筆の字だけ少し上へ */
+.screen.v b.brush,.vs-who b,.stagename b,.ttl-gain b{margin-top:-.1em}
+/* 福箱：箱とボタンのまん中をそろえる（下の帯をなくしたので、ボタンも見出しの左の中だけで・11/26 しょーくん「ずれて見える」） */
+#s-fuku>.actions{grid-column:1}
+#s-fuku>.actions.pair .seal{font-size:16px;letter-spacing:.04em}
+
+/* 余白をそろえる（11/26 しょーくん「横の白い線との余白も統一感」）：番付表の画面はどれも
+   二重の罫の上 12px・罫の下からボタンや説明まで 14px・いちばん下は 20px あける（下にボタンがない画面も同じ） */
+.screen.v{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
+.screen.v>:is(.actions,.note,.foot,.drive){margin-top:14px}
+.screen.v>.actions,.screen.v .foot .actions{padding:0}
+.screen.v>.note,.screen.v .foot .note{margin-bottom:0}
+.screen.v .foot .note+.actions{margin-top:12px}
+.screen.v>.drive{padding-bottom:0}
+.screen.v>.drive .seg{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -434,7 +520,6 @@ button{font:inherit;color:inherit;cursor:pointer}
   <section id="s-roster" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">部屋の力士</h1></header>
     <div class="slots frame2 cols tall" id="roster-slots"></div>
-    <p class="note">出られるのは、この3体から1体</p>
   </section>
 
   <section id="s-edit" class="screen v" hidden>
@@ -479,9 +564,17 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="foot"><p class="note" id="bz-world"></p><footer class="actions"><button id="bz-go" class="seal" type="button">本場所の取組へ</button></footer></div>
   </section>
 
+  <!-- 本場所の土俵（福箱の土俵スキン）をえらぶ（11/26 しょーくん「押したら切り替えだとわかりにくい・切り替え画面と挿し絵」） -->
+  <section id="s-dohyo" class="screen v" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">土俵</h1></header>
+    <div class="hero dyhero"><canvas id="dy-cv"></canvas><div class="who"><small>いまの土俵</small><b class="brush fit" id="dy-name"></b></div></div>
+    <div class="dylist frame2 cols" id="dy-list"></div>
+    <p class="note">本場所で使う土俵の見た目・強さは変わらない</p>
+  </section>
+
   <section id="s-select" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">力士選出</h1></header>
-    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><span id="sel-stage"></span></div></div>
+    <div class="hero selhero"><div class="selhead"><b class="brush" id="sel-mode"></b><em id="sel-rec"></em><span id="sel-stage"></span></div></div>
     <div class="slots frame2 cols tall" id="sel-slots"></div>
     <p class="note">出す力士をえらぶ</p>
   </section>
@@ -523,6 +616,14 @@ button{font:inherit;color:inherit;cursor:pointer}
     <canvas id="bout-cv"></canvas>
     <div class="names" id="names"><span id="n-a"></span><span id="n-b"></span></div>
     <div class="stagename" id="stagename"><small id="sn-mode"></small><b class="brush" id="sn-name"></b><span id="sn-note"></span></div>
+    <div class="vs" id="vs" aria-hidden="true">
+      <div class="vs-side vs-a"><div class="vs-lines"></div><canvas></canvas><div class="vs-who"><span class="vs-col"><i class="vs-dir">東</i><em>ひがぁしぃ</em></span><small></small><b class="brush fit"></b></div></div>
+      <div class="vs-side vs-b"><div class="vs-lines"></div><canvas></canvas><div class="vs-who"><span class="vs-col"><i class="vs-dir">西</i><em>にぃしぃ</em></span><small></small><b class="brush fit"></b></div></div>
+      <svg class="vs-rule" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="58" x2="100" y2="42"/></svg>
+      <svg class="vs-slash" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="58" x2="100" y2="42"/></svg>
+      <div class="vs-tai brush">対</div>
+    </div>
+    <div class="ttl-gain" id="r-title"></div>
     <div class="cutin" id="cutin"><div class="band"></div><div class="word brush">勝負<small>FIGHT</small></div></div>
     <div class="result" id="result" hidden>
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
@@ -546,7 +647,6 @@ button{font:inherit;color:inherit;cursor:pointer}
         <span class="fkmeta"><i class="hanko brush" id="fk-tier"></i><small id="fk-kind"></small><em id="fk-new"></em></span>
       </div>
     </div>
-    <div class="fkkinds frame2 cols" id="fk-kinds"></div>
     <footer class="actions pair"><button id="fk-odds" class="seal sub" type="button">出る物と確率</button><button id="fk-open" class="seal" type="button"></button></footer>
   </section>
 
@@ -644,15 +744,14 @@ const T = {
   fukuShort: '小判が足りない',
   fukuDone: 'ぜんぶ持っている',
   fukuOdds: '出る物と確率',
-  fukuNote: '中身は見た目だけ・強さは変わらない。持っている物は出ない',
-  fukuOddsNote: 'まず段が決まり、その段の、まだ持っていない物からひとしく1つ。そろった段は出ないので、ほかの段で割りなおす',
   fukuAgain: 'もう一つ',
   fukuClose: 'とじる',
   fukuNew: '手に入れた',
   dohyoPick: (name) => `土俵：${name}`,
-  lockedLook: (n) => `まだ持っていない見た目 あと${n}・福箱から出る`,
+  lockedLook: () => '見た目は福箱から出る',   // いくつあるかは出さない（11/26）
   look: { name: '名前', mise: '見た目' },
-  lockedWords: (n) => `まだ持っていない語 あと${n}・福箱から出る`,
+  lockedName: (w, t) => (w || t ? '語と称号は福箱から出る（称号は取組でも）' : ''),
+  titleGain: '称号を手に入れた',
   linkNone: '（なし）',
   retire: '引退',
   retireAgain: 'もう一度で引退',
@@ -1505,19 +1604,43 @@ return { SHIKONA_CATS, SHIKONA, SHIKONA_START, SHIKONA_FOE_SKIP, SHIKONA_LINK_WE
 
 __m['src/data/titles.js'] = (function () {
 // 称号（力士の四股名の上に小さく出る）。見た目だけで、強さにはさわらない（要件 11）。
-// 1つ＝「id:字」。id は保存とサーバーで使う共通の ID。いまは全部使える（あとで実績・福箱でふやす）。
+// 1つ＝「id:字」。id は保存とサーバーで使う共通の ID。
+// 手に入れ方（11/26 しょーくん「C」＝取組の実績と福箱で半分ずつ）：
+//   はじめから＝TITLE_START だけ／実績＝TITLE_ACH（条件の中身は game/titles.js）／福箱＝data/fukubako.js の FUKU_TIERS.title
+//   前からいる力士がつけている称号は、持っていることにする（game/save.js）。相手（CPU）の称号は全部から
 const LIST = [
   'shindeshi:新弟子', 'shinsei:期待の新星', 'kamihitoe:紙一重', 'ippitsu:一筆入魂', 'oshi:押しの一手',
   'fudo:不動の構え', 'shijin:土俵の詩人', 'yurayura:ゆらゆら名人', 'sumiko:墨の申し子', 'kirie:切り絵の達人',
   'nimaigoshi:二枚腰', 'okiagari:起き上がり小法師', 'hasami:はさみの魔術師', 'washi:和紙の貴公子', 'kazeni:風に舞う',
   'kenkyu:研究熱心', 'nikoniko:負けてもにこにこ', 'yofukashi:夜ふかし力士', 'tawara:土俵際の粘り', 'ichimai:一枚岩',
   'fubuki:紙吹雪', 'harimaru:張り子の虎', 'senmai:千枚通し', 'origami:折り目正しい',
+  'sekitori:関取', 'sanyaku:三役', 'itadaki:紙の頂',
 ];
 
 const TITLES = LIST.map((w) => { const [id, t] = w.split(':'); return { id: 'ti_' + id.replace(/[^a-z0-9]/g, ''), t }; });
 const TITLE_START = 'ti_shindeshi';
 
-return { TITLES, TITLE_START };
+// 実績の称号：id → 手に入れ方（あとで図鑑・実績の画面に出す・数字はここだけ）
+const TITLE_ACH = {
+  ti_shinsei: 'はじめて勝つ',
+  ti_oshi: '押し出しで勝つ',
+  ti_tawara: '突き落としで勝つ',
+  ti_kamihitoe: '踏み出しか勇み足で勝つ',
+  ti_fudo: '5連勝する',
+  ti_nikoniko: '10回負ける',
+  ti_kenkyu: '稽古で5体みんなに勝つ',
+  ti_ippitsu: '力士を3人そろえて取る',
+  ti_yofukashi: '夜中（0時〜4時）に取る',
+  ti_sekitori: '本場所で十両に上がる',
+  ti_sanyaku: '本場所で小結に上がる',
+  ti_itadaki: '本場所で横綱に上がる',
+};
+// 実績の数字（連勝・負けの数は巡業と本場所だけで数える）
+const TITLE_NUM = { streak: 5, loses: 10, nightFrom: 0, nightTo: 4 };
+// 番付で手に入る称号 → その番付（data/banzuke.js の id）
+const TITLE_RANK = { ti_sekitori: 'juryo', ti_sanyaku: 'komusubi', ti_itadaki: 'yokozuna' };
+
+return { TITLES, TITLE_START, TITLE_ACH, TITLE_NUM, TITLE_RANK };
 })();
 
 __m['src/game/names.js'] = (function () {
@@ -1737,110 +1860,6 @@ const DOHYO_DEFAULT = 'kami';
 return { DOHYO, DOHYO_DEFAULT };
 })();
 
-__m['src/game/save.js'] = (function () {
-// 保存（端末の中だけ・試作）。キーは試作①からの sumo-proto-v1 のまま、中身を足していく（前の形はそのまま読める）。
-//   shape・drive・mute・short：試作①②から（shape はいま選んでいる力士の形を写す＝道具が使う）
-//   slots：力士3枠（{ shape, shikona:[上・つなぎ・下], title, rec:{w,l,d} } か null）・active：いま選んでいる枠
-//   rate・hon・jun：本場所のレートと戦績・巡業の戦績（オンラインになったらサーバーが正）
-//   words：手に入れた四股名の語（はじめから持っている SHIKONA_START のほか。11/26〜）
-//   koban・kobanDay：小判（取組でたまる）・その日の初勝利をもらった日／items：福箱で手に入れた紙質・気・土俵／dohyo：本場所の土俵スキン
-//   slots[i].paper・aura：力士ごとの紙質と気（見た目だけ）
-const { checkShape } = __m['src/geom/check.js'];
-const { validShikona, validTitle, randomShikona, startTitle, ownedWords, isStartWord, isWord } = __m['src/game/names.js'];
-const { RATE } = __m['src/data/banzuke.js'];
-const { PAPERS, PAPER_DEFAULT } = __m['src/data/papers.js'];
-const { AURAS, AURA_DEFAULT } = __m['src/data/auras.js'];
-const { DOHYO } = __m['src/data/dohyo.js'];
-
-const SAVE_KEY = 'sumo-proto-v1';
-const SLOT_COUNT = 3;
-
-function rec(r) { return { w: (r && r.w) | 0, l: (r && r.l) | 0, d: (r && r.d) | 0 }; }
-
-// has：持っている語（Set）。新しい力士の四股名は、その中から
-function newRikishi(shape, has = ownedWords()) {
-  return { shape, shikona: randomShikona(Math.random, has), title: startTitle(), rec: rec(), paper: PAPER_DEFAULT, aura: AURA_DEFAULT };
-}
-
-function cleanSlot(s) {
-  if (!s || !s.shape || !checkShape(s.shape).ok) return null;
-  return {
-    shape: s.shape,
-    shikona: validShikona(s.shikona) ? s.shikona : randomShikona(Math.random, ownedWords()),
-    title: validTitle(s.title) ? s.title : startTitle(),
-    rec: rec(s.rec),
-    paper: PAPERS[s.paper] ? s.paper : PAPER_DEFAULT,
-    aura: AURAS[s.aura] ? s.aura : AURA_DEFAULT,
-  };
-}
-
-function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami' };
-  try {
-    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
-    if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
-    st.mute = d.mute === true;
-    st.short = d.short === true;
-    if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
-    else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
-    if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
-    if (Number.isFinite(d.rate)) st.rate = Math.round(d.rate);
-    st.hon = rec(d.hon);
-    st.jun = rec(d.jun);
-    if (Array.isArray(d.words)) st.words = d.words.filter((id) => isWord(id) && !isStartWord(id));
-    if (Number.isFinite(d.koban) && d.koban > 0) st.koban = Math.floor(d.koban);
-    if (typeof d.kobanDay === 'string') st.kobanDay = d.kobanDay;
-    if (Array.isArray(d.items)) st.items = d.items.filter((id) => typeof id === 'string' && (PAPERS[id] || AURAS[id] || (id.startsWith('d_') && DOHYO[id.slice(2)])));
-    if (typeof d.dohyo === 'string' && DOHYO[d.dohyo]) st.dohyo = d.dohyo;
-  } catch (e) { /* 保存できない画面でも遊べる */ }
-  // 前からいる力士の語は、持っていることにする（11/26 より前の力士の名前を、編集で元にもどせるように）
-  for (const s of st.slots) if (s) for (const id of s.shikona) if (!isStartWord(id) && !st.words.includes(id)) st.words.push(id);
-  if (!st.slots[st.active]) st.active = Math.max(0, st.slots.findIndex(Boolean));
-  return st;
-}
-
-function saveState(st) {
-  const cur = st.slots[st.active];
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
-      slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
-      koban: st.koban, kobanDay: st.kobanDay, items: st.items, dohyo: st.dohyo,
-    }));
-  } catch (e) { /* */ }
-}
-
-// 道具の「はじめての流れを見る」（試作だけ）：いまの保存を1つだけ取っておき、まっさらな部屋から見なおす／もどす
-const STASH_KEY = SAVE_KEY + '-bak';
-function freshProgress() {
-  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami' };
-}
-function hasStash() {
-  try { return !!localStorage.getItem(STASH_KEY); } catch (e) { return false; }
-}
-function stashSave() {   // もう取ってあれば上書きしない（何度見なおしても、最初の力士たちを守る）
-  try {
-    const cur = localStorage.getItem(SAVE_KEY);
-    if (cur && !localStorage.getItem(STASH_KEY)) localStorage.setItem(STASH_KEY, cur);
-  } catch (e) { /* */ }
-}
-function unstashSave() {
-  try {
-    const b = localStorage.getItem(STASH_KEY);
-    if (!b) return false;
-    localStorage.setItem(SAVE_KEY, b);
-    localStorage.removeItem(STASH_KEY);
-    return true;
-  } catch (e) { return false; }
-}
-
-function addRec(r, winner, side = 'a') {
-  if (winner === side) r.w++; else if (winner) r.l++; else r.d++;
-}
-
-return { SLOT_COUNT, newRikishi, loadState, saveState, freshProgress, hasStash, stashSave, unstashSave, addRec };
-})();
-
 __m['src/data/cpu-shapes.js'] = (function () {
 // CPU の力士（紙の座標 300×420・y 下向き・右が正面）。形の点検に通ること（tools/test.mjs で確かめる）。
 // 戦い方の型ではなく、ただの「切った形」。強さの補正はない。
@@ -1889,6 +1908,119 @@ const OTEHON = {
 };
 
 return { CPU_SHAPES, OTEHON };
+})();
+
+__m['src/game/save.js'] = (function () {
+// 保存（端末の中だけ・試作）。キーは試作①からの sumo-proto-v1 のまま、中身を足していく（前の形はそのまま読める）。
+//   shape・drive・mute・short：試作①②から（shape はいま選んでいる力士の形を写す＝道具が使う）
+//   slots：力士3枠（{ shape, shikona:[上・つなぎ・下], title, rec:{w,l,d} } か null）・active：いま選んでいる枠
+//   rate・hon・jun：本場所のレートと戦績・巡業の戦績（オンラインになったらサーバーが正）
+//   words：手に入れた四股名の語（はじめから持っている SHIKONA_START のほか。11/26〜）
+//   koban・kobanDay：小判（取組でたまる）・その日の初勝利をもらった日／items：福箱で手に入れた紙質・気・土俵／dohyo：本場所の土俵スキン
+//   slots[i].paper・aura：力士ごとの紙質と気（見た目だけ）
+//   titles：手に入れた称号（はじめから持っている TITLE_START のほか。実績と福箱・11/26〜）・streak：巡業と本場所の連勝・keikoWon：稽古で勝った CPU の形
+const { checkShape } = __m['src/geom/check.js'];
+const { validShikona, validTitle, randomShikona, startTitle, ownedWords, isStartWord, isWord } = __m['src/game/names.js'];
+const { RATE } = __m['src/data/banzuke.js'];
+const { PAPERS, PAPER_DEFAULT } = __m['src/data/papers.js'];
+const { AURAS, AURA_DEFAULT } = __m['src/data/auras.js'];
+const { DOHYO } = __m['src/data/dohyo.js'];
+const { TITLE_START } = __m['src/data/titles.js'];
+const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
+
+const SAVE_KEY = 'sumo-proto-v1';
+const SLOT_COUNT = 3;
+
+function rec(r) { return { w: (r && r.w) | 0, l: (r && r.l) | 0, d: (r && r.d) | 0 }; }
+
+// has：持っている語（Set）。新しい力士の四股名は、その中から
+function newRikishi(shape, has = ownedWords()) {
+  return { shape, shikona: randomShikona(Math.random, has), title: startTitle(), rec: rec(), paper: PAPER_DEFAULT, aura: AURA_DEFAULT };
+}
+
+function cleanSlot(s) {
+  if (!s || !s.shape || !checkShape(s.shape).ok) return null;
+  return {
+    shape: s.shape,
+    shikona: validShikona(s.shikona) ? s.shikona : randomShikona(Math.random, ownedWords()),
+    title: validTitle(s.title) ? s.title : startTitle(),
+    rec: rec(s.rec),
+    paper: PAPERS[s.paper] ? s.paper : PAPER_DEFAULT,
+    aura: AURAS[s.aura] ? s.aura : AURA_DEFAULT,
+  };
+}
+
+function loadState() {
+  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
+    st.mute = d.mute === true;
+    st.short = d.short === true;
+    if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
+    else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
+    if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
+    if (Number.isFinite(d.rate)) st.rate = Math.round(d.rate);
+    st.hon = rec(d.hon);
+    st.jun = rec(d.jun);
+    if (Array.isArray(d.words)) st.words = d.words.filter((id) => isWord(id) && !isStartWord(id));
+    if (Number.isFinite(d.koban) && d.koban > 0) st.koban = Math.floor(d.koban);
+    if (typeof d.kobanDay === 'string') st.kobanDay = d.kobanDay;
+    if (Array.isArray(d.items)) st.items = d.items.filter((id) => typeof id === 'string' && (PAPERS[id] || AURAS[id] || (id.startsWith('d_') && DOHYO[id.slice(2)])));
+    if (typeof d.dohyo === 'string' && DOHYO[d.dohyo]) st.dohyo = d.dohyo;
+    if (Array.isArray(d.titles)) st.titles = d.titles.filter((id) => validTitle(id) && id !== TITLE_START);
+    if (Number.isFinite(d.streak) && d.streak > 0) st.streak = Math.floor(d.streak);
+    if (Array.isArray(d.keikoWon)) st.keikoWon = d.keikoWon.filter((id) => CPU_SHAPES.some((c) => c.id === id));
+  } catch (e) { /* 保存できない画面でも遊べる */ }
+  // 前からいる力士の語は、持っていることにする（11/26 より前の力士の名前を、編集で元にもどせるように）
+  for (const s of st.slots) if (s) for (const id of s.shikona) if (!isStartWord(id) && !st.words.includes(id)) st.words.push(id);
+  // 前からいる力士の称号も、持っていることにする（11/26 より前は24こ全部えらべた）
+  for (const s of st.slots) if (s && s.title !== TITLE_START && !st.titles.includes(s.title)) st.titles.push(s.title);
+  if (!st.slots[st.active]) st.active = Math.max(0, st.slots.findIndex(Boolean));
+  return st;
+}
+
+function saveState(st) {
+  const cur = st.slots[st.active];
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
+      slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
+      koban: st.koban, kobanDay: st.kobanDay, items: st.items, dohyo: st.dohyo,
+      titles: st.titles, streak: st.streak, keikoWon: st.keikoWon,
+    }));
+  } catch (e) { /* */ }
+}
+
+// 道具の「はじめての流れを見る」（試作だけ）：いまの保存を1つだけ取っておき、まっさらな部屋から見なおす／もどす
+const STASH_KEY = SAVE_KEY + '-bak';
+function freshProgress() {
+  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
+}
+function hasStash() {
+  try { return !!localStorage.getItem(STASH_KEY); } catch (e) { return false; }
+}
+function stashSave() {   // もう取ってあれば上書きしない（何度見なおしても、最初の力士たちを守る）
+  try {
+    const cur = localStorage.getItem(SAVE_KEY);
+    if (cur && !localStorage.getItem(STASH_KEY)) localStorage.setItem(STASH_KEY, cur);
+  } catch (e) { /* */ }
+}
+function unstashSave() {
+  try {
+    const b = localStorage.getItem(STASH_KEY);
+    if (!b) return false;
+    localStorage.setItem(SAVE_KEY, b);
+    localStorage.removeItem(STASH_KEY);
+    return true;
+  } catch (e) { return false; }
+}
+
+function addRec(r, winner, side = 'a') {
+  if (winner === side) r.w++; else if (winner) r.l++; else r.d++;
+}
+
+return { SLOT_COUNT, newRikishi, loadState, saveState, freshProgress, hasStash, stashSave, unstashSave, addRec };
 })();
 
 __m['src/game/rating.js'] = (function () {
@@ -1969,10 +2101,12 @@ const RARITY = [
 ];
 
 // 種類
-const KINDS = { word: '四股名の語', paper: '紙質', aura: '気', dohyo: '土俵' };
+const KINDS = { word: '四股名の語', title: '称号', paper: '紙質', aura: '気', dohyo: '土俵' };
 
-// 紙質・気・土俵の段（id は data/papers.js・data/auras.js・data/dohyo.js の key に d_ をつけたもの）
+// 称号・紙質・気・土俵の段（id は data/titles.js・data/papers.js・data/auras.js・data/dohyo.js の key に d_ をつけたもの）
+// 称号は、実績の称号（data/titles.js の TITLE_ACH）とかぶらない残りの14こ（11/26 しょーくん「C」）
 const FUKU_TIERS = {
+  title: { nami: ['ti_yurayura', 'ti_kazeni', 'ti_fubuki', 'ti_origami', 'ti_nimaigoshi', 'ti_okiagari'], jo: ['ti_shijin', 'ti_harimaru', 'ti_ichimai', 'ti_senmai'], tokujo: ['ti_sumiko', 'ti_kirie', 'ti_hasami'], kiwami: ['ti_washi'] },
   paper: { nami: ['p_hanshi', 'p_wara', 'p_sakura', 'p_wakakusa', 'p_ai'], jo: ['p_asanoha', 'p_seigaiha', 'p_ichimatsu', 'p_shinbun'], tokujo: ['p_suminagashi', 'p_kira'], kiwami: ['p_kinpaku'] },
   aura: { nami: ['a_yuge', 'a_kemuri'], jo: ['a_sakura', 'a_kamifubuki', 'a_hinoko'], tokujo: ['a_inazuma', 'a_shippu'], kiwami: ['a_kin'] },
   dohyo: { nami: ['d_ai', 'd_wakakusa'], jo: ['d_sakura', 'd_yuyake'], tokujo: ['d_urushi', 'd_suminagashi'], kiwami: ['d_kinbyobu'] },
@@ -3174,6 +3308,8 @@ const LOOK = {
   descendSec: 1.0,        // 旋回が止まってから、降りきるまで（秒）
   orbitElev: 26,          // 旋回中の見下ろす角度（度）
   orbitFar: 1.3,          // 旋回中のカメラの遠さ（戦うときの何倍）
+  vsSec: 1.8,             // 本場所のはじめの対戦カットインの長さ（秒・旋回にかぶせる）
+  vsShortSec: 1.1,        // 演出を短くのとき（このぶん「勝負」がおそくなる）
   hush: 0.3,              // 旋回のあとの静寂（秒）
   goLead: 0.35,           // 「勝負」が出てから取組が動きはじめるまで
   // 戦うときのカメラ
@@ -3846,6 +3982,7 @@ const { createStage } = __m['src/ui/stage3d.js'];
 const { createFx } = __m['src/ui/fx.js'];
 const { playSfx } = __m['src/ui/sound.js'];
 const { createAura } = __m['src/ui/aura.js'];
+const { drawShapeThumb } = __m['src/ui/pick.js'];
 
 const TAU = Math.PI * 2;
 // 一定の速さでまわり、最後だけゆっくり止まる（0〜1 → 0〜1）
@@ -3871,6 +4008,18 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
   const kimaEl = document.getElementById('r-kima');
   const kindEl = document.getElementById('r-kind');
   const gainEl = document.getElementById('r-gain');
+  const ttlEl = document.getElementById('r-title');
+  const vsEl = document.getElementById('vs');
+  // 本場所のカットイン：板の中を流れる線（はじめに1回だけ作る・左右で同じ形をくり返してつなぐ）
+  for (const el of vsEl.querySelectorAll('.vs-lines')) {
+    let lines = '';
+    for (let i = 0; i < 30; i++) {
+      const y = (Math.random() * 100).toFixed(1), x = Math.random() * 100, len = 12 + Math.random() * 46;
+      const w = (0.6 + Math.random() * 1.6).toFixed(1), o = (0.05 + Math.random() * 0.16).toFixed(2);
+      for (const dx of [0, 100]) lines += `<line x1="${(x + dx).toFixed(1)}" y1="${y}" x2="${(x + dx + len).toFixed(1)}" y2="${y}" stroke-width="${w}" opacity="${o}"/>`;
+    }
+    el.innerHTML = `<svg viewBox="0 0 200 100" preserveAspectRatio="none">${lines}</svg>`;
+  }
   const fx = createFx(cv);
   let stage = null, st = null, raf = 0, curLook = null;
   const btn = (id) => document.getElementById(id);
@@ -3887,6 +4036,8 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     st = null;
     cutin.classList.remove('go');
     names.classList.remove('in');
+    vsEl.classList.remove('in', 'out', 'short');
+    ttlEl.classList.remove('in');
     sname.classList.remove('in', 'out');
     fx.clear();
   }
@@ -3911,7 +4062,8 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     gainEl.style.color = kindEl.style.color;
   }
 
-  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと,
+  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub, rank }）,
+  //        onResult(結果, 決まり手)→ひとこと か { text, titles（新しく手に入れた称号の字） },
   //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ） }
   function start(me, foe, seed, opt = {}) {
     stop();
@@ -3932,6 +4084,9 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
+    // 上の名前は、左右で同じ大きさ（長いほうに合わせて、半分の幅に収める・11/26 しょーくん「見切れる」「統一感」）
+    const nLen = (w) => Array.from(w.name || '').length;
+    names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
     const keiko = !opt.mode || opt.mode === 'keiko';
     btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
@@ -3950,7 +4105,12 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const short = !!getShort();
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
     const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
-    const goAt = orbitEnd + (short ? 0.1 : LOOK.hush);
+    // 本場所：はじめに対戦のカットイン（11/26 しょーくん「格闘ゲームみたいなスピード感」）。旋回のはじめにかぶせる。
+    // 演出を短くでは旋回がないので、カットインのぶんだけ「勝負」をおくらせる
+    const vs = opt.mode === 'honbasho';
+    const vsAt = orbitStart + 0.05, vsLen = short ? LOOK.vsShortSec : LOOK.vsSec;
+    const goAt = vs && short ? vsAt + vsLen + 0.1 : orbitEnd + (short ? 0.1 : LOOK.hush);
+    if (vs) setVs(me, foe.pts, a, b, opt.papers || [], short);
     // 巡業：旋回のあいだに、どの土俵かを右に縦書きで（11/26 しょーくん）。演出を短くでは、立ち合いのあと少しだけ
     const sn = opt.mode === 'jungyo';
     if (sn) {
@@ -3959,6 +4119,7 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
       document.getElementById('sn-note').textContent = S.note;
     }
     st = {
+      vs, vsAt, vsOutAt: vsAt + vsLen - (short ? 0.14 : 0.22), vsEnd: vsAt + vsLen, vsIn: false, vsOut: false, vsGone: false,
       sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
       auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], idle3d: false,
@@ -3973,8 +4134,71 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
 
   // 旋回中にタップしたら飛ばす
   function skip() {
-    if (!st || st.play || st.t >= st.orbitEnd) return;
+    if (!st) return;
+    if (st.vs && st.vsIn && !st.vsOut) { vsLeave(); if (st.short) st.t = Math.max(st.t, st.vsEnd - 0.1); }
+    if (st.play || st.t >= st.orbitEnd) return;
     st.t = st.orbitEnd;
+  }
+
+  // 本場所のカットイン：名前・番付・称号を入れておく（絵は出す瞬間に描く＝見えないと大きさがはかれない）
+  function setVs(me, foePts, a, b, papers, short) {
+    // 東西の名前は同じ大きさ（長いほうに合わせる）
+    const n = String(Math.max(4, Array.from(a.name).length, Array.from(b.name).length));
+    const fill = (side, who) => {
+      const el = vsEl.querySelector('.vs-' + side);
+      el.querySelector('small').textContent = [who.rank, who.sub].filter(Boolean).join('　');
+      const nb = el.querySelector('b');
+      nb.textContent = who.name;
+      nb.style.setProperty('--n', n);
+    };
+    fill('a', a);
+    fill('b', b);
+    vsEl.classList.toggle('short', short);
+    vsEl._draw = () => {
+      const cvs = vsEl.querySelectorAll('canvas');
+      drawShapeThumb(cvs[0], me, false, papers[0]);
+      drawShapeThumb(cvs[1], foePts, true, papers[1]);   // 相手は左向き
+    };
+  }
+  function vsShow() {
+    const s = st;
+    s.vsIn = true;
+    vsEl.classList.remove('out');
+    // 絵は動きを止めた形の大きさで描く（傾けたまま測ると、まわりの四角が大きくなって絵がのびる）→ 動きをはじめる
+    vsEl.classList.add('in', 'measure');
+    if (vsEl._draw) vsEl._draw();
+    vsFit();
+    void vsEl.offsetWidth;
+    vsEl.classList.remove('measure');
+    // 東がシュッ → 西がシュッ →「対」がドン
+    const k = s.short ? 0.6 : 1;
+    playSfx('kami', { vol: 0.7, rate: 1.5 });
+    setTimeout(() => { if (st === s) playSfx('kami', { vol: 0.7, rate: 1.3 }); }, 100 * k);
+    setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.4, rate: 1.2 }); } }, 180 * k);
+    setTimeout(() => { if (st === s && !s.vsOut) { playSfx('taiko', { vol: 0.95, rate: 0.75 }); playSfx('hyoshigi', { vol: 0.35, rate: 1.4 }); } }, 330 * k);
+  }
+  // 東西の名前が斜めの切れ目にかからないように、実際の字の高さをはかって小さくする（11/26 しょーくん「上の名前の下が切れる」）。
+  // 切れ目は左ほど低いので、東（上）は名前の左のはしで、西（下）は名前の右のはしでくらべる。東西は同じ大きさのまま
+  function vsFit() {
+    const box = vsEl.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const cut = (x) => box.top + box.height * (0.58 - 0.16 * (x - box.left) / box.width);   // 斜めの切れ目（CSS の clip-path と同じ 58%→42%）
+    const na = vsEl.querySelector('.vs-a b'), nb = vsEl.querySelector('.vs-b b');
+    na.style.fontSize = nb.style.fontSize = '';
+    const ra = na.getBoundingClientRect(), rb = nb.getBoundingClientRect();
+    const gap = 14;
+    const sa = ra.height > 0 ? Math.min(1, (cut(ra.left) - gap - ra.top) / ra.height) : 1;
+    const sb = rb.height > 0 ? Math.min(1, (rb.bottom - (cut(rb.right) + gap)) / rb.height) : 1;
+    const s = Math.max(0.3, Math.min(sa, sb));
+    if (s < 1) {
+      const px = parseFloat(getComputedStyle(na).fontSize) * s;
+      na.style.fontSize = nb.style.fontSize = px.toFixed(1) + 'px';
+    }
+  }
+  function vsLeave() {
+    st.vsOut = true;
+    vsEl.classList.add('out');
+    playSfx('kami', { vol: 0.45, rate: 1.8 });
   }
 
   function camera(s) {
@@ -4007,7 +4231,12 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     const done = !!s.bout.result.kind;
     const lastIdx = s.rec.n - 1;
     // 立ち合いまで
-    if (!s.went && s.t >= s.orbitStart) names.classList.add('in');
+    if (!s.went && s.t >= (s.vs ? s.vsEnd : s.orbitStart)) names.classList.add('in');
+    if (s.vs) {
+      if (!s.vsIn && s.t >= s.vsAt) { if (s.t < s.vsOutAt) vsShow(); else { s.vsIn = s.vsOut = true; } }
+      if (s.vsIn && !s.vsOut && s.t >= s.vsOutAt) vsLeave();
+      if (!s.vsGone && s.t >= s.vsEnd + 0.1) { s.vsGone = true; vsEl.classList.remove('in', 'out'); }
+    }
     if (s.sn && !s.snIn && s.t >= s.snAt) {
       s.snIn = true;
       if (s.t < s.snOutAt) {   // タップで旋回を飛ばしたあとなら出さない
@@ -4108,11 +4337,29 @@ function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome }) {
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
     placeKind();
     // 巡業・本場所：番付や戦績のひとこと
-    if (s.opt.onResult) s.opt.gain = s.opt.onResult(r) || '';
+    let res = s.opt.onResult ? s.opt.onResult(r, s.kima) : '';
+    if (!res || typeof res === 'string') res = { text: res || '' };
+    s.opt.gain = res.text || '';
+    showTitles(res.titles || []);
     gainEl.textContent = s.opt.gain || '';
     gainEl.hidden = !s.opt.gain;
     resEl.classList.toggle('has-gain', !gainEl.hidden);   // ひとことがあるときは、決まりの文を少し上へ（2行で横の面のまん中に）
     resEl.hidden = false;
+  }
+
+  // 称号を手に入れた：結果の右に縦書きで（金の罫 → 名前を筆で → 「称号を手に入れた」）
+  function showTitles(list) {
+    ttlEl.textContent = '';
+    ttlEl.classList.remove('in');
+    if (!list.length) return;
+    const sm = document.createElement('small');
+    sm.textContent = T.titleGain;
+    ttlEl.appendChild(sm);
+    for (const t of list.slice(0, 2)) { const b = document.createElement('b'); b.className = 'brush'; b.textContent = t; ttlEl.appendChild(b); }
+    void ttlEl.offsetWidth;
+    ttlEl.classList.add('in');
+    const s = st;
+    setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.45, rate: 1.0 }); playSfx('taiko', { vol: 0.5, rate: 1.25 }); } }, 1000);
   }
 
   gl.addEventListener('pointerdown', skip);
@@ -4335,13 +4582,11 @@ function createRoller(col, onPick) {
       kids[i].className = 'rl-item' + (d === 0 ? ' sel' : d === 1 ? ' n1' : d === 2 ? ' n2' : '');
     }
   }
-  // 字の多い語（称号の8字 など）は、列の幅に収まる大きさに
+  // 字の大きさは列でそろえる：いちばん字の多い語（称号の8字 など）が列の幅に収まる大きさ（11/26 しょーくん「統一感」）
   function fit() {
     const w = list.clientWidth;
-    for (const el of list.children) {
-      const n = Array.from(el.textContent).length;
-      el.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / Math.max(1, n)))}px`);
-    }
+    const n = Math.max(1, ...[...list.children].map((el) => Array.from(el.textContent).length));
+    list.style.setProperty('--fit', `${Math.min(20, Math.floor((w * 0.9) / n))}px`);
   }
   function settleLater() {   // 動きが止まったら、プログラムでまわした分の「だまって」を解く
     clearTimeout(quietT);
@@ -4418,6 +4663,11 @@ function fitText(el, text) {
 }
 // 字の数だけ入れる（大きさは CSS が、入れ物の高さ 100cqh と --n から決める＝どの画面の高さでも1列に収まる）
 function setN(el) { el.style.setProperty('--n', String(Math.max(2, Array.from(el.textContent).length))); }
+// ならんだ字の大きさをそろえる：いちばん字の多いものの --n をみんなに
+function sameSize(els) {
+  const n = Math.max(2, ...[...els].map((e) => Array.from(e.textContent).length));
+  for (const e of els) e.style.setProperty('--n', String(n));
+}
 // 縦の見出し：中の span に字を入れて --n を
 function headText(h1, text) {
   let sp = h1.querySelector('span');
@@ -4428,6 +4678,8 @@ function headText(h1, text) {
 
 // 力士のカード（部屋の力士・力士選出で使う）。番付表の1列＝1力士。opt：{ onPick(i, ボタン), emptyOk }
 // 朱の帯は、はじめはのせない（タップしたときに choose.js でベタッと・11/26 しょーくん）
+// 勝敗とレートは部屋（ユーザー）のもので、力士の札には出さない（11/26 しょーくん「いろんな力士を作りやすく」）
+// 名前の字の大きさは、ならんだ札でそろえる（いちばん長い名前に合わせる・11/26 しょーくん「統一感」）
 function renderSlots(el, slots, opt) {
   el.textContent = '';
   slots.forEach((s, i) => {
@@ -4439,7 +4691,6 @@ function renderSlots(el, slots, opt) {
       b.innerHTML = '<canvas></canvas><span class="who"><small></small><b class="brush"></b><em></em></span>';
       b.querySelector('small').textContent = titleText(s.title);
       fitText(b.querySelector('b'), shikonaText(s.shikona));
-      b.querySelector('em').textContent = T.rec(s.rec);
     } else {
       b.innerHTML = '<span class="plus brush">＋</span><span class="who"><b class="brush"></b><em></em></span>';
       fitText(b.querySelector('b'), T.slotEmpty);
@@ -4448,17 +4699,18 @@ function renderSlots(el, slots, opt) {
     b.addEventListener('click', () => opt.onPick(i, b));
     el.appendChild(b);
   });
+  sameSize(el.querySelectorAll('.slot:not(.empty) .who b'));
   // 描くのはならべてから（canvas の大きさが決まってから）
   slots.forEach((s, i) => { if (s) drawShapeThumb(el.children[i].querySelector('canvas'), s.shape, false, s.paper); });
 }
 
 // ドラムに並べる語。has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
 function itemsOf(g, has) {
-  if (g === 'title') return TITLES.map((t) => ({ id: t.id, label: t.t }));
+  if (g === 'title') return TITLES.filter((t) => has.has(t.id)).map((t) => ({ id: t.id, label: t.t }));
   return SHIKONA[g].filter((w) => has.has(w.id)).map((w) => ({ id: w.id, label: wordText(w.id) || T.rollNone }));
 }
 
-// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, getMise()＝{ papers, auras }（持っている紙質・気の id）, onChange(i), onRecut(i), onRetire(i), onDone() }
+// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語と称号の Set, getMise()＝{ papers, auras }（持っている紙質・気の id）, onChange(i), onRecut(i), onRetire(i), onDone() }
 // 「名前」と「見た目」（紙質・気＝11/26 福箱）の2つのドラムを、上の切りかえで
 function initEdit(cb) {
   const cv = document.getElementById('ed-cv');
@@ -4470,7 +4722,6 @@ function initEdit(cb) {
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
     fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
-    document.getElementById('ed-rec').textContent = T.rec(s.rec);
   }
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
@@ -4529,7 +4780,8 @@ function initEdit(cb) {
     const s = cb.getSlot(idx), has = cb.getOwned();
     for (const g in rollers) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
     const locked = SHIKONA.kami.filter((w) => !has.has(w.id)).length + SHIKONA.shimo.filter((w) => !has.has(w.id)).length;
-    document.getElementById('ed-locked').textContent = locked ? T.lockedWords(locked) : '';
+    const lockedT = TITLES.filter((t) => !has.has(t.id)).length;
+    document.getElementById('ed-locked').textContent = T.lockedName(locked, lockedT);
   }
 
   // おまかせ：3つのドラムがスロットのようにまわって止まる
@@ -4566,7 +4818,7 @@ function initEdit(cb) {
   };
 }
 
-return { fitText, setN, headText, renderSlots, initEdit };
+return { fitText, setN, sameSize, headText, renderSlots, initEdit };
 })();
 
 __m['src/ui/choose.js'] = (function () {
@@ -4702,7 +4954,8 @@ const { SHIKONA, SHIKONA_START } = __m['src/data/shikona.js'];
 const { PAPERS, PAPER_DEFAULT } = __m['src/data/papers.js'];
 const { AURAS, AURA_DEFAULT } = __m['src/data/auras.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
-const { wordText } = __m['src/game/names.js'];
+const { TITLE_START } = __m['src/data/titles.js'];
+const { wordText, titleText } = __m['src/game/names.js'];
 
 // 出る物ぜんぶ：{ id, kind, tier, name }
 const FUKU_ITEMS = [];
@@ -4713,7 +4966,7 @@ for (const g of ['kami', 'shimo']) {
     if (tier) FUKU_ITEMS.push({ id: w.id, kind: 'word', tier, name: wordText(w.id), part: g });
   }
 }
-for (const kind of ['paper', 'aura', 'dohyo']) {
+for (const kind of ['title', 'paper', 'aura', 'dohyo']) {
   for (const tier in FUKU_TIERS[kind]) {
     for (const id of FUKU_TIERS[kind][tier]) FUKU_ITEMS.push({ id, kind, tier, name: itemName(id, kind) });
   }
@@ -4725,6 +4978,7 @@ function itemName(id, kind = BY_ID[id] && BY_ID[id].kind) {
   if (kind === 'paper') return PAPERS[id] ? PAPERS[id].name : '';
   if (kind === 'aura') return AURAS[id] ? AURAS[id].name : '';
   if (kind === 'dohyo') { const d = DOHYO[id.slice(2)]; return d ? d.name : ''; }
+  if (kind === 'title') return titleText(id);
   return wordText(id);
 }
 function fukuItem(id) { return BY_ID[id] || null; }
@@ -4733,7 +4987,7 @@ function kindName(kind) { return KINDS[kind] || ''; }
 
 // 持っている物（はじめから持っている物＋手に入れた物）
 function ownedItems(state) {
-  return new Set([...SHIKONA_START, PAPER_DEFAULT, AURA_DEFAULT, ...(state.words || []), ...(state.items || [])]);
+  return new Set([...SHIKONA_START, TITLE_START, PAPER_DEFAULT, AURA_DEFAULT, ...(state.words || []), ...(state.titles || []), ...(state.items || [])]);
 }
 function ownedPapers(state) { const o = ownedItems(state); return Object.keys(PAPERS).filter((id) => o.has(id)); }
 function ownedAuras(state) { const o = ownedItems(state); return Object.keys(AURAS).filter((id) => o.has(id)); }
@@ -4767,9 +5021,10 @@ function drawFuku(owned, rng = Math.random) {
   return row.items[Math.floor(rng() * row.items.length)];
 }
 
-// 手に入れる（語は words、ほかは items）
+// 手に入れる（語は words、称号は titles、ほかは items）
 function addItem(state, it) {
   if (it.kind === 'word') { if (!state.words.includes(it.id)) state.words.push(it.id); }
+  else if (it.kind === 'title') { if (!state.titles.includes(it.id)) state.titles.push(it.id); }
   else if (!state.items.includes(it.id)) state.items.push(it.id);
 }
 
@@ -4788,6 +5043,51 @@ function todayKey(d = new Date()) {
 return { FUKU_ITEMS, itemName, fukuItem, tierOf, kindName, ownedItems, ownedPapers, ownedAuras, ownedDohyo, fukuOdds, drawFuku, addItem, kobanFor, todayKey };
 })();
 
+__m['src/game/titles.js'] = (function () {
+// 称号の手に入れ方（11/26 しょーくん「C」）：取組の実績で手に入る称号を決める。福箱の称号は game/fukubako.js
+// 見た目だけ（強さにはさわらない）。実績はそろえても、ほかのごほうびはない
+const { TITLES, TITLE_START, TITLE_ACH, TITLE_NUM, TITLE_RANK } = __m['src/data/titles.js'];
+const { BANZUKE } = __m['src/data/banzuke.js'];
+const { CPU_SHAPES } = __m['src/data/cpu-shapes.js'];
+
+const rankMin = (id) => (BANZUKE.find((b) => b.id === id) || { min: Infinity }).min;
+const won = (c) => c.winner === 'a';
+
+// c：{ mode（jungyo・honbasho・keiko）, winner, kima（決まり手の id）, hour }。st は取組の結果を入れたあと
+const COND = {
+  ti_shinsei: (st, c) => c.rated && won(c),
+  ti_oshi: (st, c) => c.rated && won(c) && c.kima === 'oshidashi',
+  ti_tawara: (st, c) => c.rated && won(c) && c.kima === 'tsukiotoshi',
+  ti_kamihitoe: (st, c) => c.rated && won(c) && (c.kima === 'fumidashi' || c.kima === 'isamiashi'),
+  ti_fudo: (st) => (st.streak | 0) >= TITLE_NUM.streak,
+  ti_nikoniko: (st) => st.hon.l + st.jun.l >= TITLE_NUM.loses,
+  ti_kenkyu: (st) => CPU_SHAPES.every((s) => st.keikoWon.includes(s.id)),
+  ti_ippitsu: (st) => st.slots.every(Boolean),
+  ti_yofukashi: (st, c) => c.hour >= TITLE_NUM.nightFrom && c.hour < TITLE_NUM.nightTo,
+};
+for (const id in TITLE_RANK) COND[id] = (st, c) => c.mode === 'honbasho' && st.rate >= rankMin(TITLE_RANK[id]);
+
+function ownedTitles(state) { return new Set([TITLE_START, ...(state.titles || [])]); }
+function isTitle(id) { return TITLES.some((t) => t.id === id); }
+
+// 取組のあと：連勝・稽古で勝った相手を数えて、新しく手に入れた称号の id を返す（state.titles に足す）
+// foeId：稽古の相手（CPU の形の id）
+function afterBout(state, c) {
+  c.rated = c.mode === 'jungyo' || c.mode === 'honbasho';
+  if (c.rated) { if (won(c)) state.streak = (state.streak | 0) + 1; else if (c.winner) state.streak = 0; }
+  if (c.mode === 'keiko' && won(c) && c.foeId && !state.keikoWon.includes(c.foeId)) state.keikoWon.push(c.foeId);
+  const has = ownedTitles(state), got = [];
+  for (const id in TITLE_ACH) {
+    if (has.has(id) || !COND[id] || !COND[id](state, c)) continue;
+    state.titles.push(id);
+    got.push(id);
+  }
+  return got;
+}
+
+return { ownedTitles, isTitle, afterBout };
+})();
+
 __m['src/ui/fuku.js'] = (function () {
 // 福箱の画面（11/26 しょーくん）：小判で買って開ける・出る物と確率の一覧。
 // 開け方は「和紙で包んだ箱をゆらす（太鼓）→ 朱の筆で切る → 紙が左右にさける → 中身」。スロットやパチンコには似せない（game-art-rule.md）
@@ -4796,7 +5096,7 @@ const { T } = __m['src/data/text.js'];
 const { KOBAN, KINDS } = __m['src/data/fukubako.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
 const { OTEHON } = __m['src/data/cpu-shapes.js'];
-const { FUKU_ITEMS, fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } = __m['src/game/fukubako.js'];
+const { fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } = __m['src/game/fukubako.js'];
 const { drawShapeThumb, thumbAuraBox } = __m['src/ui/pick.js'];
 const { auraPreview } = __m['src/ui/aura.js'];
 const { patternFill } = __m['src/ui/papertex.js'];
@@ -4804,8 +5104,7 @@ const { setupCanvas } = __m['src/ui/ink.js'];
 const { fitText } = __m['src/ui/roster.js'];
 const { playSfx } = __m['src/ui/sound.js'];
 
-const KIND_ORDER = ['word', 'paper', 'aura', 'dohyo'];
-const SHORT = { word: '四股名' };   // 下の帯は短く
+const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
 const pct = (x) => `${x.toFixed(2)}%`;
 
 // 土俵の小さな見本（上の面・墨の輪・仕切り線と、横の面）
@@ -4847,21 +5146,7 @@ function initFuku(cb) {
   function paint() {
     const st = cb.getState(), owned = ownedItems(st);
     $('fk-koban').textContent = T.koban(st.koban);
-    // 種類ごとの、持っている数／ぜんぶ（そろえても、ごほうびはない＝コンプガチャにしない）
-    const kinds = $('fk-kinds');
-    kinds.textContent = '';
-    for (const k of KIND_ORDER) {
-      const all = FUKU_ITEMS.filter((it) => it.kind === k);
-      const d = document.createElement('div');
-      const b = document.createElement('b');
-      b.className = 'brush';
-      const n = document.createElement('span');   // 「12／64」：数字は縦中横で
-      const num = (x) => { const i = document.createElement('i'); i.textContent = String(x); return i; };
-      n.append(num(all.filter((it) => owned.has(it.id)).length), '／', num(all.length));
-      d.append(b, n);
-      kinds.appendChild(d);
-      fitText(b, SHORT[k] || KINDS[k]);
-    }
+    // 福箱の画面は、箱と「出る物と確率」「開ける」だけ（持っている数・ぜんぶの数は出さない＝開けてのおたのしみ・11/26 しょーくん）
     const left = fukuOdds(owned).left;
     openBtn.disabled = !left || st.koban < KOBAN.price;
     openBtn.textContent = !left ? T.fukuDone : st.koban < KOBAN.price ? T.fukuShort : T.fukuOpen(KOBAN.price);
@@ -4936,9 +5221,6 @@ function initFuku(cb) {
     const { rows } = fukuOdds(ownedItems(cb.getState()));
     const body = $('od-list');
     body.textContent = '';
-    const note = (t) => { const p = document.createElement('p'); p.textContent = t; body.appendChild(p); };
-    note(T.fukuNote);
-    note(T.fukuOddsNote);
     for (const r of rows) {
       const sec = document.createElement('section');
       sec.className = 'odds';
@@ -4953,16 +5235,14 @@ function initFuku(cb) {
       sub.textContent = r.items.length ? `${r.items.length}種・1つ ${pct(r.rate / r.items.length)}` : T.fukuDone;
       h.append(stamp, rate, sub);
       sec.appendChild(h);
-      // 四股名の語は、上の句と下の句で分けて（同じ字の語が両方にあるため）
-      const groups = [['上の句', (it) => it.kind === 'word' && it.part === 'kami'], ['下の句', (it) => it.kind === 'word' && it.part === 'shimo']]
-        .concat(KIND_ORDER.slice(1).map((k) => [KINDS[k], (it) => it.kind === k]));
-      for (const [label, f] of groups) {
-        const its = r.items.filter(f);
-        if (!its.length) continue;
+      // 種類ごとの数と確率だけ（名前は出さない＝何が入っているかは開けてのおたのしみ・11/26 しょーくん）
+      for (const k of KIND_ORDER) {
+        const n = r.items.filter((it) => it.kind === k).length;
+        if (!n) continue;
         const p = document.createElement('p');
         const kb = document.createElement('b');
-        kb.textContent = `${label} ${its.length}`;
-        p.append(kb, document.createTextNode(its.map((it) => it.name || T.rollNone).join('・')));
+        kb.textContent = `${KINDS[k]} ${n}`;
+        p.append(kb, document.createTextNode(pct((r.rate * n) / r.items.length)));
         sec.appendChild(p);
       }
       body.appendChild(sec);
@@ -4991,10 +5271,11 @@ __m['src/ui/match.js'] = (function () {
 const { T } = __m['src/data/text.js'];
 const { STAGES } = __m['src/data/stages.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
+const { drawDohyoSwatch } = __m['src/ui/fuku.js'];
 const { BANZUKE } = __m['src/data/banzuke.js'];
 const { schedule, slotLeftMin } = __m['src/game/jungyo.js'];
 const { rankOf, nextRank } = __m['src/game/rating.js'];
-const { renderSlots, headText, fitText, setN } = __m['src/ui/roster.js'];
+const { renderSlots, headText, fitText, setN, sameSize } = __m['src/ui/roster.js'];
 
 function hhmm(ms) { const d = new Date(ms); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; }
 
@@ -5066,21 +5347,50 @@ function initBanzuke() {
   };
 }
 
+// 土俵えらび（本場所の土俵スキン）：o：{ own（持っている土俵の key）, cur（いまの key）, onPick(key, ボタン) }
+const dohyoLabel = (key) => DOHYO[key].name.replace(/の(土俵|箱)$/, '');
+function initDohyoPick() {
+  return {
+    show(o) {
+      document.getElementById('dy-name').textContent = DOHYO[o.cur].name;
+      setN(document.getElementById('dy-name'));
+      const list = document.getElementById('dy-list');
+      list.textContent = '';
+      for (const key of o.own) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = key === o.cur ? 'on' : '';
+        b.innerHTML = '<b class="brush fit"></b><canvas></canvas>';
+        b.querySelector('b').textContent = dohyoLabel(key);
+        b.addEventListener('click', () => o.onPick(key, b));
+        list.appendChild(b);
+      }
+      sameSize(list.querySelectorAll('b'));
+      // 絵はならべてから（大きさが決まってから）
+      drawDohyoSwatch(document.getElementById('dy-cv'), o.cur);
+      list.querySelectorAll('canvas').forEach((cv, i) => drawDohyoSwatch(cv, o.own[i]));
+    },
+  };
+}
+
 function initSelect() {
   return {
-    // o：{ mode, stage, drawn（抽選したか）, slots, active, onPick(i) }
+    // o：{ mode, stage, drawn（抽選したか）, slots, active, rec（部屋の番付・レート・勝敗のひとこと）, onPick(i) }
     show(o) {
       document.getElementById('sel-mode').textContent = T.mode[o.mode];
       setN(document.getElementById('sel-mode'));
       const S = STAGES[o.stage];
       document.getElementById('sel-stage').textContent = o.drawn ? T.jungyoDraw(S.name) + '・' + S.note : T.stageLine(S.name, S.note);
       setN(document.getElementById('sel-stage'));
+      const rec = document.getElementById('sel-rec');
+      rec.textContent = o.rec || '';
+      setN(rec);
       renderSlots(document.getElementById('sel-slots'), o.slots, { active: o.active, onPick: o.onPick, emptyOk: false });
     },
   };
 }
 
-return { initJungyo, initBanzuke, initSelect };
+return { initJungyo, initBanzuke, initDohyoPick, initSelect };
 })();
 
 __m['src/ui/btnart.js'] = (function () {
@@ -5095,12 +5405,13 @@ const svgOf = (w, h, body, keep) =>
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'${keep ? '' : " preserveAspectRatio='none'"}>${body}</svg>`;
 
 // 筆でひと塗りした帯（左は筆を置いたかすれ、右は毛先がすっと抜ける・上下に細い毛のすじ）
-function brushBand(color, seed) {
-  const r = rand(seed), W = 240, H = 64, top = [], bot = [];
+// m：上下のすきま（ふつう9・小さくすると太い帯）
+function brushBand(color, seed, m = 9) {
+  const r = rand(seed), W = 240, H = 64, top = [], bot = [], k = m / 9;
   for (let i = 0; i <= 12; i++) {
     const x = 16 + (i / 12) * (W - 40), tail = i > 9 ? (i - 9) * 2 : 0;
-    top.push([x, 9 + Math.sin(i * 0.9) * 1.6 + r() * 2.4 + tail]);
-    bot.push([x, H - 8 - Math.sin(i * 0.7 + 1) * 1.6 - r() * 2.4 - tail * 1.1]);
+    top.push([x, m + (Math.sin(i * 0.9) * 1.6 + r() * 2.4 + tail) * k]);
+    bot.push([x, H - m + 1 - (Math.sin(i * 0.7 + 1) * 1.6 + r() * 2.4 + tail * 1.1) * k]);
   }
   let d = `M${n1(top[0][0])},${n1(top[0][1])}`;
   for (const p of top.slice(1)) d += `L${n1(p[0])},${n1(p[1])}`;
@@ -5182,10 +5493,11 @@ const { initHeya } = __m['src/ui/heya.js'];
 const { reset: resetChoose } = __m['src/ui/choose.js'];
 const { renderSlots, initEdit, fitText, headText, setN } = __m['src/ui/roster.js'];
 const { choose } = __m['src/ui/choose.js'];
-const { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo } = __m['src/game/fukubako.js'];
+const { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } = __m['src/game/fukubako.js'];
+const { afterBout } = __m['src/game/titles.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
 const { initFuku } = __m['src/ui/fuku.js'];
-const { initJungyo, initBanzuke, initSelect } = __m['src/ui/match.js'];
+const { initJungyo, initBanzuke, initSelect, initDohyoPick } = __m['src/ui/match.js'];
 const { unlockAudio, setMuted, playSfx, sfxReady } = __m['src/ui/sound.js'];
 const { applyButtonArt } = __m['src/ui/btnart.js'];
 
@@ -5202,6 +5514,10 @@ const save = () => saveState(state);
 const activeSlot = () => state.slots[state.active];
 const hasRikishi = () => state.slots.some(Boolean);
 const who = (s) => ({ name: shikonaText(s.shikona), sub: titleText(s.title) });
+// 取組のあと：実績の称号（11/26 しょーくん「C」）。新しく手に入れた称号の字を返す
+function titlesAfter(mode, r, kima, foeId) {
+  return afterBout(state, { mode, winner: r.winner, kima, foeId, hour: new Date().getHours() }).map(titleText);
+}
 
 // 画面の行き来（もどるボタンは1つ前へ）
 let cur = null;
@@ -5303,7 +5619,11 @@ function boot() {
     onFight(foe) {
       show('s-bout');
       const me = activeSlot();
-      bout.start(me.shape, foe, state.seed++, { mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura] });
+      bout.start(me.shape, foe, state.seed++, {
+        mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura],
+        // 稽古は戦績・小判なし。称号（研究熱心など）だけ
+        onResult(r, kima) { const t = titlesAfter('keiko', r, kima, foe.id); save(); return { text: '', titles: t }; },
+      });
     },
     onBack: back,
   });
@@ -5332,6 +5652,8 @@ function boot() {
   }
   onShow['s-select'] = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
+    // 勝敗とレートは部屋（ユーザー）のもの：本場所は番付・レート・本場所の勝敗、巡業は巡業の勝敗（11/26 しょーくん）
+    rec: match.mode === 'honbasho' ? `${T.rateLine(rankOf(state.rate).name, state.rate)}　${T.rec(state.hon)}` : T.rec(state.jun),
     // 選んだ列に朱の帯をベタッと＋太鼓ドドン、朱の判子「出」をポン → ほかは下へ抜けて取組へ
     onPick(i, btn) {
       if (stamping) return;
@@ -5349,10 +5671,12 @@ function boot() {
     const m = match;
     show('s-bout');
     bout.start(me.shape, foe, state.seed++, {
-      mode: m.mode, stage: m.stage, a: who(me), b: who(foe),
+      mode: m.mode, stage: m.stage,
+      // 本場所はカットインに番付も（相手の番付は仮のレートから）
+      a: Object.assign(who(me), { rank: rankOf(state.rate).name }), b: Object.assign(who(foe), { rank: rankOf(foe.rate).name }),
       papers: [me.paper, foe.paper], auras: [me.aura, foe.aura],
       look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
-      onResult(r) {
+      onResult(r, kima) {
         addRec(me.rec, r.winner);
         // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
         const kb = kobanFor(state, r.winner, todayKey());
@@ -5362,14 +5686,16 @@ function boot() {
           const d = eloDelta(state.rate, foe.rate, r.winner === 'a' ? 1 : r.winner ? 0 : 0.5);
           state.rate += d;
           addRec(state.hon, r.winner);
+          const titles = titlesAfter('honbasho', r, kima);
           save();
           const after = rankOf(state.rate);
           const move = after.min > before.min ? '　' + T.promote(after.name) : after.min < before.min ? '　' + T.demote(after.name) : '';
-          return T.rateGain(after.name, state.rate, d) + move + kbText;
+          return { text: T.rateGain(after.name, state.rate, d) + move + kbText, titles };
         }
         addRec(state.jun, r.winner);
+        const titles = titlesAfter('jungyo', r, kima);
         save();
-        return `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}` + kbText;
+        return { text: `${STAGES[m.stage].name}　${T.mode.jungyo} ${T.rec(state.jun)}` + kbText, titles };
       },
     });
   }
@@ -5433,7 +5759,7 @@ function boot() {
   });
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
-    getOwned: () => ownedWords(state.words),
+    getOwned: () => ownedItems(state),
     getMise: () => ({ papers: ownedPapers(state), auras: ownedAuras(state) }),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
@@ -5455,7 +5781,7 @@ function boot() {
     openSelect('jungyo', true);
   });
   const banzuke = initBanzuke();
-  // 本場所の土俵（福箱の土俵スキン）：押すたびに、持っている土俵を順に。1つだけなら出さない
+  // 本場所の土俵（福箱の土俵スキン）：押すと土俵えらびの画面（挿し絵つき）へ。1つだけなら出さない
   const bzDohyo = document.getElementById('bz-dohyo');
   const paintDohyo = () => {
     const own = ownedDohyo(state);
@@ -5463,12 +5789,18 @@ function boot() {
     bzDohyo.hidden = own.length < 2;
     bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
   };
-  bzDohyo.addEventListener('click', () => {
-    const own = ownedDohyo(state);
-    state.dohyo = own[(own.indexOf(state.dohyo) + 1) % own.length];
-    save();
-    paintDohyo();
-    playSfx('kami', { vol: 0.5 });
+  bzDohyo.addEventListener('click', () => go('s-dohyo'));
+  const dohyoPick = initDohyoPick();
+  onShow['s-dohyo'] = () => dohyoPick.show({
+    own: ownedDohyo(state), cur: state.dohyo,
+    // えらんだ列に朱の帯をベタッと＋ドドン → 番付へもどる（いまの土俵をもう一度えらんだら、そのままもどる）
+    onPick(key, btn) {
+      if (key === state.dohyo) { back(); return; }
+      for (const b of btn.parentElement.children) b.classList.remove('on');
+      state.dohyo = key;
+      save();
+      choose(btn, back, state.short);
+    },
   });
   onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
   document.getElementById('bz-go').addEventListener('click', () => {
@@ -5483,7 +5815,7 @@ function boot() {
   // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
   const unstashBtn = document.getElementById('b-unstash');
   const paintStash = () => { unstashBtn.hidden = !hasStash(); };
-  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo'];
+  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo', 'titles', 'streak', 'keikoWon'];
   document.getElementById('b-intro').addEventListener('click', () => {
     stashSave();
     Object.assign(state, freshProgress());

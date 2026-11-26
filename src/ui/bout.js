@@ -9,6 +9,7 @@ import { createStage } from './stage3d.js';
 import { createFx } from './fx.js';
 import { playSfx } from './sound.js';
 import { createAura } from './aura.js';
+import { drawShapeThumb } from './pick.js';
 
 const TAU = Math.PI * 2;
 // 一定の速さでまわり、最後だけゆっくり止まる（0〜1 → 0〜1）
@@ -34,6 +35,18 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   const kimaEl = document.getElementById('r-kima');
   const kindEl = document.getElementById('r-kind');
   const gainEl = document.getElementById('r-gain');
+  const ttlEl = document.getElementById('r-title');
+  const vsEl = document.getElementById('vs');
+  // 本場所のカットイン：板の中を流れる線（はじめに1回だけ作る・左右で同じ形をくり返してつなぐ）
+  for (const el of vsEl.querySelectorAll('.vs-lines')) {
+    let lines = '';
+    for (let i = 0; i < 30; i++) {
+      const y = (Math.random() * 100).toFixed(1), x = Math.random() * 100, len = 12 + Math.random() * 46;
+      const w = (0.6 + Math.random() * 1.6).toFixed(1), o = (0.05 + Math.random() * 0.16).toFixed(2);
+      for (const dx of [0, 100]) lines += `<line x1="${(x + dx).toFixed(1)}" y1="${y}" x2="${(x + dx + len).toFixed(1)}" y2="${y}" stroke-width="${w}" opacity="${o}"/>`;
+    }
+    el.innerHTML = `<svg viewBox="0 0 200 100" preserveAspectRatio="none">${lines}</svg>`;
+  }
   const fx = createFx(cv);
   let stage = null, st = null, raf = 0, curLook = null;
   const btn = (id) => document.getElementById(id);
@@ -50,6 +63,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     st = null;
     cutin.classList.remove('go');
     names.classList.remove('in');
+    vsEl.classList.remove('in', 'out', 'short');
+    ttlEl.classList.remove('in');
     sname.classList.remove('in', 'out');
     fx.clear();
   }
@@ -74,7 +89,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     gainEl.style.color = kindEl.style.color;
   }
 
-  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub }）, onResult(結果)→ひとこと,
+  // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub, rank }）,
+  //        onResult(結果, 決まり手)→ひとこと か { text, titles（新しく手に入れた称号の字） },
   //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ） }
   function start(me, foe, seed, opt = {}) {
     stop();
@@ -95,6 +111,9 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
+    // 上の名前は、左右で同じ大きさ（長いほうに合わせて、半分の幅に収める・11/26 しょーくん「見切れる」「統一感」）
+    const nLen = (w) => Array.from(w.name || '').length;
+    names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
     const keiko = !opt.mode || opt.mode === 'keiko';
     btn('b-again').hidden = !keiko; btn('b-foe').hidden = !keiko; btn('b-recut').hidden = !keiko;
@@ -113,7 +132,12 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const short = !!getShort();
     const orbitStart = LOOK.inkSec + LOOK.orbitDelay;
     const orbitEnd = orbitStart + (short ? 0 : LOOK.orbitSec + LOOK.descendSec);
-    const goAt = orbitEnd + (short ? 0.1 : LOOK.hush);
+    // 本場所：はじめに対戦のカットイン（11/26 しょーくん「格闘ゲームみたいなスピード感」）。旋回のはじめにかぶせる。
+    // 演出を短くでは旋回がないので、カットインのぶんだけ「勝負」をおくらせる
+    const vs = opt.mode === 'honbasho';
+    const vsAt = orbitStart + 0.05, vsLen = short ? LOOK.vsShortSec : LOOK.vsSec;
+    const goAt = vs && short ? vsAt + vsLen + 0.1 : orbitEnd + (short ? 0.1 : LOOK.hush);
+    if (vs) setVs(me, foe.pts, a, b, opt.papers || [], short);
     // 巡業：旋回のあいだに、どの土俵かを右に縦書きで（11/26 しょーくん）。演出を短くでは、立ち合いのあと少しだけ
     const sn = opt.mode === 'jungyo';
     if (sn) {
@@ -122,6 +146,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       document.getElementById('sn-note').textContent = S.note;
     }
     st = {
+      vs, vsAt, vsOutAt: vsAt + vsLen - (short ? 0.14 : 0.22), vsEnd: vsAt + vsLen, vsIn: false, vsOut: false, vsGone: false,
       sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
       auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], idle3d: false,
@@ -136,8 +161,71 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
 
   // 旋回中にタップしたら飛ばす
   function skip() {
-    if (!st || st.play || st.t >= st.orbitEnd) return;
+    if (!st) return;
+    if (st.vs && st.vsIn && !st.vsOut) { vsLeave(); if (st.short) st.t = Math.max(st.t, st.vsEnd - 0.1); }
+    if (st.play || st.t >= st.orbitEnd) return;
     st.t = st.orbitEnd;
+  }
+
+  // 本場所のカットイン：名前・番付・称号を入れておく（絵は出す瞬間に描く＝見えないと大きさがはかれない）
+  function setVs(me, foePts, a, b, papers, short) {
+    // 東西の名前は同じ大きさ（長いほうに合わせる）
+    const n = String(Math.max(4, Array.from(a.name).length, Array.from(b.name).length));
+    const fill = (side, who) => {
+      const el = vsEl.querySelector('.vs-' + side);
+      el.querySelector('small').textContent = [who.rank, who.sub].filter(Boolean).join('　');
+      const nb = el.querySelector('b');
+      nb.textContent = who.name;
+      nb.style.setProperty('--n', n);
+    };
+    fill('a', a);
+    fill('b', b);
+    vsEl.classList.toggle('short', short);
+    vsEl._draw = () => {
+      const cvs = vsEl.querySelectorAll('canvas');
+      drawShapeThumb(cvs[0], me, false, papers[0]);
+      drawShapeThumb(cvs[1], foePts, true, papers[1]);   // 相手は左向き
+    };
+  }
+  function vsShow() {
+    const s = st;
+    s.vsIn = true;
+    vsEl.classList.remove('out');
+    // 絵は動きを止めた形の大きさで描く（傾けたまま測ると、まわりの四角が大きくなって絵がのびる）→ 動きをはじめる
+    vsEl.classList.add('in', 'measure');
+    if (vsEl._draw) vsEl._draw();
+    vsFit();
+    void vsEl.offsetWidth;
+    vsEl.classList.remove('measure');
+    // 東がシュッ → 西がシュッ →「対」がドン
+    const k = s.short ? 0.6 : 1;
+    playSfx('kami', { vol: 0.7, rate: 1.5 });
+    setTimeout(() => { if (st === s) playSfx('kami', { vol: 0.7, rate: 1.3 }); }, 100 * k);
+    setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.4, rate: 1.2 }); } }, 180 * k);
+    setTimeout(() => { if (st === s && !s.vsOut) { playSfx('taiko', { vol: 0.95, rate: 0.75 }); playSfx('hyoshigi', { vol: 0.35, rate: 1.4 }); } }, 330 * k);
+  }
+  // 東西の名前が斜めの切れ目にかからないように、実際の字の高さをはかって小さくする（11/26 しょーくん「上の名前の下が切れる」）。
+  // 切れ目は左ほど低いので、東（上）は名前の左のはしで、西（下）は名前の右のはしでくらべる。東西は同じ大きさのまま
+  function vsFit() {
+    const box = vsEl.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const cut = (x) => box.top + box.height * (0.58 - 0.16 * (x - box.left) / box.width);   // 斜めの切れ目（CSS の clip-path と同じ 58%→42%）
+    const na = vsEl.querySelector('.vs-a b'), nb = vsEl.querySelector('.vs-b b');
+    na.style.fontSize = nb.style.fontSize = '';
+    const ra = na.getBoundingClientRect(), rb = nb.getBoundingClientRect();
+    const gap = 14;
+    const sa = ra.height > 0 ? Math.min(1, (cut(ra.left) - gap - ra.top) / ra.height) : 1;
+    const sb = rb.height > 0 ? Math.min(1, (rb.bottom - (cut(rb.right) + gap)) / rb.height) : 1;
+    const s = Math.max(0.3, Math.min(sa, sb));
+    if (s < 1) {
+      const px = parseFloat(getComputedStyle(na).fontSize) * s;
+      na.style.fontSize = nb.style.fontSize = px.toFixed(1) + 'px';
+    }
+  }
+  function vsLeave() {
+    st.vsOut = true;
+    vsEl.classList.add('out');
+    playSfx('kami', { vol: 0.45, rate: 1.8 });
   }
 
   function camera(s) {
@@ -170,7 +258,12 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const done = !!s.bout.result.kind;
     const lastIdx = s.rec.n - 1;
     // 立ち合いまで
-    if (!s.went && s.t >= s.orbitStart) names.classList.add('in');
+    if (!s.went && s.t >= (s.vs ? s.vsEnd : s.orbitStart)) names.classList.add('in');
+    if (s.vs) {
+      if (!s.vsIn && s.t >= s.vsAt) { if (s.t < s.vsOutAt) vsShow(); else { s.vsIn = s.vsOut = true; } }
+      if (s.vsIn && !s.vsOut && s.t >= s.vsOutAt) vsLeave();
+      if (!s.vsGone && s.t >= s.vsEnd + 0.1) { s.vsGone = true; vsEl.classList.remove('in', 'out'); }
+    }
     if (s.sn && !s.snIn && s.t >= s.snAt) {
       s.snIn = true;
       if (s.t < s.snOutAt) {   // タップで旋回を飛ばしたあとなら出さない
@@ -271,11 +364,29 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
     placeKind();
     // 巡業・本場所：番付や戦績のひとこと
-    if (s.opt.onResult) s.opt.gain = s.opt.onResult(r) || '';
+    let res = s.opt.onResult ? s.opt.onResult(r, s.kima) : '';
+    if (!res || typeof res === 'string') res = { text: res || '' };
+    s.opt.gain = res.text || '';
+    showTitles(res.titles || []);
     gainEl.textContent = s.opt.gain || '';
     gainEl.hidden = !s.opt.gain;
     resEl.classList.toggle('has-gain', !gainEl.hidden);   // ひとことがあるときは、決まりの文を少し上へ（2行で横の面のまん中に）
     resEl.hidden = false;
+  }
+
+  // 称号を手に入れた：結果の右に縦書きで（金の罫 → 名前を筆で → 「称号を手に入れた」）
+  function showTitles(list) {
+    ttlEl.textContent = '';
+    ttlEl.classList.remove('in');
+    if (!list.length) return;
+    const sm = document.createElement('small');
+    sm.textContent = T.titleGain;
+    ttlEl.appendChild(sm);
+    for (const t of list.slice(0, 2)) { const b = document.createElement('b'); b.className = 'brush'; b.textContent = t; ttlEl.appendChild(b); }
+    void ttlEl.offsetWidth;
+    ttlEl.classList.add('in');
+    const s = st;
+    setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.45, rate: 1.0 }); playSfx('taiko', { vol: 0.5, rate: 1.25 }); } }, 1000);
   }
 
   gl.addEventListener('pointerdown', skip);
