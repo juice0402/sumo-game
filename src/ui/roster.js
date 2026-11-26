@@ -22,6 +22,28 @@ export function sameSize(els) {
   const n = Math.max(2, ...[...els].map((e) => Array.from(e.textContent).length));
   for (const e of els) e.style.setProperty('--n', String(n));
 }
+// 力士の編集の名前：字の大きさはいつも同じ（11/26 しょーくん「A＝固定」）。大きさは、2列に折ったときの
+// 長いほうの列（いちばん長い「上の句＋つなぎ」と「下の句」）が入る大きさ。1列で入る所は1列のまま、
+// 入らないときだけ2列に折る（11/26「余白あるのに変な改行」）。折る所は、2列の長さが近くなるほう（同じなら下の句の前）
+const len = (t) => Array.from(t).length;
+const longest = (g) => Math.max(...SHIKONA[g].map((w) => len(w.t)));
+export const ED_NAME_COL = Math.max(longest('kami') + longest('tsunagi'), longest('shimo'));
+export function edNameBreak(ids) {
+  const [k, t, s] = ids.map(wordText);
+  const late = [k + t, s], early = [k, t + s];
+  return Math.max(len(early[0]), len(early[1])) < Math.max(len(late[0]), len(late[1])) ? early : late;
+}
+function paintEdName(el, ids) {
+  el.textContent = ids.map(wordText).join('');
+  el.style.setProperty('--n', String(ED_NAME_COL));
+  el.classList.add('fit');
+  const box = el.closest('.hero');
+  if (!box || !box.clientHeight || el.offsetHeight <= box.clientHeight - 8) return;   // 1列で入る（かくれている間ははかれないので、見えたら描きなおす）
+  const [a, b] = edNameBreak(ids);
+  el.textContent = a;
+  el.appendChild(document.createElement('br'));
+  el.appendChild(document.createTextNode(b));
+}
 // 縦の見出し：中の span に字を入れて --n を
 export function headText(h1, text) {
   let sp = h1.querySelector('span');
@@ -75,8 +97,10 @@ export function initEdit(cb) {
     const s = cb.getSlot(idx);
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
-    fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
+    paintEdName(document.getElementById('ed-name'), s.shikona);
   }
+  // 画面が見えたとき・大きさが変わったときに、1列か2列かを決めなおす
+  if (window.ResizeObserver) new ResizeObserver(() => { if (cb.getSlot(idx)) paintName(); }).observe(document.querySelector('#s-edit .hero'));
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
 
@@ -111,16 +135,15 @@ export function initEdit(cb) {
       saveLater();
     });
   }
-  // 名前／見た目の切りかえ（ドラムは見えてから並べる：かくれていると幅と位置がはかれないため）
+  // 名前／称号／見た目の切りかえ（ドラムは見えてから並べる：かくれていると幅と位置がはかれないため）
   let tab = 'name';
   const tabs = document.querySelectorAll('#ed-tabs button');
   function setTab(t) {
     tab = t;
     for (const b of tabs) b.setAttribute('aria-pressed', String(b.dataset.t === t));
-    for (const el of document.querySelectorAll('#ed-roller .rl-name')) el.hidden = t !== 'name';
-    for (const el of document.querySelectorAll('#ed-roller .rl-mise')) el.hidden = t !== 'mise';
-    document.getElementById('ed-titles').hidden = t !== 'name';
-    if (t === 'mise') setMise(); else setRollers();
+    for (const k of ['name', 'title', 'mise']) for (const el of document.querySelectorAll(`#ed-roller .rl-${k}`)) el.hidden = t !== k;
+    document.getElementById('ed-titles').hidden = t !== 'title';   // 称号のページだけ
+    if (t === 'mise') setMise(); else setRollers(t);
   }
   for (const b of tabs) b.addEventListener('click', () => { if (b.dataset.t !== tab) setTab(b.dataset.t); });
   function setMise() {
@@ -130,10 +153,10 @@ export function initEdit(cb) {
     const left = (Object.keys(PAPERS).length - m.papers.length) + (Object.keys(AURAS).length - m.auras.length);
     document.getElementById('ed-locked').textContent = left ? T.lockedLook(left) : '';
   }
-  function setRollers() {
+  function setRollers(t) {
     const s = cb.getSlot(idx), has = cb.getOwned();
-    for (const g in rollers) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
-    document.getElementById('ed-locked').textContent = '';   // 名前のときは「称号の手に入れ方」だけ（11/26 しょーくん「左の説明はいらない」）
+    for (const g of t === 'title' ? ['title'] : ['kami', 'tsunagi', 'shimo']) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
+    document.getElementById('ed-locked').textContent = '';   // 名前・称号のページに説明は出さない（11/26 しょーくん「左の説明はいらない」）
   }
 
   document.getElementById('ed-recut').addEventListener('click', () => cb.onRecut(idx));
