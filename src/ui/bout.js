@@ -197,12 +197,11 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     vsFit();
     void vsEl.offsetWidth;
     vsEl.classList.remove('measure');
-    // 東がシュッ → 西がシュッ →「対」がドン
+    // 東がシュッ → 西がシュッ → 太刀筋と「対」でガキーン（11/26 しょーくん「剣同士がぶつかり合う、ガキーン」→ 聞きくらべで E＝金床を打つ音・シュッは2回・拍子木とドンはなし）
     const k = s.short ? 0.6 : 1;
-    playSfx('kami', { vol: 0.7, rate: 1.5 });
-    setTimeout(() => { if (st === s) playSfx('kami', { vol: 0.7, rate: 1.3 }); }, 100 * k);
-    setTimeout(() => { if (st === s) { playSfx('fude', { vol: 0.4, rate: 1.2 }); } }, 180 * k);
-    setTimeout(() => { if (st === s && !s.vsOut) { playSfx('taiko', { vol: 0.95, rate: 0.75 }); playSfx('hyoshigi', { vol: 0.35, rate: 1.4 }); } }, 330 * k);
+    playSfx('shu', { vol: 0.5, rate: 1.1 });
+    setTimeout(() => { if (st === s) playSfx('shu', { vol: 0.55, rate: 1.25 }); }, 100 * k);
+    setTimeout(() => { if (st === s && !s.vsOut) playSfx('kin', { vol: 0.95 }); }, 300 * k);
   }
   // 東西の名前が斜めの切れ目にかからないように、実際の字の高さをはかって小さくする（11/26 しょーくん「上の名前の下が切れる」）。
   // 切れ目は左ほど低いので、東（上）は名前の左のはしで、西（下）は名前の右のはしでくらべる。東西は同じ大きさのまま
