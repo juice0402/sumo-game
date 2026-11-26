@@ -4,7 +4,7 @@ import { SHIKONA, SHIKONA_START } from '../data/shikona.js';
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
 import { AURAS, AURA_DEFAULT } from '../data/auras.js';
 import { DOHYO } from '../data/dohyo.js';
-import { TITLE_START } from '../data/titles.js';
+import { TITLE_START, TITLES } from '../data/titles.js';
 import { wordText, titleText } from './names.js';
 
 // 出る物ぜんぶ：{ id, kind, tier, name }
@@ -39,11 +39,15 @@ export function kindName(kind) { return KINDS[kind] || ''; }
 export function ownedItems(state) {
   return new Set([...SHIKONA_START, TITLE_START, PAPER_DEFAULT, AURA_DEFAULT, ...(state.words || []), ...(state.titles || []), ...(state.items || [])]);
 }
-export function ownedPapers(state) { const o = ownedItems(state); return Object.keys(PAPERS).filter((id) => o.has(id)); }
-export function ownedAuras(state) { const o = ownedItems(state); return Object.keys(AURAS).filter((id) => o.has(id)); }
+// 道具の「ぜんぶ持っている」（試しだけ・11/26）：えらぶ画面（力士の編集・土俵えらび）だけ、ぜんぶ持っていることにする。
+// 福箱（出る物・確率・かぶりなし）と保存はいつも本当の持ち物（ownedItems）
+export function shownItems(state) {
+  return state.unlockAll ? new Set([...ownedItems(state), ...FUKU_ITEMS.map((it) => it.id), ...TITLES.map((t) => t.id)]) : ownedItems(state);
+}
+export function ownedPapers(state, o = ownedItems(state)) { return Object.keys(PAPERS).filter((id) => o.has(id)); }
+export function ownedAuras(state, o = ownedItems(state)) { return Object.keys(AURAS).filter((id) => o.has(id)); }
 // 本場所で使える土俵（data/dohyo.js の key）：いつもの紙の箱＋手に入れた土俵スキン
-export function ownedDohyo(state) {
-  const o = ownedItems(state);
+export function ownedDohyo(state, o = ownedItems(state)) {
   return ['kami', ...FUKU_ITEMS.filter((it) => it.kind === 'dohyo' && o.has(it.id)).map((it) => it.id.slice(2))];
 }
 

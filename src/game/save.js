@@ -38,12 +38,13 @@ function cleanSlot(s) {
 }
 
 export function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
+  const st = { drive: 'hop', mute: false, short: false, unlockAll: true, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
     st.mute = d.mute === true;
     st.short = d.short === true;
+    st.unlockAll = d.unlockAll !== false;   // 道具の「ぜんぶ持っている」（試しだけ・はじめは入）
     if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
     else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
     if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
@@ -71,7 +72,7 @@ export function saveState(st) {
   const cur = st.slots[st.active];
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
+      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short, unlockAll: st.unlockAll,
       slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
       koban: st.koban, kobanDay: st.kobanDay, items: st.items, dohyo: st.dohyo,
       titles: st.titles, streak: st.streak, keikoWon: st.keikoWon,

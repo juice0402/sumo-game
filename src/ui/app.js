@@ -19,7 +19,7 @@ import { initHeya } from './heya.js';
 import { reset as resetChoose } from './choose.js';
 import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
 import { choose, DON_VOL } from './choose.js';
-import { kobanFor, todayKey, ownedItems, ownedPapers, ownedAuras, ownedDohyo } from '../game/fukubako.js';
+import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo, shownItems } from '../game/fukubako.js';
 import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
@@ -288,12 +288,12 @@ function boot() {
       }, state.short);
     },
   });
-  const titleList = initTitleList({ getOwned: () => ownedItems(state) });
+  const titleList = initTitleList({ getOwned: () => shownItems(state) });
   document.getElementById('ed-titles').addEventListener('click', () => titleList.open());
   const edit = initEdit({
     getSlot: (i) => state.slots[i],
-    getOwned: () => ownedItems(state),
-    getMise: () => ({ papers: ownedPapers(state), auras: ownedAuras(state) }),
+    getOwned: () => shownItems(state),
+    getMise: () => ({ papers: ownedPapers(state, shownItems(state)), auras: ownedAuras(state, shownItems(state)) }),
     onChange() { save(); },
     onRecut(i) { cutFor(i, () => back()); },
     onRetire(i) {
@@ -317,7 +317,7 @@ function boot() {
   // 本場所の土俵（福箱の土俵スキン）：押すと土俵えらびの画面（挿し絵つき）へ。1つだけなら出さない
   const bzDohyo = document.getElementById('bz-dohyo');
   const paintDohyo = () => {
-    const own = ownedDohyo(state);
+    const own = ownedDohyo(state, shownItems(state));
     if (!own.includes(state.dohyo)) state.dohyo = 'kami';
     bzDohyo.hidden = own.length < 2;
     bzDohyo.textContent = T.dohyoPick(DOHYO[state.dohyo].name.replace(/の土俵$/, ''));
@@ -325,7 +325,7 @@ function boot() {
   bzDohyo.addEventListener('click', () => go('s-dohyo'));
   const dohyoPick = initDohyoPick();
   onShow['s-dohyo'] = () => dohyoPick.show({
-    own: ownedDohyo(state), cur: state.dohyo,
+    own: ownedDohyo(state, shownItems(state)), cur: state.dohyo,
     // えらんだ列に朱の帯をベタッと＋ドドン → 番付へもどる（いまの土俵をもう一度えらんだら、そのままもどる）
     onPick(key, btn) {
       if (key === state.dohyo) { back(); return; }
@@ -372,6 +372,7 @@ function boot() {
   };
   toggle('b-mute', 'mute', () => setMuted(state.mute));
   toggle('b-short', 'short');
+  toggle('b-unlock', 'unlockAll');
   document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });

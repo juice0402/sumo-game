@@ -154,8 +154,9 @@
       <div class="verdict"><div class="stamp brush" id="r-big"></div><div class="kimarite brush" id="r-kima"></div></div>
       <div class="kind" id="r-kind"></div>
       <div class="gain" id="r-gain" hidden></div>
-      <div class="row"><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button></div>
-      <div class="row"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button><button id="b-home" class="ghost" type="button">部屋へ</button></div>
+      <!-- いちばん下に「部屋へ｜次の取組（稽古はもう一番）」を同じ幅で横に並べる（11/26 しょーくん）。稽古だけ、その上に相手をかえる・切り直す -->
+      <div class="row r-sub" id="r-sub"><button id="b-foe" class="ghost" type="button">相手をかえる</button><button id="b-recut" class="ghost" type="button">切り直す</button></div>
+      <div class="actions pair r-pair"><button id="b-home" class="seal sub" type="button">部屋へ</button><button id="b-again" class="seal" type="button">もう一番</button><button id="b-next" class="seal" type="button" hidden>次の取組</button></div>
     </div>
   </section>
 
@@ -191,9 +192,10 @@
       <h1 class="brush">道具</h1>
     </header>
     <div class="body">
-      <h2>小判</h2>
+      <h2>小判と持ち物</h2>
       <p>福箱をためすための小判（試作だけ）。</p>
-      <div class="toggles"><button id="b-koban" class="ghost" type="button">小判 +1000</button></div>
+      <div class="toggles"><button id="b-koban" class="ghost" type="button">小判 +1000</button><button id="b-unlock" class="ghost" type="button" aria-pressed="true">ぜんぶ持っている</button></div>
+      <p>ぜんぶ持っている：力士の編集・土俵えらびで、紙質・気・土俵・称号・四股名の語をぜんぶえらべる（試しだけ・福箱と保存の持ち物は変わらない）</p>
       <h2>はじめての流れ</h2>
       <p>いまの力士と番付を取っておいて、まっさらな相撲部屋から見なおす（試作だけ）。</p>
       <div class="toggles"><button id="b-intro" class="ghost" type="button">はじめての流れを見る</button><button id="b-unstash" class="ghost" type="button" hidden>前の保存にもどす</button></div>
