@@ -57,11 +57,11 @@ def cord_tile(strip):
     return tile, lag, best, n
 
 # 保存の形（code-rules C・11/26 の軽量化）：--q 品質・--aq すけ具合の品質・--scale 小さくする倍率（名前ごとに 名前@倍率 も可）
-OPT = {'q': 78, 'aq': 80, 'scale': 1.0}
+OPT = {'q': 78, 'aq': 80, 'scale': 1.0, 'cols': 3}
 ARGS, _argv = [], sys.argv[1:]
 while _argv:
     _a = _argv.pop(0)
-    if _a in ('--q', '--aq', '--scale'): OPT[_a[2:]] = float(_argv.pop(0))
+    if _a in ('--q', '--aq', '--scale', '--cols'): OPT[_a[2:]] = float(_argv.pop(0))
     else: ARGS.append(_a)
 
 def save(im, name):
@@ -84,14 +84,18 @@ def fit(im, mx):
     return im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS) if k < 1 else im
 
 src, kind, names = ARGS[0], ARGS[1], ARGS[2:]
-if kind == 'fx':
+if kind in ('fx', 'grid'):   # fx＝黒の地（明るさ → すけ具合）・grid＝緑の地。--cols でよこの数（たては2）
     raw = Image.open(src)
     W, H = raw.size
+    C = int(OPT['cols'])
     # 名前:大きさの上限:濃さ（金箔はかたく、煙と光はやわらかく）
     for i, spec in enumerate(names):
         n, mx, boost = spec.split(':')
-        cx, cy = i % 3, i // 3
-        cell = raw.crop((cx * W // 3, cy * H // 2, (cx + 1) * W // 3, (cy + 1) * H // 2))
+        cx, cy = i % C, i // C
+        cell = raw.crop((cx * W // C, cy * H // 2, (cx + 1) * W // C, (cy + 1) * H // 2))
+        if kind == 'grid':
+            save(fit(key_green(cell), int(mx)), n)
+            continue
         k = key_black(cell, float(boost))
         al = np.asarray(k)[..., 3]
         k.putalpha(Image.fromarray(np.where(al > 6, al, 0).astype(np.uint8)))

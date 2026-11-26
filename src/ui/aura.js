@@ -169,7 +169,7 @@ export function createAura(id) {
       const white = A.color === '#EEE9DE';
       const id = p.pick < 0.55 ? 'fx-wisp' : 'ki-steam';
       const im = white ? KI[id] : tint(id, A.color);
-      ctx.globalAlpha = alpha * fade * (white ? 0.55 : 0.7);
+      ctx.globalAlpha = alpha * fade * (white ? 0.55 : 0.5);
       sprite(ctx, im, x, y - h * 0.06, h * (id === 'fx-wisp' ? 0.26 : 0.13) * (0.8 + age * 0.5), Math.sin(p.ph) * 0.3);
     } else if (k === 'petal') {
       sprite(ctx, KI['ki-petal' + (1 + Math.floor(p.pick * 3))], x, y, h * 0.075, p.a + p.t * 2, Math.cos(p.t * 4 + p.ph));
@@ -179,7 +179,7 @@ export function createAura(id) {
     } else if (k === 'spark' || k === 'bolt') {
       ctx.globalCompositeOperation = 'lighter';
       if (k === 'bolt') sprite(ctx, KI['ki-bolt2'], x, y, h * 0.12, p.ph, p.pick < 0.5 ? -1 : 1);
-      else sprite(ctx, KI[p.pick < 0.35 ? 'ki-ember1' : 'ki-ember2'], x, y, h * (p.pick < 0.35 ? 0.07 : 0.035), Math.atan2(p.vv, p.vu) + Math.PI / 2);
+      else sprite(ctx, KI[p.pick < 0.35 ? 'ki-ember1' : 'ki-ember2'], x, y, h * (p.pick < 0.35 ? 0.1 : 0.05), Math.atan2(p.vv, p.vu) + Math.PI / 2);
       ctx.globalCompositeOperation = 'source-over';
     } else if (k === 'wind') {   // 力士のまわりをまわる筆の風の筋
       const a = p.a0 + p.dir * age * 1.6;
@@ -190,7 +190,7 @@ export function createAura(id) {
       else {
         ctx.globalCompositeOperation = 'lighter';
         if (p.star) { ctx.globalAlpha = alpha * Math.sin(age * Math.PI); sprite(ctx, KI['fx-glint'], x, y, h * 0.14 * Math.sin(age * Math.PI)); }
-        else { ctx.globalAlpha = alpha * fade * 0.8; sprite(ctx, KI['ki-gold'], x, y, h * 0.07, p.ph); }
+        else { ctx.globalAlpha = alpha * fade * 0.9; sprite(ctx, KI['ki-gold'], x, y, h * 0.11, p.ph); }
         ctx.globalCompositeOperation = 'source-over';
       }
     } else return false;
