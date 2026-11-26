@@ -407,11 +407,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rl-tabs button{background:none;border:0;padding:6px 8px 12px;min-height:40px;font-size:14px;letter-spacing:.24em;color:var(--dim)}
 .rl-tabs button[aria-pressed=true]{background:var(--b-lineshu) center bottom 4px/100% 6px no-repeat;color:var(--washi)}
 .rl-mise .rl-col+.rl-col{border-left:3px double var(--line)}
-#s-fuku .fkkinds{height:clamp(132px,24vh,180px)}
-.fkkinds>div{gap:8px;padding:12px 0 10px}
-.fkkinds b{--max:22px;--room:calc(100cqh - 56px)}
-.fkkinds span{font-size:12px;color:var(--washi2)}
-.fkkinds span i{font-style:normal;text-combine-upright:all}
 .fkhero{position:relative;display:grid;place-items:center}
 .fkbox{position:relative;width:min(66cqw,62cqh);aspect-ratio:1/.92}
 .fkbox .half{position:absolute;top:0;bottom:0;width:50%;overflow:hidden;background:var(--washi2);border:1.5px solid var(--sumi3)}
@@ -620,7 +615,6 @@ button{font:inherit;color:inherit;cursor:pointer}
         <span class="fkmeta"><i class="hanko brush" id="fk-tier"></i><small id="fk-kind"></small><em id="fk-new"></em></span>
       </div>
     </div>
-    <div class="fkkinds frame2 cols" id="fk-kinds"></div>
     <footer class="actions pair"><button id="fk-odds" class="seal sub" type="button">出る物と確率</button><button id="fk-open" class="seal" type="button"></button></footer>
   </section>
 
@@ -718,8 +712,6 @@ const T = {
   fukuShort: '小判が足りない',
   fukuDone: 'ぜんぶ持っている',
   fukuOdds: '出る物と確率',
-  fukuNote: '中身は見た目だけ・強さは変わらない。持っている物は出ない',
-  fukuOddsNote: 'まず段が決まり、その段の、まだ持っていない物からひとしく1つ。そろった段は出ないので、ほかの段で割りなおす。何が入っているかは、開けてのおたのしみ',
   fukuAgain: 'もう一つ',
   fukuClose: 'とじる',
   fukuNew: '手に入れた',
@@ -5053,16 +5045,15 @@ const { T } = __m['src/data/text.js'];
 const { KOBAN, KINDS } = __m['src/data/fukubako.js'];
 const { DOHYO } = __m['src/data/dohyo.js'];
 const { OTEHON } = __m['src/data/cpu-shapes.js'];
-const { FUKU_ITEMS, fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } = __m['src/game/fukubako.js'];
+const { fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } = __m['src/game/fukubako.js'];
 const { drawShapeThumb, thumbAuraBox } = __m['src/ui/pick.js'];
 const { auraPreview } = __m['src/ui/aura.js'];
 const { patternFill } = __m['src/ui/papertex.js'];
 const { setupCanvas } = __m['src/ui/ink.js'];
-const { fitText, sameSize } = __m['src/ui/roster.js'];
+const { fitText } = __m['src/ui/roster.js'];
 const { playSfx } = __m['src/ui/sound.js'];
 
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
-const SHORT = { word: '四股名' };   // 下の帯は短く
 const pct = (x) => `${x.toFixed(2)}%`;
 
 // 土俵の小さな見本（上の面・墨の輪・仕切り線と、横の面）
@@ -5104,22 +5095,7 @@ function initFuku(cb) {
   function paint() {
     const st = cb.getState(), owned = ownedItems(st);
     $('fk-koban').textContent = T.koban(st.koban);
-    // 種類ごとの、持っている数だけ（ぜんぶでいくつかは出さない＝開けてのおたのしみ・11/26 しょーくん。そろえても、ごほうびはない＝コンプガチャにしない）
-    const kinds = $('fk-kinds');
-    kinds.textContent = '';
-    for (const k of KIND_ORDER) {
-      const all = FUKU_ITEMS.filter((it) => it.kind === k);
-      const d = document.createElement('div');
-      const b = document.createElement('b');
-      b.className = 'brush';
-      const n = document.createElement('span');   // 「12」：数字は縦中横で
-      const num = (x) => { const i = document.createElement('i'); i.textContent = String(x); return i; };
-      n.append(num(all.filter((it) => owned.has(it.id)).length));
-      d.append(b, n);
-      kinds.appendChild(d);
-      fitText(b, SHORT[k] || KINDS[k]);
-    }
-    sameSize(kinds.querySelectorAll('b'));   // 種類の名前の字の大きさをそろえる
+    // 福箱の画面は、箱と「出る物と確率」「開ける」だけ（持っている数・ぜんぶの数は出さない＝開けてのおたのしみ・11/26 しょーくん）
     const left = fukuOdds(owned).left;
     openBtn.disabled = !left || st.koban < KOBAN.price;
     openBtn.textContent = !left ? T.fukuDone : st.koban < KOBAN.price ? T.fukuShort : T.fukuOpen(KOBAN.price);
@@ -5194,9 +5170,6 @@ function initFuku(cb) {
     const { rows } = fukuOdds(ownedItems(cb.getState()));
     const body = $('od-list');
     body.textContent = '';
-    const note = (t) => { const p = document.createElement('p'); p.textContent = t; body.appendChild(p); };
-    note(T.fukuNote);
-    note(T.fukuOddsNote);
     for (const r of rows) {
       const sec = document.createElement('section');
       sec.className = 'odds';

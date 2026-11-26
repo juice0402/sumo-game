@@ -5,16 +5,15 @@ import { T } from '../data/text.js';
 import { KOBAN, KINDS } from '../data/fukubako.js';
 import { DOHYO } from '../data/dohyo.js';
 import { OTEHON } from '../data/cpu-shapes.js';
-import { FUKU_ITEMS, fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } from '../game/fukubako.js';
+import { fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } from '../game/fukubako.js';
 import { drawShapeThumb, thumbAuraBox } from './pick.js';
 import { auraPreview } from './aura.js';
 import { patternFill } from './papertex.js';
 import { setupCanvas } from './ink.js';
-import { fitText, sameSize } from './roster.js';
+import { fitText } from './roster.js';
 import { playSfx } from './sound.js';
 
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
-const SHORT = { word: '四股名' };   // 下の帯は短く
 const pct = (x) => `${x.toFixed(2)}%`;
 
 // 土俵の小さな見本（上の面・墨の輪・仕切り線と、横の面）
@@ -56,22 +55,7 @@ export function initFuku(cb) {
   function paint() {
     const st = cb.getState(), owned = ownedItems(st);
     $('fk-koban').textContent = T.koban(st.koban);
-    // 種類ごとの、持っている数だけ（ぜんぶでいくつかは出さない＝開けてのおたのしみ・11/26 しょーくん。そろえても、ごほうびはない＝コンプガチャにしない）
-    const kinds = $('fk-kinds');
-    kinds.textContent = '';
-    for (const k of KIND_ORDER) {
-      const all = FUKU_ITEMS.filter((it) => it.kind === k);
-      const d = document.createElement('div');
-      const b = document.createElement('b');
-      b.className = 'brush';
-      const n = document.createElement('span');   // 「12」：数字は縦中横で
-      const num = (x) => { const i = document.createElement('i'); i.textContent = String(x); return i; };
-      n.append(num(all.filter((it) => owned.has(it.id)).length));
-      d.append(b, n);
-      kinds.appendChild(d);
-      fitText(b, SHORT[k] || KINDS[k]);
-    }
-    sameSize(kinds.querySelectorAll('b'));   // 種類の名前の字の大きさをそろえる
+    // 福箱の画面は、箱と「出る物と確率」「開ける」だけ（持っている数・ぜんぶの数は出さない＝開けてのおたのしみ・11/26 しょーくん）
     const left = fukuOdds(owned).left;
     openBtn.disabled = !left || st.koban < KOBAN.price;
     openBtn.textContent = !left ? T.fukuDone : st.koban < KOBAN.price ? T.fukuShort : T.fukuOpen(KOBAN.price);
@@ -146,9 +130,6 @@ export function initFuku(cb) {
     const { rows } = fukuOdds(ownedItems(cb.getState()));
     const body = $('od-list');
     body.textContent = '';
-    const note = (t) => { const p = document.createElement('p'); p.textContent = t; body.appendChild(p); };
-    note(T.fukuNote);
-    note(T.fukuOddsNote);
     for (const r of rows) {
       const sec = document.createElement('section');
       sec.className = 'odds';
