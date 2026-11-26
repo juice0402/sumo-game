@@ -315,17 +315,18 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     let auraDraw = null;
     if (s.auras && s.t > LOOK.inkSec) {
       auraDraw = [];
+      const polys = [];   // ふたりの紙の形を画面に写す（うしろの気の粒を、ふたりの形でかくす）
       for (let i = 0; i < 2; i++) {
         const au = s.auras[i];
-        if (!au) continue;
-        au.step(fdt);
         const bx = s.boxes[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2], c = Math.cos(rz), sn = Math.sin(rz);
-        const wx = x + bx.cx * c - bx.cy * sn, wy = y + bx.cx * sn + bx.cy * c;
-        const q = stage.project(wx, wy), q2 = stage.project(wx, wy + bx.h / 2);
-        // 紙の形を画面に写す（うしろの気の粒を、力士の形でかくす）
         const ol = s.outlines[i], poly = new Array(ol.length);
         for (let j = 0; j < ol.length; j++) { const p = ol[j]; poly[j] = stage.project(x + p[0] * c - p[1] * sn, y + p[0] * sn + p[1] * c); }
-        auraDraw.push({ a: au, x: q[0], y: q[1], h: Math.hypot(q2[0] - q[0], q2[1] - q[1]) * 2, poly });
+        polys.push(poly);
+        if (!au) continue;
+        au.step(fdt);
+        const wx = x + bx.cx * c - bx.cy * sn, wy = y + bx.cx * sn + bx.cy * c;
+        const q = stage.project(wx, wy), q2 = stage.project(wx, wy + bx.h / 2);
+        auraDraw.push({ a: au, x: q[0], y: q[1], h: Math.hypot(q2[0] - q[0], q2[1] - q[1]) * 2, polys });
       }
     }
     const r = s.bout.result;
