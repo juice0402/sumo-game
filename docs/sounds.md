@@ -1,6 +1,8 @@
 # 効果音の出どころ（assets/sfx/）
 
-すべて koe-irai（github.com/juice0402/koe-irai）の sfx/wyzowl/ から。集は Wyzowl SFX Kit（CC0・クレジットいらない・配布元 https://huggingface.co/datasets/wyzowl/sfx-kit・写し github.com/wyzowl/sfx-kit 92780e7）。
+11/26 しょーくんの聞きくらべ（https://claude.ai/artifact/DYtnbvLj7foT52StiKthN1 ）で、えらんだときは和太鼓のドン（don・A）、札が出るのは紙のシュッ（shu・A）に。どちらも Python（numpy・scipy）で作った音で、作り直しは `python3 -I tools/sfx_synth.py`（同じ順番で作るので同じ音になる）。四股名をさずかる音（sumi＋ton）はそのまま（しょーくん「とても好き」）。
+
+ほかは koe-irai（github.com/juice0402/koe-irai）の sfx/wyzowl/ から。集は Wyzowl SFX Kit（CC0・クレジットいらない・配布元 https://huggingface.co/datasets/wyzowl/sfx-kit・写し github.com/wyzowl/sfx-kit 92780e7）。
 作ったのではなく、えらんで、モノラル・80kbps の mp3 にして、頭の無音を切り・短く切って・おしりに小さな fade out・大きさをそろえた（ffmpeg）。
 
 | 名前 | 使う所 | koe-irai のもとのファイル | 長さ | 大きさ | ライセンス | 作者 |
@@ -12,6 +14,8 @@
 | fude | 線を描くとき（筆） | sfx/wyzowl/writing-and-drawing/writing-pen-draw（ペンで紙に描く音。筆ではない） | 1.31秒 | 13KB | CC0 | Wyzowl |
 | kami | 切り出しの決定（紙を切る） | sfx/wyzowl/everyday-props/props-scissors | 0.16秒 | 2KB | CC0 | Wyzowl |
 | sumi | 墨のしぶき | sfx/wyzowl/everyday-props/props-splash（水の音・0.6秒に切った） | 0.63秒 | 7KB | CC0 | Wyzowl |
+| don | えらんだとき・決定のボタン（和太鼓のドン） | — コードで作った音（tools/sfx_synth.py の taiko・長胴） | 1.6秒 | 16KB | C（コードで作った音） | Claude |
+| shu | 画面の札が右からシュッと入る（紙のシュッ） | — コードで作った音（tools/sfx_synth.py の shu） | 0.2秒 | 3KB | C（コードで作った音） | Claude |
 
 - ぴったりではないもの：fude（ペンの音）・sumi（水のしぶき）・hyoshigi（ノック）・taiko（洋の大太鼓）。聞いて合わなければ、ほかを koe-irai の catalog から選び直す
 - Oculus（CC BY）の音は使っていない。ゲームのクレジットは text.js の T.credits（CC0 の1行）
