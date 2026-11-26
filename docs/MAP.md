@@ -64,7 +64,7 @@
 | ui/tools.js | 道具（指紋・相性表・動きの切りかえ）。音と演出の切りかえと「はじめての流れを見る／前の保存にもどす」は app.js |
 | ui/ink.js | 墨・和紙の描きかた |
 | ui/papertex.js | 紙質と土俵のもようのタイル（paperFill・patternFill）。紙質に tex があれば Codex のテクスチャ（loadPaperTextures でタイトルの間に読む）、なければ・読む前はコードのもよう。見た目だけ |
-| ui/aura.js | 気を描く（createAura：取組の fx の上・auraPreview：部屋・編集・福箱の見本）。粒は Codex の絵（ki-*・fx-wisp・fx-leaf・fx-glint・墨のけむりは白い絵を墨の色にそめる）、読みこむ前はコードの線と四角。見た目だけ |
+| ui/aura.js | 気を描く（createAura：取組の fx の上・auraPreview：部屋・編集・福箱の見本）。粒の半分ほどは力士のうしろ（draw の mask＝見本は力士の絵の canvas・取組は紙の形を画面に写した poly で切りぬく）。粒は Codex の絵（ki-*・fx-wisp・fx-leaf・fx-glint・墨のけむりは白い絵を墨の色にそめる）、読みこむ前はコードの線と四角。見た目だけ |
 | ui/btnart.js | ボタンの絵（朱の筆の帯・和紙の筆の帯・字の下の筆の線・筆の輪）を SVG で作って CSS の変数 --b-… に入れる。ピルの形にしない |
 | ui/page.html・ui/style.css | 画面のもと・見た目。部屋などの画面は案A「番付表」（`.screen.v`＝右に縦の見出し・`.hero`・`.frame2`＝二重の罫・`.cols`＝右から縦の列・`.fit`＝字の数で大きさを合わせる・いまの／主＝縦の朱の帯）。動き：画面を開くと app.js の enter が `--i` をふって、列が右から順にシュッと入る（筆の音つき）・選出は朱の判子「出」 |
 

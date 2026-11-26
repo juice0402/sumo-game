@@ -127,7 +127,7 @@ export function createFx(cv) {
     ctx.clearRect(0, 0, W, H);
     const st = o.stage;
     tonMarks(ctx, st, o.P, o.ton, st.look().tonMark);
-    if (o.auras) for (const a of o.auras) a.a.draw(ctx, a.x * dpr, a.y * dpr, a.h * dpr);   // 気（見た目だけ）
+    if (o.auras) for (const a of o.auras) a.a.draw(ctx, a.x * dpr, a.y * dpr, a.h * dpr, 1, a.poly ? { poly: a.poly.map((q) => [q[0] * dpr, q[1] * dpr]) } : null);   // 気（見た目だけ・うしろの粒は力士の形でかくす）
     // 集中線
     for (const b of bursts) {
       const q = st.project(b.x, b.y);
