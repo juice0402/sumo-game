@@ -286,6 +286,70 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes hop{0%{transform:none}14%{transform:scale(1.1,.86)}40%{transform:translateY(-20px) scale(.94,1.08) rotate(-3deg)}64%{transform:translateY(0) scale(1.12,.85)}80%{transform:scale(.97,1.04)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.mine canvas.hop,.mine canvas.hop2,.cols.leaving{animation:none}}
 
+/* 本場所の取組：はじめに格闘ゲームのような対戦のカットイン（11/26 しょーくん「相撲らしからぬスピード感とスタイリッシュ」）。
+   斜めに2つに割った墨の板が左右からシュッ（少し行きすぎて戻る）→ 斜めの金の罫と朱の太刀筋 →「対」の朱の丸がドン → 板の中はゆっくり流れる → 左右へ抜けて消える。
+   上＝東（自分・左から）・下＝西（相手・右から）。長さは --k 倍（演出を短くで .6）。画面のゆれ・フラッシュは入れない */
+.vs{position:absolute;inset:0;pointer-events:none;overflow:hidden;--k:1}
+.vs:not(.in){display:none}
+.vs.short{--k:.6}
+.vs.measure,.vs.measure *{animation:none!important}
+.vs-side{position:absolute;inset:0;overflow:hidden}
+.vs-a{background:var(--sumi);clip-path:polygon(0 0,100% 0,100% 42%,0 58%);animation:vsInL calc(.24s * var(--k)) cubic-bezier(.2,1.25,.35,1) both}
+.vs-b{background:var(--sumi2);clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%);animation:vsInR calc(.24s * var(--k)) calc(.1s * var(--k)) cubic-bezier(.2,1.25,.35,1) both}
+@keyframes vsInL{from{transform:translateX(-106%)}to{transform:none}}
+@keyframes vsInR{from{transform:translateX(106%)}to{transform:none}}
+.vs-lines{position:absolute;top:0;bottom:0;left:0;width:200%}
+.vs-lines svg{display:block;width:100%;height:100%}
+.vs-lines line{stroke:var(--washi);vector-effect:non-scaling-stroke}
+.vs-a .vs-lines{animation:vsRunR .42s linear infinite}
+.vs-b .vs-lines{animation:vsRunL .42s linear infinite}
+@keyframes vsRunR{from{transform:translateX(-50%)}to{transform:none}}
+@keyframes vsRunL{from{transform:none}to{transform:translateX(-50%)}}
+#s-bout .vs-side canvas{position:absolute;inset:auto;width:60%;height:50%;touch-action:auto}   /* #s-bout canvas（全面）より強く */
+#s-bout .vs-a canvas{left:-6%;top:5%;animation:vsDriftA calc(2.2s * var(--k)) linear both}
+#s-bout .vs-b canvas{right:-6%;bottom:5%;animation:vsDriftB calc(2.2s * var(--k)) linear both}
+@keyframes vsDriftA{from{transform:rotate(8deg) translateX(-10px)}to{transform:rotate(8deg) translateX(12px)}}   /* 相手のほうへ前のめり */
+@keyframes vsDriftB{from{transform:rotate(-8deg) translateX(10px)}to{transform:rotate(-8deg) translateX(-12px)}}
+.vs-who{position:absolute;height:34vh;writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-shadow:2px 2px 0 var(--sumi)}
+.vs-a .vs-who{right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 16px);animation:vsDriftL calc(2.2s * var(--k)) linear both}
+.vs-b .vs-who{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);animation:vsDriftR calc(2.2s * var(--k)) linear both}
+@keyframes vsDriftL{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
+@keyframes vsDriftR{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
+.vs-who b{--max:clamp(46px,14vw,70px);--room:calc(34vh - 4px);color:var(--washi);line-height:1.05;clip-path:inset(0 -10% 100% -10%);animation:inkdown calc(.34s * var(--k)) calc(.16s * var(--k)) cubic-bezier(.3,.7,.3,1) both}
+.vs-b .vs-who b{animation-delay:calc(.26s * var(--k))}
+.vs-who small{font-size:12px;letter-spacing:.2em;color:var(--kin);animation:rise calc(.3s * var(--k)) calc(.3s * var(--k)) both}
+.vs-col{display:flex;align-items:center;gap:8px;animation:rise calc(.3s * var(--k)) calc(.22s * var(--k)) both}
+.vs-dir{display:inline-grid;place-items:center;width:30px;height:30px;font:400 20px/1 "Yuji Syuku",serif;font-style:normal;writing-mode:horizontal-tb;background:var(--shu);color:var(--washi);border-radius:3px;text-shadow:none}
+.vs-b .vs-dir{background:none;border:1.5px solid var(--kin);color:var(--kin)}
+.vs-col em{font-style:normal;font-size:12px;letter-spacing:.12em;color:var(--washi2)}
+.vs-rule,.vs-slash{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.vs-rule line,.vs-slash line{vector-effect:non-scaling-stroke}
+.vs-rule line{stroke:var(--kin);stroke-width:1.5}
+.vs-slash line{stroke:var(--shu);stroke-width:9}
+.vs-rule{clip-path:inset(0 100% 0 0);animation:vsDraw calc(.16s * var(--k)) calc(.14s * var(--k)) cubic-bezier(.3,.7,.3,1) forwards}
+.vs-slash{clip-path:inset(0 0 0 100%);animation:vsDrawL calc(.12s * var(--k)) calc(.26s * var(--k)) cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes vsDraw{to{clip-path:inset(0 0 0 0)}}
+@keyframes vsDrawL{to{clip-path:inset(0 0 0 0)}}
+.vs-tai{position:absolute;left:50%;top:50%;width:clamp(96px,30vw,132px);aspect-ratio:1;border-radius:50%;background:var(--shu);display:grid;place-items:center;font-size:clamp(56px,17vw,78px);line-height:1;color:var(--washi);text-shadow:3px 3px 0 var(--sumi);opacity:0;animation:vsTai calc(.3s * var(--k)) calc(.3s * var(--k)) cubic-bezier(.2,1.3,.3,1) both}
+@keyframes vsTai{0%{opacity:0;transform:translate(-50%,-50%) scale(2.6) rotate(-24deg)}55%{opacity:1;transform:translate(-50%,-50%) scale(.9) rotate(4deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}}
+.vs.out .vs-a{animation:vsOutL calc(.22s * var(--k)) cubic-bezier(.55,0,.85,.35) both}
+.vs.out .vs-b{animation:vsOutR calc(.22s * var(--k)) cubic-bezier(.55,0,.85,.35) both}
+.vs.out .vs-tai{animation:vsTaiOut calc(.2s * var(--k)) cubic-bezier(.55,0,.85,.35) both}
+.vs.out .vs-rule,.vs.out .vs-slash{animation:vsFade calc(.14s * var(--k)) both}
+@keyframes vsOutL{to{transform:translateX(-106%) skewX(8deg)}}
+@keyframes vsOutR{to{transform:translateX(106%) skewX(8deg)}}
+@keyframes vsTaiOut{from{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}to{opacity:0;transform:translate(-50%,-50%) scale(1.5) rotate(-4deg)}}
+@keyframes vsFade{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 0 0);opacity:0}}
+@media (prefers-reduced-motion:reduce){.vs *,.vs .vs-side{animation-duration:.01s!important;animation-delay:0s!important}.vs .vs-lines{animation:none!important}}
+
+/* 取組で称号を手に入れたとき（11/26）：結果の右に縦書き＋金の罫（巡業の土俵の名前と同じ形） */
+.ttl-gain{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 86px);writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:12px;pointer-events:none;text-shadow:3px 3px 0 var(--sumi)}
+.ttl-gain:not(.in){display:none}
+.ttl-gain::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1px solid var(--kin);transform-origin:top;animation:snrule .45s .9s cubic-bezier(.3,.7,.3,1) both}
+.ttl-gain small{font-size:13px;letter-spacing:.3em;color:var(--kin);animation:rise .4s 1.2s both}
+.ttl-gain b{font-size:clamp(28px,8vw,38px);letter-spacing:.12em;line-height:1.05;color:var(--washi);clip-path:inset(0 -10% 100% -10%);animation:inkdown .6s 1s cubic-bezier(.3,.7,.3,1) both}
+.ttl-gain b+b{animation-delay:1.25s}
+
 /* 巡業の取組：旋回のあいだに土俵の名前（11/26 しょーくん「どの土俵かわからない・かっこよく」）。
    番付表の見出しと同じく、右に縦書き＋金の罫。罫が上から引かれ → 名前を筆で上から → 「巡業」と土俵のくせ → 右へ抜けて消える */
 .stagename{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 86px);writing-mode:vertical-rl;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-left:12px;pointer-events:none;text-shadow:3px 3px 0 var(--sumi)}
@@ -358,14 +422,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes fktearR{to{transform:translateX(46%) rotate(16deg);opacity:0}}
 .fkreveal{position:absolute;inset:0;display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:18px;z-index:2}
 .fkreveal>b{writing-mode:vertical-rl;--max:60px;--room:calc(100cqh - 24px);letter-spacing:.08em;line-height:1.1;white-space:nowrap}
-.fkreveal[data-kind=word]>b{--max:92px}
+.fkreveal:is([data-kind=word],[data-kind=title])>b{--max:92px}
 .fkreveal[data-tier=tokujo]>b{background:var(--b-shuv) center/100% 100% no-repeat;padding:14px 6px}
 .fkreveal[data-tier=kiwami]>b{color:var(--kin)}
 .fkmeta{writing-mode:vertical-rl;display:flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.12em;color:var(--washi2);max-height:100%}
 .fkmeta em{font-style:normal;color:var(--kin)}
 .hanko{display:inline-grid;place-items:center;border:2px solid currentColor;border-radius:4px;font-style:normal;padding:5px 3px;font-size:20px;line-height:1.05;letter-spacing:0;transform:rotate(-6deg)}
 .fkprev{position:relative;width:min(34cqw,38cqh);aspect-ratio:3/4;flex:none}
-.fkreveal[data-kind=word] .fkprev{display:none}
+.fkreveal:is([data-kind=word],[data-kind=title]) .fkprev{display:none}
 .fkreveal[data-kind=dohyo] .fkprev{aspect-ratio:4/3;width:min(46cqw,42cqh)}
 .fkprev #fk-cv{display:block;width:100%;height:100%}
 .fkprev .aura-cv{position:absolute;inset:-25%;width:150%;height:150%;pointer-events:none;z-index:1}

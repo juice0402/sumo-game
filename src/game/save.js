@@ -5,12 +5,15 @@
 //   words：手に入れた四股名の語（はじめから持っている SHIKONA_START のほか。11/26〜）
 //   koban・kobanDay：小判（取組でたまる）・その日の初勝利をもらった日／items：福箱で手に入れた紙質・気・土俵／dohyo：本場所の土俵スキン
 //   slots[i].paper・aura：力士ごとの紙質と気（見た目だけ）
+//   titles：手に入れた称号（はじめから持っている TITLE_START のほか。実績と福箱・11/26〜）・streak：巡業と本場所の連勝・keikoWon：稽古で勝った CPU の形
 import { checkShape } from '../geom/check.js';
 import { validShikona, validTitle, randomShikona, startTitle, ownedWords, isStartWord, isWord } from './names.js';
 import { RATE } from '../data/banzuke.js';
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
 import { AURAS, AURA_DEFAULT } from '../data/auras.js';
 import { DOHYO } from '../data/dohyo.js';
+import { TITLE_START } from '../data/titles.js';
+import { CPU_SHAPES } from '../data/cpu-shapes.js';
 
 const SAVE_KEY = 'sumo-proto-v1';
 export const SLOT_COUNT = 3;
@@ -35,7 +38,7 @@ function cleanSlot(s) {
 }
 
 export function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami' };
+  const st = { drive: 'hop', mute: false, short: false, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
@@ -52,9 +55,14 @@ export function loadState() {
     if (typeof d.kobanDay === 'string') st.kobanDay = d.kobanDay;
     if (Array.isArray(d.items)) st.items = d.items.filter((id) => typeof id === 'string' && (PAPERS[id] || AURAS[id] || (id.startsWith('d_') && DOHYO[id.slice(2)])));
     if (typeof d.dohyo === 'string' && DOHYO[d.dohyo]) st.dohyo = d.dohyo;
+    if (Array.isArray(d.titles)) st.titles = d.titles.filter((id) => validTitle(id) && id !== TITLE_START);
+    if (Number.isFinite(d.streak) && d.streak > 0) st.streak = Math.floor(d.streak);
+    if (Array.isArray(d.keikoWon)) st.keikoWon = d.keikoWon.filter((id) => CPU_SHAPES.some((c) => c.id === id));
   } catch (e) { /* 保存できない画面でも遊べる */ }
   // 前からいる力士の語は、持っていることにする（11/26 より前の力士の名前を、編集で元にもどせるように）
   for (const s of st.slots) if (s) for (const id of s.shikona) if (!isStartWord(id) && !st.words.includes(id)) st.words.push(id);
+  // 前からいる力士の称号も、持っていることにする（11/26 より前は24こ全部えらべた）
+  for (const s of st.slots) if (s && s.title !== TITLE_START && !st.titles.includes(s.title)) st.titles.push(s.title);
   if (!st.slots[st.active]) st.active = Math.max(0, st.slots.findIndex(Boolean));
   return st;
 }
@@ -66,6 +74,7 @@ export function saveState(st) {
       shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short,
       slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
       koban: st.koban, kobanDay: st.kobanDay, items: st.items, dohyo: st.dohyo,
+      titles: st.titles, streak: st.streak, keikoWon: st.keikoWon,
     }));
   } catch (e) { /* */ }
 }
@@ -73,7 +82,7 @@ export function saveState(st) {
 // 道具の「はじめての流れを見る」（試作だけ）：いまの保存を1つだけ取っておき、まっさらな部屋から見なおす／もどす
 const STASH_KEY = SAVE_KEY + '-bak';
 export function freshProgress() {
-  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami' };
+  return { slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
 }
 export function hasStash() {
   try { return !!localStorage.getItem(STASH_KEY); } catch (e) { return false; }

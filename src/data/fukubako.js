@@ -18,10 +18,12 @@ export const RARITY = [
 ];
 
 // 種類
-export const KINDS = { word: '四股名の語', paper: '紙質', aura: '気', dohyo: '土俵' };
+export const KINDS = { word: '四股名の語', title: '称号', paper: '紙質', aura: '気', dohyo: '土俵' };
 
-// 紙質・気・土俵の段（id は data/papers.js・data/auras.js・data/dohyo.js の key に d_ をつけたもの）
+// 称号・紙質・気・土俵の段（id は data/titles.js・data/papers.js・data/auras.js・data/dohyo.js の key に d_ をつけたもの）
+// 称号は、実績の称号（data/titles.js の TITLE_ACH）とかぶらない残りの14こ（11/26 しょーくん「C」）
 export const FUKU_TIERS = {
+  title: { nami: ['ti_yurayura', 'ti_kazeni', 'ti_fubuki', 'ti_origami', 'ti_nimaigoshi', 'ti_okiagari'], jo: ['ti_shijin', 'ti_harimaru', 'ti_ichimai', 'ti_senmai'], tokujo: ['ti_sumiko', 'ti_kirie', 'ti_hasami'], kiwami: ['ti_washi'] },
   paper: { nami: ['p_hanshi', 'p_wara', 'p_sakura', 'p_wakakusa', 'p_ai'], jo: ['p_asanoha', 'p_seigaiha', 'p_ichimatsu', 'p_shinbun'], tokujo: ['p_suminagashi', 'p_kira'], kiwami: ['p_kinpaku'] },
   aura: { nami: ['a_yuge', 'a_kemuri'], jo: ['a_sakura', 'a_kamifubuki', 'a_hinoko'], tokujo: ['a_inazuma', 'a_shippu'], kiwami: ['a_kin'] },
   dohyo: { nami: ['d_ai', 'd_wakakusa'], jo: ['d_sakura', 'd_yuyake'], tokujo: ['d_urushi', 'd_suminagashi'], kiwami: ['d_kinbyobu'] },

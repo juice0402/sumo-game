@@ -13,7 +13,7 @@ import { setupCanvas } from './ink.js';
 import { fitText } from './roster.js';
 import { playSfx } from './sound.js';
 
-const KIND_ORDER = ['word', 'paper', 'aura', 'dohyo'];
+const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
 const SHORT = { word: '四股名' };   // 下の帯は短く
 const pct = (x) => `${x.toFixed(2)}%`;
 

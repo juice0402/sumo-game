@@ -53,11 +53,11 @@ export function renderSlots(el, slots, opt) {
 
 // ドラムに並べる語。has：持っている語（Set）。えらべるのはその中だけ（11/26：ほかの語は、あとで手に入れる）
 function itemsOf(g, has) {
-  if (g === 'title') return TITLES.map((t) => ({ id: t.id, label: t.t }));
+  if (g === 'title') return TITLES.filter((t) => has.has(t.id)).map((t) => ({ id: t.id, label: t.t }));
   return SHIKONA[g].filter((w) => has.has(w.id)).map((w) => ({ id: w.id, label: wordText(w.id) || T.rollNone }));
 }
 
-// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語の Set, getMise()＝{ papers, auras }（持っている紙質・気の id）, onChange(i), onRecut(i), onRetire(i), onDone() }
+// 力士の編集。cb：{ getSlot(i), getOwned()＝持っている語と称号の Set, getMise()＝{ papers, auras }（持っている紙質・気の id）, onChange(i), onRecut(i), onRetire(i), onDone() }
 // 「名前」と「見た目」（紙質・気＝11/26 福箱）の2つのドラムを、上の切りかえで
 export function initEdit(cb) {
   const cv = document.getElementById('ed-cv');
@@ -128,7 +128,8 @@ export function initEdit(cb) {
     const s = cb.getSlot(idx), has = cb.getOwned();
     for (const g in rollers) rollers[g].set(itemsOf(g, has), g === 'title' ? s.title : s.shikona[G[g]]);
     const locked = SHIKONA.kami.filter((w) => !has.has(w.id)).length + SHIKONA.shimo.filter((w) => !has.has(w.id)).length;
-    document.getElementById('ed-locked').textContent = locked ? T.lockedWords(locked) : '';
+    const lockedT = TITLES.filter((t) => !has.has(t.id)).length;
+    document.getElementById('ed-locked').textContent = T.lockedName(locked, lockedT);
   }
 
   // おまかせ：3つのドラムがスロットのようにまわって止まる

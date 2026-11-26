@@ -146,14 +146,14 @@ console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Objec
   for (const it of FUKU_ITEMS) {
     ok(!ids.has(it.id), `福箱の中身がかさなっている: ${it.id}`);
     ids.add(it.id);
-    ok(['word', 'paper', 'aura', 'dohyo'].includes(it.kind) && it.name, `福箱の中身の種類か名前がおかしい: ${it.id}`);
+    ok(['word', 'title', 'paper', 'aura', 'dohyo'].includes(it.kind) && it.name, `福箱の中身の種類か名前がおかしい: ${it.id}`);
     ok(it.kind !== 'paper' || PAPERS[it.id], `紙質がない: ${it.id}`);
     ok(it.kind !== 'aura' || AURAS[it.id], `気がない: ${it.id}`);
     ok(it.kind !== 'dohyo' || DOHYO[it.id.slice(2)], `土俵がない: ${it.id}`);
     ok(it.kind !== 'word' || (isWord(it.id) && !SHIKONA_START.includes(it.id)), `語がおかしい: ${it.id}`);
     ok(!/^(koban|fukubako|ticket)(_|$)/.test(it.id), `福箱から小判・箱・券が出てはいけない: ${it.id}`);
   }
-  const st = { words: [], items: [], koban: 0, kobanDay: '' };
+  const st = { words: [], items: [], titles: [], koban: 0, kobanDay: '' };
   const sum = (o) => o.rows.reduce((s, r) => s + r.rate, 0);
   ok(Math.abs(sum(fukuOdds(ownedItems(st))) - 100) < 1e-9, '福箱の確率の合計が100でない');
   const rng = makeRng(7);
@@ -175,6 +175,23 @@ console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Objec
   ok(a.n === KOBAN.win + KOBAN.firstWin && a.first && b.n === KOBAN.win && !b.first && c.n === KOBAN.lose && d.first, '小判の数がおかしい');
   ok(k.koban === 2 * (KOBAN.win + KOBAN.firstWin) + KOBAN.win + KOBAN.lose, '小判の合計がおかしい');
   console.log(`福箱 ${FUKU_ITEMS.length}種（ぜんぶ開けるのに ${n}回）`);
+  // 称号（11/26「C」）：はじめから・実績・福箱のどれか1つだけ（ぜんぶの称号がどこかで手に入る）
+  const { TITLES, TITLE_START, TITLE_ACH } = await import('../src/data/titles.js');
+  const { afterBout, ownedTitles } = await import('../src/game/titles.js');
+  for (const t of TITLES) {
+    const where = (t.id === TITLE_START) + (t.id in TITLE_ACH) + FUKU_ITEMS.filter((it) => it.kind === 'title' && it.id === t.id).length;
+    ok(where === 1, `称号の手に入れ方が1つでない: ${t.id}`);
+  }
+  for (const id in TITLE_ACH) ok(TITLES.some((t) => t.id === id), `実績の称号がない: ${id}`);
+  const g = { slots: [1, null, null], rate: 1500, hon: { w: 0, l: 0, d: 0 }, jun: { w: 0, l: 0, d: 0 }, titles: [], streak: 0, keikoWon: [] };
+  const got1 = afterBout(g, { mode: 'keiko', winner: 'a', kima: 'oshidashi', foeId: 'x', hour: 12 });
+  ok(!got1.length, '稽古の勝ちで、はじめての勝ちの称号が出てはいけない');
+  g.jun.w = 1;
+  const got2 = afterBout(g, { mode: 'jungyo', winner: 'a', kima: 'oshidashi', hour: 12 });
+  ok(got2.includes('ti_shinsei') && got2.includes('ti_oshi') && g.streak === 1, 'はじめての勝ち・押し出しの称号が出ない');
+  ok(!afterBout(g, { mode: 'jungyo', winner: 'a', kima: 'oshidashi', hour: 12 }).length && ownedTitles(g).has('ti_oshi'), '同じ称号が2回出た');
+  g.rate = 1950;
+  ok(afterBout(g, { mode: 'honbasho', winner: 'b', kima: 'oshidashi', hour: 2 }).join() === 'ti_yofukashi,ti_sekitori' && g.streak === 0, '夜中・十両の称号がおかしい');
 }
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);
