@@ -92,7 +92,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes word{0%{opacity:0;transform:scale(1.6)}25%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
 .result{position:absolute;inset:0;padding:calc(env(safe-area-inset-top,0px) + max(9vh, 84px)) 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;align-items:center;gap:10px}
 .result .kind+.row{margin-top:auto}
-.verdict{display:flex;align-items:flex-start;gap:14px}
+/* 決まり手は画面のどまんなか、勝敗の判子はそのすぐ左に添える（11/26 しょーくん・右の称号にかからない） */
+.verdict{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;column-gap:8px;width:100%}
+.verdict .stamp{justify-self:end;margin-top:10px}
+.verdict .kimarite{grid-column:2}
 .stamp{width:56px;height:56px;display:grid;place-items:center;font-size:34px;line-height:1;border-radius:6px;margin-top:6px;opacity:0;animation:stamp .35s .38s cubic-bezier(.2,.9,.2,1) forwards}
 .stamp.win{background:var(--shu);color:var(--washi)}
 .stamp.lose{border:2px solid var(--washi2);color:var(--washi2)}
