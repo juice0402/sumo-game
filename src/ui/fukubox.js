@@ -65,11 +65,18 @@ function makeFx(P) {
 
 export function createFukuBox(cv) {
   let imgs = null, lay = null, raf = 0, off = null, idleSt = null, ready = null, fxp = null;
-  // 絵は、はじめて福箱の画面を開いたときに読む（起動を軽く・読みこみの前は lib-art がまだない）
-  const load = () => ready || (ready = artImages(A.ids).then((m) => { imgs = m; if (idleSt && !raf) draw(idleSt); }).catch(() => { ready = null; }));
+  // 絵は、はじめて福箱の画面を開いたときに読む（起動を軽く・読みこみの前は絵の script がまだない）
+  // 待っている箱の絵を先に（描けるようになったらすぐ描く）、開ける演出の絵はそのあとで（開けるときに待つ）
+  let fxReady = null;
+  const load = () => ready || (ready = artImages(A.ids).then((m) => {
+    imgs = m;
+    if (idleSt && !raf) draw(idleSt);
+    fxReady = artImages(A.fxIds).then((f) => { Object.assign(imgs, f); });
+    return fxReady;
+  }).catch(() => { ready = null; }));
 
   function layout() {
-    const { ctx, W, H } = setupCanvas(cv);
+    const { ctx, W, H } = setupCanvas(cv, 2);   // 細かさは2倍まで（煙と金箔を重ねても軽く）
     const bw = Math.min(W * 0.8, ((H * 0.52) * A.box.w) / A.box.h);
     const bh = (bw * A.box.h) / A.box.w;
     const L = { ctx, W, H, bw, bh, x0: (W - bw) / 2, yb: H * 0.55 + bh * 0.5, s: bw / A.box.w };
@@ -80,7 +87,7 @@ export function createFukuBox(cv) {
 
   function cords(L, pull) {
     const o = off.getContext('2d'), s = L.s, tile = imgs['fuku-cord'];
-    const t = tile.height * A.cordScale * s;
+    const t = A.size['fuku-cord'][1] * A.cordScale * s;
     o.setTransform(1, 0, 0, 1, 0, 0);
     o.clearRect(0, 0, off.width, off.height);
     o.globalCompositeOperation = 'source-over';
@@ -119,7 +126,7 @@ export function createFukuBox(cv) {
 
   function knot(ctx, s, phase, sway, alpha) {
     // 房2本（結び目の下にさがってゆれる）
-    const ts = imgs['fuku-tassel'], tw = ts.width * A.tasselScale * s, th = ts.height * A.tasselScale * s;
+    const ts = imgs['fuku-tassel'], [tw0, th0] = A.size['fuku-tassel'], tw = tw0 * A.tasselScale * s, th = th0 * A.tasselScale * s;
     for (const [dx, k] of [[-16, 1], [16, -0.8]]) {
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -133,7 +140,7 @@ export function createFukuBox(cv) {
     for (const [id, a] of pairs) {
       if (a <= 0.01) continue;
       const im = imgs[id], an = A.knotAnchor[id];
-      const w = im.width * A.cordScale * s, h = im.height * A.cordScale * s;
+      const [w0, h0] = A.size[id], w = w0 * A.cordScale * s, h = h0 * A.cordScale * s;
       ctx.globalAlpha = alpha * a;
       ctx.drawImage(im, K.x * s - an[0] * w, K.y * s - an[1] * h, w, h);
     }
@@ -156,13 +163,14 @@ export function createFukuBox(cv) {
     else {
       const bd = imgs['fuku-body'], ld = imgs['fuku-lid'];
       ctx.globalAlpha = st.boxA == null ? 1 : st.boxA;
-      ctx.drawImage(bd, ((A.box.w - bd.width) / 2) * s, A.bodyTop * s, bd.width * s, bd.height * s);
+      const [bw0, bh0] = A.size['fuku-body'], [lw0, lh0] = A.size['fuku-lid'];
+      ctx.drawImage(bd, ((A.box.w - bw0) / 2) * s, A.bodyTop * s, bw0 * s, bh0 * s);
       ctx.globalAlpha = 1;
       if (st.fx) ray(ctx, L, st);
-      const u = easeOut(st.lid), lw = ld.width * s, lh = ld.height * s;
+      const u = easeOut(st.lid), lw = lw0 * s, lh = lh0 * s;
       ctx.save();
       ctx.globalAlpha = 1 - span(st.lid, 0.45, 1);
-      ctx.translate(((A.box.w - ld.width) / 2) * s + lw / 2 + u * bw * 0.1, A.lidTop * s + lh / 2 - u * bh * 0.6);
+      ctx.translate(((A.box.w - lw0) / 2) * s + lw / 2 + u * bw * 0.1, A.lidTop * s + lh / 2 - u * bh * 0.6);
       ctx.rotate(u * 0.22);
       ctx.drawImage(ld, -lw / 2, -lh / 2, lw, lh);
       ctx.restore();

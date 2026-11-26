@@ -1,5 +1,6 @@
 # Codex の絵（art-irai の art/ の枝の PNG）を、部品に切って緑（または黒）を抜き、assets/art/*.webp にする。
 #   python3 -I tools/art_cut.py <PNG> <型> <出力の名前…>
+#   python3 -I tools/art_cut.py <PNG> <型> <名前…> [--q 品質] [--aq すけ具合の品質] [--scale 倍率]（名前@倍率 で1つだけ小さく）
 #   型：row3＝横に3つ／himo＝上に3つ・下に房とまっすぐな紐／fx＝黒の地の 3×2（明るさ → すけ具合）／tex＝画面いっぱいのテクスチャ（小さくするだけ）
 # 緑の抜き方：緑がほかの色より強い所ほどすける。ふちの緑は赤か青の強いほうまで下げる（緑のにじみを消す）。
 # まっすぐな紐は、柄のくり返しの長さを自動で探して、そのぶんを切り出す（くり返して並べてもつなぎ目が出ない）。
@@ -54,8 +55,19 @@ def cord_tile(strip):
     tile = strip.crop((x0, 0, x0 + lag * n, h))
     return tile, lag, best, n
 
+# 保存の形（code-rules C・11/26 の軽量化）：--q 品質・--aq すけ具合の品質・--scale 小さくする倍率（名前ごとに 名前@倍率 も可）
+OPT = {'q': 78, 'aq': 80, 'scale': 1.0}
+ARGS, _argv = [], sys.argv[1:]
+while _argv:
+    _a = _argv.pop(0)
+    if _a in ('--q', '--aq', '--scale'): OPT[_a[2:]] = float(_argv.pop(0))
+    else: ARGS.append(_a)
+
 def save(im, name):
-    im.save(f'assets/art/{name}.webp', 'WEBP', quality=82, alpha_quality=90, method=6)
+    k = OPT['scale']
+    if '@' in name: name, k = name.split('@')[0], float(name.split('@')[1])
+    if k < 1: im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+    im.save(f'assets/art/{name}.webp', 'WEBP', quality=int(OPT['q']), alpha_quality=int(OPT['aq']), method=6)
     print(name, im.size)
 
 def key_black(im, boost):
@@ -70,7 +82,7 @@ def fit(im, mx):
     k = min(1, mx / max(im.size))
     return im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS) if k < 1 else im
 
-src, kind, names = sys.argv[1], sys.argv[2], sys.argv[3:]
+src, kind, names = ARGS[0], ARGS[1], ARGS[2:]
 if kind == 'fx':
     raw = Image.open(src)
     W, H = raw.size
@@ -86,7 +98,7 @@ if kind == 'fx':
     sys.exit()
 if kind == 'tex':
     im = Image.open(src).convert('RGB').resize((int(names[1]),) * 2, Image.LANCZOS)
-    im.save(f'assets/art/{names[0]}.webp', 'WEBP', quality=80, method=6)
+    im.save(f'assets/art/{names[0]}.webp', 'WEBP', quality=int(OPT['q']), method=6)
     print(names[0], im.size)
     sys.exit()
 im = key_green(Image.open(src))

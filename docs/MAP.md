@@ -4,7 +4,7 @@
 
 ## ビルドと点検
 - はじめに `npm ci`（物理 @dimforge/rapier2d-deterministic-compat 0.21.0 と 3D の three 0.160.1。three は UMD の build/three.min.js をそのまま入れて window.THREE）
-- `node tools/build.mjs [--artifact 出力.html]` → index.html（約1.75MB。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。絵 assets/art/*.webp は base64 で `lib-art` に入り、ui/art.js が使うときに1枚ずつ画像にする。`--artifact` は試しのページ用（head なし）
+- `node tools/build.mjs [--artifact 出力.html]` → index.html（約1.75MB。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。絵 assets/art/*.webp は base64 で絵ごとの script（`art-<名前>`）に入り、ui/art.js が使うときに1枚ずつ画像にする（画像にしたら script は消す）。`--artifact` は試しのページ用（head なし）
 - `node tools/test.mjs` → だめな所だけ出して最後に「OK（指紋 ……）」
 - `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--write]` → 相性表（`--write` で docs/balance.md）
 - `node tools/bout-sheet.mjs <左id> <右id> [シード] [出力.svg] [--set key=value]` → 1番をこま割りの絵に（物理の調整用。`rsvg-convert` で png に）
@@ -52,7 +52,7 @@
 | ui/fuku.js | 福箱の画面（箱は ui/fukubox.js → 中身・段の判子）と「出る物と確率」・土俵の小さな見本 drawDohyoSwatch |
 | ui/fukubox.js | 福箱の箱（11/26・Codex の絵）：金の漆の箱に紫の組紐（まっすぐな紐の絵を箱の面に沿った線に並べ、箱の形で切る）。play：ゆれる → 結び目がゆるむ → 紐が結び目へ引かれて落ちる → ふたが抜ける → 光の筋・煙・金箔・きらめき（PERIOD の end で中身・fxEnd で止まる）。段では変えない |
 | ui/titlelist.js | 称号の手に入れ方（編集の「称号の手に入れ方」から・シート s-titles）：持っている＝名前、持っていない＝？？？。取組の実績は条件、福箱は段だけ |
-| ui/art.js | 絵（lib-art）を使うときに1枚ずつ blob URL の画像に（artImage・artImages） |
+| ui/art.js | 絵（script の art-<名前>）を使うときに1枚ずつ blob URL の画像に・decode でほどいてから渡す（artImage・artImages） |
 | ui/match.js | 土俵巡業の予定・番付（本場所）・土俵えらび（initDohyoPick：番付の「土俵：○○」から・挿し絵つき・本場所の土俵スキン）・力士選出（相手は取組まで「？」・上に部屋の番付・レート・勝敗） |
 | ui/cut.js | 切る画面（show(形, { demo }) で、はじめての人に人の形 OTEHON を型抜きの点線で出す。描いている間も消さない・はじまりは朱の丸と「ここから」・向きの矢じるし） |
 | ui/pick.js | 稽古：相手をえらぶ画面（CPU 5体・全員と取る ●○） |
@@ -84,6 +84,7 @@
 - index.html・docs/balance.md・node_modules/・package-lock.json
 
 ## 軽さの記録（code-rules C・CPU ×4 の headless Chrome・3回の中ほど）
-- 11/26 福箱の絵（Codex 17枚・webp で約490KB）を足して index.html 1.84 → 2.51MB。絵は福箱を開いたとき・紙質はタイトルの間に1枚ずつほどく（起動の固まりは増やさない）
+- 11/26 福箱の絵（Codex 17枚）を足して index.html 1.84 → 2.51MB → 同じ日の軽量化で 2.28MB：絵を品質74〜76・すけ具合70で入れなおし、結び目・房・紐は描く大きさに合わせて小さく（490 → 316KB）・テクスチャは 448px 品質70。絵は1枚ずつの script（大きな JSON を読まない・画像にしたら消す）・decode してから描く・福箱は待ちの箱を先に、開ける演出の絵はあとから読む・福箱の canvas は細かさ2倍まで。開ける動き（CPU ×4）：1こま 約28 → 約20ms・固まり 2〜9回（最大110ms）→ 2回（最大70ms）・JS のメモリ 22 → 21MB
+- 中身の内わけ（2.28MB）：物理の wasm 1.23MB・絵 0.42MB・ゲームのコード 0.26MB・three 0.22MB・効果音 0.07MB・物理の JS 0.05MB・CSS 0.04MB（wasm を別ファイルにするかは工房に入れる前に司令塔と相談）
 - 11/25 軽量化：index.html 4.39 → 1.75MB／タイトルが出るまで 約1000 → 約650ms／物理と3Dの用意まで 約1050 → 約850ms／いちばん長い固まり 約220 → 約140ms／メモリ 17 → 11MB／旋回中の1こまの描画 22 → 12回（影は物が動いたときだけ）／結果が出てからの描画 毎秒約240回 → 0（大きさが変わったら1こまだけ）
 - fps は headless だと画面描きがソフト（SwiftShader）なので目安にならない。くらべるのは描画の回数と固まりの長さ

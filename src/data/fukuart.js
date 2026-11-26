@@ -2,8 +2,12 @@
 // 絵は assets/art/fuku-*.webp（tools/art_cut.py で切った）。数字は絵の上のピクセル（閉じた箱 fuku-box 593×643 が元）。
 // 紐は「まっすぐな紐」fuku-cord を、箱の面に沿った線の上に並べて描く（はしは箱の形で切るので、ふちまでぴったり届く）。
 export const FUKU_ART = {
-  ids: ['fuku-box', 'fuku-body', 'fuku-lid', 'fuku-knot1', 'fuku-knot2', 'fuku-knot3', 'fuku-tassel', 'fuku-cord',
-    'fx-smoke', 'fx-wisp', 'fx-ray', 'fx-leaf1', 'fx-leaf2', 'fx-glint'],   // fx-*＝開ける演出（requests/sumo/fukubako-fx.md・黒の地をすけさせた）
+  // 待っている箱に使う絵（先に読む）と、開ける演出の絵（あとから読む・requests/sumo/fukubako-fx.md・黒の地をすけさせた）
+  ids: ['fuku-box', 'fuku-body', 'fuku-lid', 'fuku-knot1', 'fuku-knot2', 'fuku-knot3', 'fuku-tassel', 'fuku-cord'],
+  fxIds: ['fx-smoke', 'fx-wisp', 'fx-ray', 'fx-leaf1', 'fx-leaf2', 'fx-glint'],
+  // 部品の大きさ（閉じた箱 593×643 の上のピクセル）。絵のファイルは軽くするため小さくしてあるので、描く大きさはこちらで決める
+  size: { 'fuku-body': [595, 615], 'fuku-lid': [594, 320], 'fuku-knot1': [480, 442], 'fuku-knot2': [380, 371], 'fuku-knot3': [547, 313],
+    'fuku-tassel': [169, 354], 'fuku-cord': [240, 37] },
   box: { w: 593, h: 643 },
   bodyTop: 28,          // ふたを外した本体（595×615）を、下と左右のまん中でそろえたときの上のはし
   lidTop: 0,            // ふただけ（594×320）の上のはし
