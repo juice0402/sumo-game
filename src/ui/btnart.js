@@ -9,7 +9,7 @@ const svgOf = (w, h, body, keep) =>
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'${keep ? '' : " preserveAspectRatio='none'"}>${body}</svg>`;
 
 // 筆でひと塗りした帯（左は筆を置いたかすれ、右は毛先がすっと抜ける・上下に細い毛のすじ）
-// m：上下のすきま（ふつう9）。列の縦の帯は m を小さくして、帯の中の字がかすれにかからないように（11/26 しょーくん「字が乗り切ってない」）
+// m：上下のすきま（ふつう9・小さくすると太い帯）
 function brushBand(color, seed, m = 9) {
   const r = rand(seed), W = 240, H = 64, top = [], bot = [], k = m / 9;
   for (let i = 0; i <= 12; i++) {
@@ -54,7 +54,7 @@ function brushDisc(color, seed) {
 
 // 縦の筆の帯（縦書きのボタン用）：横の帯を90度まわしたもの
 function brushBandV(color, seed) {
-  const h = brushBand(color, seed, 3).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  const h = brushBand(color, seed).replace(/^<svg[^>]*>|<\/svg>$/g, '');
   return svgOf(64, 240, `<g transform='translate(64,0) rotate(90)'>${h}</g>`);
 }
 

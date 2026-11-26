@@ -144,7 +144,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 0}
 .cols{display:flex;flex-direction:row-reverse;align-items:stretch;height:clamp(200px,36vh,300px)}
 .cols.tall{height:clamp(280px,56vh,460px)}
-.cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:16px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
+.cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:28px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
 .cols>*{container-type:size}
 .cols>*:last-child{border-left:0}
 .cols>button:active{background-color:rgba(238,233,222,.06)}
@@ -165,7 +165,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mine .who small{font-size:14px}
 .mine .who em{font-size:14px;color:var(--kin)}
 .mine canvas{width:84px;height:110px;align-self:flex-end;flex:none}
-.menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:16px 0;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
+.menu .seal{writing-mode:vertical-rl;min-height:0;justify-content:flex-start;align-items:center;padding:28px 0 16px;gap:12px;font-size:23px;letter-spacing:.32em;background:none;color:var(--washi)}
 .menu .seal svg{width:20px;height:20px}
 .menu .lbl{white-space:nowrap;letter-spacing:.32em;font-size:min(30px,calc((100cqh - 32px) / (var(--n,4) * 1.32 + .1)))}   /* どの項目も同じ大きさ（--n はいちばん長い字の数）・32px は上の印とすきま */
 #s-home .menu{height:clamp(240px,42vh,330px)}
@@ -183,7 +183,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #s-meimei.enter #mm-name{animation:inkdown .7s .35s cubic-bezier(.3,.7,.3,1) both}
 #s-meimei.enter .meihan{animation:hanko .34s 1.12s cubic-bezier(.2,.9,.2,1) both}
 /* 勝負 */
-.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:18px 0 14px}
+.modecard{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:28px 0 14px}
 .modecard b{white-space:nowrap;letter-spacing:.2em;font-size:min(40px,calc((100cqh - 32px) / (var(--n,3) * 1.2 + .1)),calc((100cqw - 62px) / 1.1))}
 .modecard span{white-space:nowrap;letter-spacing:.08em;line-height:1.3;color:var(--washi2);font-size:min(13px,calc((100cqh - 32px) / (var(--n,12) * 1.08 + .1)))}
 .modecard small{white-space:nowrap;line-height:1.3;font-size:12px;color:var(--kin)}   /* 力士の札の称号と同じ：右に金の小さい字 */
@@ -231,7 +231,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .myrank .info{writing-mode:vertical-rl;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--washi2);max-height:100%}
 .myrank em{font-style:normal;font-size:16px;color:var(--kin);text-combine-upright:none}
 .ladder{list-style:none;padding:0;height:clamp(180px,30vh,240px)}
-.ladder li{padding:12px 0 8px;gap:6px}
+.ladder li{padding:24px 0 8px;gap:6px}
 .ladder li b{--max:21px;--room:150px;color:var(--washi2)}
 .ladder li span{writing-mode:horizontal-tb;margin-top:auto;font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
 .ladder li.on b,.ladder li.on span{color:var(--washi)}
@@ -291,7 +291,7 @@ button{font:inherit;color:inherit;cursor:pointer}
    はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は下へ抜けて消える */
 .screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
 .screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
-.cols>.chosen::before{content:"";position:absolute;inset:0 -12%;z-index:-1;background:var(--b-shuv) center/100% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
+.cols>.chosen::before{content:"";position:absolute;inset:0 -28%;z-index:-1;background:var(--b-shuv) center/100% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
 .cols>.chosen :is(span,small){color:var(--washi)}
 .screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
 .cols.leaving{animation:jolt .2s .12s both}
@@ -5405,7 +5405,7 @@ const svgOf = (w, h, body, keep) =>
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'${keep ? '' : " preserveAspectRatio='none'"}>${body}</svg>`;
 
 // 筆でひと塗りした帯（左は筆を置いたかすれ、右は毛先がすっと抜ける・上下に細い毛のすじ）
-// m：上下のすきま（ふつう9）。列の縦の帯は m を小さくして、帯の中の字がかすれにかからないように（11/26 しょーくん「字が乗り切ってない」）
+// m：上下のすきま（ふつう9・小さくすると太い帯）
 function brushBand(color, seed, m = 9) {
   const r = rand(seed), W = 240, H = 64, top = [], bot = [], k = m / 9;
   for (let i = 0; i <= 12; i++) {
@@ -5450,7 +5450,7 @@ function brushDisc(color, seed) {
 
 // 縦の筆の帯（縦書きのボタン用）：横の帯を90度まわしたもの
 function brushBandV(color, seed) {
-  const h = brushBand(color, seed, 3).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  const h = brushBand(color, seed).replace(/^<svg[^>]*>|<\/svg>$/g, '');
   return svgOf(64, 240, `<g transform='translate(64,0) rotate(90)'>${h}</g>`);
 }
 
