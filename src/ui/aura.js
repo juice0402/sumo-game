@@ -56,23 +56,29 @@ export function createAura(id) {
     if (k === 'wisp') Object.assign(p, { u: side * (0.15 + R() * 0.25), v: -0.15 + R() * 0.35, vu: side * 0.04, vv: -(0.2 + R() * 0.14), life: 2 + R() * 0.8, rot: (R() - 0.5) * 0.5, vr: (R() - 0.5) * 0.3, puff: R() < 0.25 });   // 肩やわきから立ちのぼる（ふわっとした湯気は4つに1つ）
     else if (k === 'petal') Object.assign(p, { u: (R() - 0.5) * 1.5, v: -0.95 + R() * 0.35, vu: 0.04 + R() * 0.05, vv: 0.24 + R() * 0.08, life: 3.8 + R() * 0.8, rot: R() * 6.28, amp: 0.08 + R() * 0.07 });   // 上から力士の足もとまで
     else if (k === 'confetti') Object.assign(p, { u: (R() - 0.5) * 1.5, v: -0.95 + R() * 0.3, vu: (R() - 0.5) * 0.08, vv: 0.3 + R() * 0.1, life: 3.4 + R() * 0.6, rot: R() * 6.28, amp: 0.05 + R() * 0.05, c: A.colors[Math.floor(R() * A.colors.length)] });
-    else if (k === 'spark') Object.assign(p, { u: side * (0.05 + R() * 0.4), v: 0.25 + R() * 0.25, vu: side * (0.02 + R() * 0.1), vv: -(0.55 + R() * 0.45), life: 0.7 + R() * 0.6, big: R() < 0.3 });
-    else if (k === 'bolt') Object.assign(p, { u: (R() - 0.5) * 0.8, v: (R() - 0.5) * 0.9, vv: -0.05, life: 0.25 + R() * 0.15, tiny: true });
-    else if (k === 'wind') Object.assign(p, { dir: side, hv: (R() - 0.5) * 0.7, arc: (R() - 0.5) * 0.16, life: 0.55 + R() * 0.3 });   // 横からの突風（左右どちらから来るか・高さ・ゆるい弧）
+    else if (k === 'spark') Object.assign(p, { u: side * (0.15 + R() * 0.4), v: 0.25 + R() * 0.25, vu: side * (0.02 + R() * 0.1), vv: -(0.55 + R() * 0.45), life: 0.7 + R() * 0.6, big: R() < 0.3 });
+    else if (k === 'bolt') Object.assign(p, { u: side * (0.2 + R() * 0.35), v: -0.6 + R() * 1.05, vv: -0.05, life: 0.25 + R() * 0.15, tiny: true });   // 体のふちのパチッ（体のうしろで消えないよう、ふちより外へ）
+    else if (k === 'wind') Object.assign(p, { dir: side, hv: -0.45 + R() * 0.8, arc: (R() - 0.5) * 0.16, life: 0.55 + R() * 0.3 });   // 横からの突風（左右どちらから来るか・高さ・ゆるい弧）
     else if (k === 'gold') {
       const q = R();
       if (q < 0.16) Object.assign(p, { leaf: true, u: (R() - 0.5) * 1.3, v: -0.9 + R() * 0.3, vu: 0.03, vv: 0.16 + R() * 0.05, life: 3.2, rot: R() * 6.28, amp: 0.06 });   // 金箔：前もうしろもひらひら
       else if (q < 0.3) Object.assign(p, { star: true, back: true, u: (R() - 0.5) * 1.1, v: (R() - 0.5) * 1.1, life: 0.5 });   // きらっ
-      else Object.assign(p, { back: true, u: side * (0.1 + R() * 0.4), v: -0.1 + R() * 0.5, vu: side * 0.02, vv: -(0.1 + R() * 0.08), life: 1.8 + R() * 0.6 });   // 金の粉（小さなまたたき）
+      else Object.assign(p, { back: true, u: side * (0.18 + R() * 0.4), v: -0.35 + R() * 0.75, vu: side * 0.02, vv: -(0.1 + R() * 0.08), life: 1.8 + R() * 0.6 });   // 金の粉（小さなまたたき）
     }
     parts.push(p);
   }
-  function bolt() {   // 筆の稲妻（コードの線のときは pts・絵のときは su, sv）
-    const s = R() < 0.5 ? -1 : 1, su = s * (0.28 + R() * 0.18), pts = [];
-    let u = su, v = -0.55;
-    pts.push([u, v]);
-    for (let i = 0; i < 5; i++) { u += s * (0.02 + R() * 0.05) * (i % 2 ? -1 : 1.6); v += 0.16 + R() * 0.05; pts.push([u, v]); }
-    parts.push({ boltPts: pts, su: s * (0.32 + R() * 0.16), sv: -0.05 + R() * 0.1, sc: 0.8 + R() * 0.35, s, t: 0, life: 0.34, back: true });   // 稲妻は力士のうしろ
+  // 筆の稲妻（コードの線のときは pts・絵のときは su, sv, len）。空から落ちる：頭より上から、頭〜腰のあたりまで。
+  // 左右・上の高さ・長さ・かたむき・裏返しを毎回かえ、前の稲妻と近い所には落とさない（11/26 しょーくん「一定の所にしか落ちない・下のほう」）
+  let lastU = 0;
+  function bolt() {
+    let u;
+    do u = (R() < 0.5 ? -1 : 1) * (0.12 + R() * 0.6); while (Math.abs(u - lastU) < 0.25);
+    lastU = u;
+    const top = -0.78 - R() * 0.32, len = 0.62 + R() * 0.42, s = R() < 0.5 ? -1 : 1, pts = [];
+    let pu = u, v = top;
+    pts.push([pu, v]);
+    for (let i = 0; i < 5; i++) { pu += s * (0.02 + R() * 0.05) * (i % 2 ? -1 : 1.6); v += len / 5; pts.push([pu, v]); }
+    parts.push({ boltPts: pts, su: u, sv: top + len / 2, len, rot: (R() - 0.5) * 0.3, s, t: 0, life: 0.34, back: true });   // 稲妻は力士のうしろ（頭より上は見える）
   }
 
   // 1つの粒を描く（Codex の絵）
@@ -85,7 +91,7 @@ export function createAura(id) {
       const a = age < 0.12 ? 1 : age < 0.22 ? 0.25 : age < 0.4 ? 0.9 : (0.9 * (1 - age)) / 0.6;
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = alpha * a;
-      sprite(ctx, KI['ki-bolt1'], cx + p.su * h, cy + p.sv * h, h * 0.95 * p.sc, p.s * 0.08, p.s);
+      sprite(ctx, KI['ki-bolt1'], cx + p.su * h, cy + p.sv * h, h * p.len, p.rot, p.s);
       ctx.globalCompositeOperation = 'source-over';
       return;
     }
@@ -179,7 +185,7 @@ export function createAura(id) {
       }
     },
     // cx, cy：力士のまん中（px）・h：力士の高さ（px）・alpha：全体のこさ
-    // mask：力士の形（うしろの粒をかくす）＝ { img, x, y, w, h }（見本の絵の canvas）か { poly: [[x, y], …] }（取組の紙の形）
+    // mask：力士の形（うしろの粒をかくす）＝ { img, x, y, w, h }（見本の絵の canvas）か { polys: [[[x, y], …], …] }（取組のふたりの紙の形）
     draw(ctx, cx, cy, h, alpha = 1, mask = null) {
       ctx.save();
       if (!KI) { drawPlain(ctx, cx, cy, h, alpha); ctx.restore(); return; }
@@ -196,7 +202,7 @@ export function createAura(id) {
         o.globalAlpha = 1;
         o.globalCompositeOperation = 'destination-out';
         if (mask.img) o.drawImage(mask.img, mask.x, mask.y, mask.w, mask.h);
-        else if (mask.poly) { o.beginPath(); mask.poly.forEach(([x, y], i) => (i ? o.lineTo(x, y) : o.moveTo(x, y))); o.closePath(); o.fill(); }
+        else for (const pl of mask.polys || [mask.poly]) { o.beginPath(); pl.forEach(([x, y], i) => (i ? o.lineTo(x, y) : o.moveTo(x, y))); o.closePath(); o.fill(); }
         o.globalCompositeOperation = 'source-over';
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalAlpha = 1;
