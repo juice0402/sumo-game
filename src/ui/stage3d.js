@@ -5,7 +5,8 @@ import { paperFill, patternFill } from './papertex.js';
 import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
 import { LOOK } from '../data/look.js';
 import { PAPER } from '../data/config.js';
-import { buildVenue } from './venue.js';
+import { buildVenue, venueArtCount } from './venue.js';
+import { VL } from '../data/venue.js';
 
 const D2R = Math.PI / 180;
 
@@ -119,7 +120,19 @@ export function createStage(cv, P) {
   const sc = sun.shadow.camera;
   sc.left = -3; sc.right = 3; sc.top = 3; sc.bottom = -3; sc.near = 1; sc.far = 16;
   sun.shadow.bias = -0.0008;
-  scene.add(sun, sun.target, new THREE.HemisphereLight(0xf4efe4, 0x3a3631, 1.8));
+  const hemi = new THREE.HemisphereLight(0xf4efe4, 0x3a3631, 1.8);
+  scene.add(sun, sun.target, hemi);
+  // 本場所の会場で、明かりがパッとつく（上から土俵を本当に照らす・光の輪の絵は描かない）。ふだんは 0
+  const spot = new THREE.SpotLight(0xfff2dc, 0, 30, 0.42, 0.55, 2);
+  spot.position.set(0, 9, 3.5);
+  scene.add(spot, spot.target);
+  // k：0＝暗い会場 → 1＝明かりがついた（パッのときは少し上）。会場がないときは、いつもの明るさ
+  function lights(k, full = 1) {
+    const d = VL.stageDim + (full - VL.stageDim) * Math.min(1, k);
+    sun.intensity = 2.1 * d * (k > 1 ? 1 + (k - 1) * 0.5 : 1);
+    hemi.intensity = 1.8 * d;
+    spot.intensity = VL.spot * Math.min(k, 1.4);
+  }
 
   let dohyo = null, fighters = [], base = 10, cssW = 1, cssH = 1;
   const disposables = [];
@@ -157,18 +170,29 @@ export function createStage(cv, P) {
   }
 
   // 本場所の会場の飾り（ui/venue.js・見た目だけ）。lv＝番付の順（0 序ノ口〜9 横綱）・-1 なし。同じ番付なら作りなおさない
-  let venue = null, venueLv = -1;
+  let venue = null, venueLv = -1, venueArt = 0;
   function setVenue(lv) {
-    if (lv === venueLv) return;
+    if (lv === venueLv && venueArt === venueArtCount()) return;   // 同じ番付でも、Codex の絵が届いたら作りなおす
+    venueArt = venueArtCount();
     if (venue) { scene.remove(venue); venue.userData.free(); venue = null; }
     venueLv = lv;
-    if (lv < 0) return;
+    if (lv < 0) { sun.intensity = 2.1; hemi.intensity = 1.8; spot.intensity = 0; return; }
     venue = buildVenue(THREE, lv);
     venue.position.y = dohyo.userData.floor.position.y;
     scene.add(venue);
+    layoutVenue();
   }
-  // 懸賞旗（横綱）：tt＝旋回のはじめからの秒・-1 で消す
-  function parade(tt) { if (venue) venue.userData.parade(tt); }
+  // 会場の書き割りを、真横で止まったときの画面に合わせる（画面の形が変わったときも）
+  function layoutVenue() {
+    if (!venue) return;
+    const e = LOOK.elev * D2R;
+    venue.userData.layout({ camY: P.ringDepth + LOOK.lookY + Math.sin(e) * base, camZ: Math.cos(e) * base, tanTop: Math.tan((LOOK.fov / 2 - LOOK.elev) * D2R) });
+  }
+  // 会場の時間：tt＝旋回のはじめからの秒（真横で止まったあとは 99）。観客が湧く・屋根が降りる・明かりがパッ・懸賞旗
+  function venueTime(tt) {
+    if (!venue) return;
+    lights(venue.userData.time(tt), 1);
+  }
 
   function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
@@ -227,6 +251,7 @@ export function createStage(cv, P) {
     base = Math.max(LOOK.viewHalfW / th, LOOK.viewHalfH / tv);
     camera.updateProjectionMatrix();
     if (scene.fog) { scene.fog.near = base * 0.9; scene.fog.far = base * 2.2; }
+    layoutVenue();
   }
 
   // カメラ：az＝まわりの角度（0＝真横の正面）・elev＝見下ろす角度（度）・far＝遠さの倍率
@@ -247,7 +272,7 @@ export function createStage(cv, P) {
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setVenue, parade, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, venueTime, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };

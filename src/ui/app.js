@@ -25,6 +25,7 @@ import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
 import { loadPaperTextures } from './papertex.js';
+import { loadVenueArt } from './venue.js';
 import { initTitleList } from './titlelist.js';
 import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
@@ -98,6 +99,7 @@ function loadLibs() {
         if (el) { window.SUMO_SFX = JSON.parse(el.textContent); el.remove(); sfxReady(); }
       } catch (e) { /* 音なしで続ける */ }
       loadPaperTextures();   // 紙質のテクスチャ（Codex の絵・タイトルの間に読む。読む前はコードのもよう）
+      loadVenueArt();        // 本場所の会場の絵（Codex・読む前はコードの切り絵）
     })
     .then(() => run('lib-rapier'))
     .then(() => pause().then(() => unpackLib('lib-wasm')))

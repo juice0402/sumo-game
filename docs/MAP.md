@@ -25,7 +25,8 @@
 | data/fukuart.js | 福箱の絵（Codex）の名前と寸法（上の面のかど・結び目・本体とふたの位置・紐と房の倍率） |
 | data/auras.js | 気（オーラ）の種類と色。AURA_DEFAULT＝なし |
 | data/look.js | 演出の数字（旋回・カメラ・紙の厚み・スロー）。物理にさわらないので CONFIG_VERSION は上げない |
-| data/venue.js | 本場所の会場の飾り（見た目だけ）：番付ごとの数 VENUE（座布団の列・座る人・段・提灯・吊り屋根・懸賞旗）と置き場所・色 VL。数を変えるだけで会場が変わる |
+| data/venue.js | 本場所の会場（見た目だけ）：番付ごとの数 VENUE（奥の観客 back・手前の観客 front・屋根 roof・垂れ幕 tare・提灯 lamp・懸賞旗 kensho・明かり light）と、置き場所・時間・色 VL（湧く・降りる・パッの秒は VL.t） |
+| data/kaijoart.js | 会場の Codex の絵（assets/art/kaijo-*）の部品の四角と合わせる所（tools/kaijo_cut.py が書く）。ない絵はコードの切り絵 |
 | data/kimarite.js | 決まり手（取組の記録から決める・見た目だけ）。数字は KIMARITE |
 | geom/poly.js | 多角形の基本（面積・自己交差・帯で切る・反転） |
 | geom/stroke.js | 指の線 → 整数の輪郭（等間隔→なめらか→間引く→整数） |
@@ -59,7 +60,7 @@
 | ui/pick.js | 稽古：相手をえらぶ画面（CPU 5体・全員と取る ●○） |
 | ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える・東西の名前は vsFit で斜めの切れ目にかからない大きさに）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title）。結果の決まり手は画面のどまんなか・勝敗の判子はそのすぐ左（.verdict は3列の grid）。結果のボタンはいちばん下に「部屋へ｜次の取組（稽古はもう一番）」を同じ幅で横に（.r-pair・初土俵は部屋へを visibility で隠して場所は残す）・稽古だけその上に相手をかえる・切り直す（#r-sub） |
 | ui/stage3d.js | 2.5D（Three.js）：紙の箱の土俵（setDohyo で切りかえ・前の床と絵は外す）・紙の力士（厚み・影）・カメラ（旋回と真横）・project（描く座標→画面） |
-| ui/venue.js | 本場所の会場の飾りを作る buildVenue(THREE, 番付の順)：紙の切り絵（コードで描く）の座布団と観客（InstancedMesh）・段・提灯（Sprite・ひも）・吊り屋根と紫の幕と四房・懸賞旗（横綱・呼出が持って旋回のあいだ回り、真横へ降りる前に消える＝stage3d の parade(秒)・名前は text.js の T.kensho）。正面のまん中の近くには人を置かない。stage3d の setVenue が床に合わせて置く（bout.start の opt.venue・道具の「本場所の会場」で見る番付をかえられる） |
+| ui/venue.js | 本場所の会場の書き割り buildVenue(THREE, 番付の順)：真横のカメラから見る奥と手前だけ。旋回のあいだは土俵だけ（暗い）→ 観客が下から湧く（段ごとに1つの形・湧くあいだだけ形を書きかえる）→ 屋根と幕・垂れ幕・提灯が上からストン → 明かりがパッ（time(秒) が明かりを返し、stage3d の lights が日の光とスポットを変える）・横綱は懸賞旗が旋回のあいだ回る。layout が真横の画面の上のはしに屋根と提灯を合わせる。絵は loadVenueArt（タイトルの間に読む） |
 | ui/fx.js | 上にのせる2Dの演出：はじまりの墨の筆・墨のしぶき・集中線・トンの合図・体がついた所 |
 | ui/unpack.js | 重いもの（lib-rapier・lib-wasm・lib-three）を base64 → gzip からもどす。unpackLib(id)・gunzip（古いブラウザ用・tools/test.mjs で zlib とくらべる） |
 | ui/sound.js | 効果音（Web Audio）。unlockAudio（最初のタップ）・playSfx・setMuted |

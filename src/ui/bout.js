@@ -236,10 +236,10 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       const u = Math.min(1, tt / LOOK.orbitSec);
       const d = smoother(LOOK.orbitSec * LOOK.descendFrom, LOOK.orbitSec + LOOK.descendSec, tt);
       stage.view(-TAU * (1 - orbitEase(u)), mix(LOOK.orbitElev, LOOK.elev, d), mix(LOOK.orbitFar, 1, d));
-      stage.parade(tt);   // 横綱の本場所：懸賞旗が土俵のまわりを回る（真横へ降りる前に消える）
+      stage.venueTime(tt);   // 本場所の会場：懸賞旗が回る → 観客が湧く・屋根が降りる・明かりがパッ
     } else {
       stage.view(0, LOOK.elev, 1);
-      stage.parade(-1);
+      stage.venueTime(99);   // 真横で止まったあと（旋回を飛ばしたとき・演出を短くも）は、会場ができあがった姿
     }
   }
 
