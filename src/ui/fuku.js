@@ -56,7 +56,7 @@ export function initFuku(cb) {
   function paint() {
     const st = cb.getState(), owned = ownedItems(st);
     $('fk-koban').textContent = T.koban(st.koban);
-    // 種類ごとの、持っている数／ぜんぶ（そろえても、ごほうびはない＝コンプガチャにしない）
+    // 種類ごとの、持っている数だけ（ぜんぶでいくつかは出さない＝開けてのおたのしみ・11/26 しょーくん。そろえても、ごほうびはない＝コンプガチャにしない）
     const kinds = $('fk-kinds');
     kinds.textContent = '';
     for (const k of KIND_ORDER) {
@@ -64,9 +64,9 @@ export function initFuku(cb) {
       const d = document.createElement('div');
       const b = document.createElement('b');
       b.className = 'brush';
-      const n = document.createElement('span');   // 「12／64」：数字は縦中横で
+      const n = document.createElement('span');   // 「12」：数字は縦中横で
       const num = (x) => { const i = document.createElement('i'); i.textContent = String(x); return i; };
-      n.append(num(all.filter((it) => owned.has(it.id)).length), '／', num(all.length));
+      n.append(num(all.filter((it) => owned.has(it.id)).length));
       d.append(b, n);
       kinds.appendChild(d);
       fitText(b, SHORT[k] || KINDS[k]);

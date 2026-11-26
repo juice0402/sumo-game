@@ -724,9 +724,9 @@ const T = {
   fukuClose: 'とじる',
   fukuNew: '手に入れた',
   dohyoPick: (name) => `土俵：${name}`,
-  lockedLook: (n) => `まだ持っていない見た目 あと${n}・福箱から出る`,
+  lockedLook: () => 'まだ持っていない見た目は、福箱から出る',   // いくつあるかは出さない（11/26）
   look: { name: '名前', mise: '見た目' },
-  lockedName: (w, t) => (w || t ? '福箱から出る：' + [w ? `語 あと${w}` : '', t ? `称号 あと${t}（取組でも）` : ''].filter(Boolean).join('・') : ''),
+  lockedName: (w, t) => (w || t ? 'まだ持っていない語と称号は、福箱から出る（称号は取組でも）' : ''),
   titleGain: '称号を手に入れた',
   linkNone: '（なし）',
   retire: '引退',
@@ -5104,7 +5104,7 @@ function initFuku(cb) {
   function paint() {
     const st = cb.getState(), owned = ownedItems(st);
     $('fk-koban').textContent = T.koban(st.koban);
-    // 種類ごとの、持っている数／ぜんぶ（そろえても、ごほうびはない＝コンプガチャにしない）
+    // 種類ごとの、持っている数だけ（ぜんぶでいくつかは出さない＝開けてのおたのしみ・11/26 しょーくん。そろえても、ごほうびはない＝コンプガチャにしない）
     const kinds = $('fk-kinds');
     kinds.textContent = '';
     for (const k of KIND_ORDER) {
@@ -5112,9 +5112,9 @@ function initFuku(cb) {
       const d = document.createElement('div');
       const b = document.createElement('b');
       b.className = 'brush';
-      const n = document.createElement('span');   // 「12／64」：数字は縦中横で
+      const n = document.createElement('span');   // 「12」：数字は縦中横で
       const num = (x) => { const i = document.createElement('i'); i.textContent = String(x); return i; };
-      n.append(num(all.filter((it) => owned.has(it.id)).length), '／', num(all.length));
+      n.append(num(all.filter((it) => owned.has(it.id)).length));
       d.append(b, n);
       kinds.appendChild(d);
       fitText(b, SHORT[k] || KINDS[k]);
