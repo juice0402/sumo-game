@@ -141,7 +141,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .screen.v>.hero{grid-column:1;grid-row:2;min-height:0;container-type:size}
 .screen.v>.frame2{grid-column:1/3;grid-row:3}
 .screen.v>:is(.actions,.note,.foot,.drive){grid-column:1/3;grid-row:4}
-.frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 14px}
+.frame2{border-top:5px double var(--washi2);border-bottom:5px double var(--washi2);margin:12px 0 0}
 .cols{display:flex;flex-direction:row-reverse;align-items:stretch;height:clamp(200px,36vh,300px)}
 .cols.tall{height:clamp(280px,56vh,460px)}
 .cols>*{flex:1 1 0;min-width:0;writing-mode:vertical-rl;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding:16px 0 12px;background:none;border:0;border-left:1px solid var(--line);border-radius:0;color:var(--washi);text-align:start}
@@ -202,7 +202,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 力士の編集 */
 .profile{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:20px;position:relative}
 .profile .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
-.profile .who b{--max:56px;--room:calc(100cqh - 52px)}   /* 左下の「おまかせ」にかからない */
+.profile .who b{--max:56px;--room:calc(100cqh - 64px)}   /* 左下の「おまかせ」にかからない */
 .profile .who small{font-size:14px}
 .profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
 #ed-rand{position:absolute;left:0;bottom:0;font-size:14px}
@@ -253,7 +253,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .selhead em{font-style:normal;white-space:nowrap;letter-spacing:.08em;color:var(--kin);font-size:min(15px,calc((100cqh - 16px) / (var(--n,12) * 1.04 + .1)))}   /* 部屋の番付・レート・勝敗（力士の札には出さない） */
 /* 稽古 */
 .me{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:18px;position:relative;border:0;padding:0}
-.me p{writing-mode:vertical-rl;margin:0;--max:44px;--room:calc(100cqh - 52px);font-size:min(var(--max),calc(var(--room) / (var(--n,4) * 1.08 + .1)));color:var(--washi);flex:none;max-height:100%}
+.me p{writing-mode:vertical-rl;margin:0;--max:44px;--room:calc(100cqh - 64px);font-size:min(var(--max),calc(var(--room) / (var(--n,4) * 1.08 + .1)));color:var(--washi);flex:none;max-height:100%}
 .me canvas{width:76px;height:100px;align-self:flex-end}
 #b-all{position:absolute;left:0;bottom:0}
 .foes{display:flex;grid-template-columns:none;overflow:hidden;padding:0;gap:0}
@@ -291,7 +291,7 @@ button{font:inherit;color:inherit;cursor:pointer}
    はじめは朱をのせない。えらんだ列に朱の筆の帯を上からベタッと（ド）→ ぐっと沈む（ドン）→ ほかの列は下へ抜けて消える */
 .screen .cols>.chosen{position:relative;isolation:isolate;color:var(--washi);animation:punch .2s cubic-bezier(.2,.9,.3,1) both}
 .screen .cols>.chosen2{animation:punch2 .24s cubic-bezier(.2,.9,.3,1) both}
-.cols>.chosen::before{content:"";position:absolute;inset:0 -7%;z-index:-1;background:var(--b-shuv) center/100% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
+.cols>.chosen::before{content:"";position:absolute;inset:0 -12%;z-index:-1;background:var(--b-shuv) center/100% 100% no-repeat;animation:slam .17s cubic-bezier(.15,.85,.25,1) both}
 .cols>.chosen :is(span,small){color:var(--washi)}
 .screen .cols>.leave-d{animation:leaveD .28s cubic-bezier(.55,0,.85,.35) both;animation-delay:calc(190ms + var(--d,0ms))}
 .cols.leaving{animation:jolt .2s .12s both}
@@ -387,7 +387,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* ===== くるくる（力士の編集・ui/roller.js。11/26 しょーくん「スプラの二つ名みたいにロールして選べる」）=====
    横に 称号｜上の句・つなぎ・下の句 のドラム。指で上下にまわすと真ん中の行に止まり、そこに横いっぱいの朱の筆の帯。
    真ん中は和紙の字で大きく、上下は遠いほどうすく */
-.roller{--row:34px;margin:10px 0 12px}
+.roller{--row:34px}
 .rl-heads,.rl-body{display:flex}
 .rl-heads span,.rl-col{flex:1.25 1 0;min-width:0}
 .rl-heads .ti,.rl-col.ti{flex-grow:1.5}
@@ -471,6 +471,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 福箱：箱とボタンのまん中をそろえる（下の帯をなくしたので、ボタンも見出しの左の中だけで・11/26 しょーくん「ずれて見える」） */
 #s-fuku>.actions{grid-column:1}
 #s-fuku>.actions.pair .seal{font-size:16px;letter-spacing:.04em}
+
+/* 余白をそろえる（11/26 しょーくん「横の白い線との余白も統一感」）：番付表の画面はどれも
+   二重の罫の上 12px・罫の下からボタンや説明まで 14px・いちばん下は 20px あける（下にボタンがない画面も同じ） */
+.screen.v{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
+.screen.v>:is(.actions,.note,.foot,.drive){margin-top:14px}
+.screen.v>.actions,.screen.v .foot .actions{padding:0}
+.screen.v>.note,.screen.v .foot .note{margin-bottom:0}
+.screen.v .foot .note+.actions{margin-top:12px}
+.screen.v>.drive{padding-bottom:0}
+.screen.v>.drive .seg{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -510,7 +520,6 @@ button{font:inherit;color:inherit;cursor:pointer}
   <section id="s-roster" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">部屋の力士</h1></header>
     <div class="slots frame2 cols tall" id="roster-slots"></div>
-    <p class="note">出られるのは、この3体から1体</p>
   </section>
 
   <section id="s-edit" class="screen v" hidden>
@@ -739,9 +748,9 @@ const T = {
   fukuClose: 'とじる',
   fukuNew: '手に入れた',
   dohyoPick: (name) => `土俵：${name}`,
-  lockedLook: () => 'まだ持っていない見た目は、福箱から出る',   // いくつあるかは出さない（11/26）
+  lockedLook: () => '見た目は福箱から出る',   // いくつあるかは出さない（11/26）
   look: { name: '名前', mise: '見た目' },
-  lockedName: (w, t) => (w || t ? 'まだ持っていない語と称号は、福箱から出る（称号は取組でも）' : ''),
+  lockedName: (w, t) => (w || t ? '語と称号は福箱から出る（称号は取組でも）' : ''),
   titleGain: '称号を手に入れた',
   linkNone: '（なし）',
   retire: '引退',
@@ -5396,12 +5405,13 @@ const svgOf = (w, h, body, keep) =>
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}'${keep ? '' : " preserveAspectRatio='none'"}>${body}</svg>`;
 
 // 筆でひと塗りした帯（左は筆を置いたかすれ、右は毛先がすっと抜ける・上下に細い毛のすじ）
-function brushBand(color, seed) {
-  const r = rand(seed), W = 240, H = 64, top = [], bot = [];
+// m：上下のすきま（ふつう9）。列の縦の帯は m を小さくして、帯の中の字がかすれにかからないように（11/26 しょーくん「字が乗り切ってない」）
+function brushBand(color, seed, m = 9) {
+  const r = rand(seed), W = 240, H = 64, top = [], bot = [], k = m / 9;
   for (let i = 0; i <= 12; i++) {
     const x = 16 + (i / 12) * (W - 40), tail = i > 9 ? (i - 9) * 2 : 0;
-    top.push([x, 9 + Math.sin(i * 0.9) * 1.6 + r() * 2.4 + tail]);
-    bot.push([x, H - 8 - Math.sin(i * 0.7 + 1) * 1.6 - r() * 2.4 - tail * 1.1]);
+    top.push([x, m + (Math.sin(i * 0.9) * 1.6 + r() * 2.4 + tail) * k]);
+    bot.push([x, H - m + 1 - (Math.sin(i * 0.7 + 1) * 1.6 + r() * 2.4 + tail * 1.1) * k]);
   }
   let d = `M${n1(top[0][0])},${n1(top[0][1])}`;
   for (const p of top.slice(1)) d += `L${n1(p[0])},${n1(p[1])}`;
@@ -5440,7 +5450,7 @@ function brushDisc(color, seed) {
 
 // 縦の筆の帯（縦書きのボタン用）：横の帯を90度まわしたもの
 function brushBandV(color, seed) {
-  const h = brushBand(color, seed).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  const h = brushBand(color, seed, 3).replace(/^<svg[^>]*>|<\/svg>$/g, '');
   return svgOf(64, 240, `<g transform='translate(64,0) rotate(90)'>${h}</g>`);
 }
 

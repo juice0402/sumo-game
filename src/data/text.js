@@ -53,9 +53,9 @@ export const T = {
   fukuClose: 'とじる',
   fukuNew: '手に入れた',
   dohyoPick: (name) => `土俵：${name}`,
-  lockedLook: () => 'まだ持っていない見た目は、福箱から出る',   // いくつあるかは出さない（11/26）
+  lockedLook: () => '見た目は福箱から出る',   // いくつあるかは出さない（11/26）
   look: { name: '名前', mise: '見た目' },
-  lockedName: (w, t) => (w || t ? 'まだ持っていない語と称号は、福箱から出る（称号は取組でも）' : ''),
+  lockedName: (w, t) => (w || t ? '語と称号は福箱から出る（称号は取組でも）' : ''),
   titleGain: '称号を手に入れた',
   linkNone: '（なし）',
   retire: '引退',
