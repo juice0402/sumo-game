@@ -22,6 +22,22 @@ export function sameSize(els) {
   const n = Math.max(2, ...[...els].map((e) => Array.from(e.textContent).length));
   for (const e of els) e.style.setProperty('--n', String(n));
 }
+// 力士の編集の名前：字の大きさはいつも同じ（11/26 しょーくん「A＝固定」）。1列に入る字の数は、
+// いちばん長い「上の句＋つなぎ」と「下の句」の長いほう。それより長い名前は下の句の前で2列に折る
+const len = (t) => Array.from(t).length;
+const longest = (g) => Math.max(...SHIKONA[g].map((w) => len(w.t)));
+export const ED_NAME_COL = Math.max(longest('kami') + longest('tsunagi'), longest('shimo'));
+function paintEdName(el, ids) {
+  const head = wordText(ids[0]) + wordText(ids[1]), tail = wordText(ids[2]);
+  el.textContent = head + tail;
+  if (len(head + tail) > ED_NAME_COL) {
+    el.textContent = head;
+    el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode(tail));
+  }
+  el.style.setProperty('--n', String(ED_NAME_COL));
+  el.classList.add('fit');
+}
 // 縦の見出し：中の span に字を入れて --n を
 export function headText(h1, text) {
   let sp = h1.querySelector('span');
@@ -75,7 +91,7 @@ export function initEdit(cb) {
     const s = cb.getSlot(idx);
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
-    fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
+    paintEdName(document.getElementById('ed-name'), s.shikona);
   }
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };

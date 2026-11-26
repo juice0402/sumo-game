@@ -205,8 +205,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 力士の編集 */
 .profile{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:20px;position:relative}
 .profile .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
-.profile .who{width:118px;flex:none;justify-content:flex-start}   /* 名前の長さで力士の位置が動かないよう、名前の列の幅はいつも同じ（11/26 しょーくん「レイアウトがころころ変わらない」） */
-.profile .who b{--max:56px;--room:calc(100cqh - 8px)}
+.profile .who{width:118px;flex:none;justify-content:flex-start;align-self:stretch}   /* 名前の長さで力士の位置が動かないよう、名前の列の幅はいつも同じ（11/26 しょーくん「レイアウトがころころ変わらない」） */
+.profile .who b{--max:40px;--room:calc(100cqh - 8px)}   /* 大きさは名前の長さで変えない（roster.js の paintEdName）。40px＝2列に折っても名前の列の幅に入る */
 .profile .who small{font-size:14px}
 .profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
 #s-edit .actions{padding-top:0}
@@ -4809,6 +4809,22 @@ function sameSize(els) {
   const n = Math.max(2, ...[...els].map((e) => Array.from(e.textContent).length));
   for (const e of els) e.style.setProperty('--n', String(n));
 }
+// 力士の編集の名前：字の大きさはいつも同じ（11/26 しょーくん「A＝固定」）。1列に入る字の数は、
+// いちばん長い「上の句＋つなぎ」と「下の句」の長いほう。それより長い名前は下の句の前で2列に折る
+const len = (t) => Array.from(t).length;
+const longest = (g) => Math.max(...SHIKONA[g].map((w) => len(w.t)));
+const ED_NAME_COL = Math.max(longest('kami') + longest('tsunagi'), longest('shimo'));
+function paintEdName(el, ids) {
+  const head = wordText(ids[0]) + wordText(ids[1]), tail = wordText(ids[2]);
+  el.textContent = head + tail;
+  if (len(head + tail) > ED_NAME_COL) {
+    el.textContent = head;
+    el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode(tail));
+  }
+  el.style.setProperty('--n', String(ED_NAME_COL));
+  el.classList.add('fit');
+}
 // 縦の見出し：中の span に字を入れて --n を
 function headText(h1, text) {
   let sp = h1.querySelector('span');
@@ -4862,7 +4878,7 @@ function initEdit(cb) {
     const s = cb.getSlot(idx);
     if (!s) return;
     document.getElementById('ed-title').textContent = titleText(s.title);
-    fitText(document.getElementById('ed-name'), shikonaText(s.shikona));
+    paintEdName(document.getElementById('ed-name'), s.shikona);
   }
   // まわしている間は名前だけ描きなおし、保存は止まってから
   const saveLater = () => { clearTimeout(saveT); saveT = setTimeout(() => cb.onChange(idx), 300); };
@@ -4947,7 +4963,7 @@ function initEdit(cb) {
   };
 }
 
-return { fitText, setN, sameSize, headText, renderSlots, initEdit };
+return { fitText, setN, sameSize, ED_NAME_COL, headText, renderSlots, initEdit };
 })();
 
 __m['src/ui/choose.js'] = (function () {

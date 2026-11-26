@@ -193,8 +193,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 力士の編集 */
 .profile{display:flex;flex-direction:row-reverse;justify-content:center;align-items:center;gap:20px;position:relative}
 .profile .who{writing-mode:vertical-rl;max-height:100%;gap:8px}
-.profile .who{width:118px;flex:none;justify-content:flex-start}   /* 名前の長さで力士の位置が動かないよう、名前の列の幅はいつも同じ（11/26 しょーくん「レイアウトがころころ変わらない」） */
-.profile .who b{--max:56px;--room:calc(100cqh - 8px)}
+.profile .who{width:118px;flex:none;justify-content:flex-start;align-self:stretch}   /* 名前の長さで力士の位置が動かないよう、名前の列の幅はいつも同じ（11/26 しょーくん「レイアウトがころころ変わらない」） */
+.profile .who b{--max:40px;--room:calc(100cqh - 8px)}   /* 大きさは名前の長さで変えない（roster.js の paintEdName）。40px＝2列に折っても名前の列の幅に入る */
 .profile .who small{font-size:14px}
 .profile canvas{width:80px;height:106px;align-self:flex-end;flex:none}
 #s-edit .actions{padding-top:0}
