@@ -424,24 +424,54 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rl-mise .rl-col+.rl-col{border-left:3px double var(--line)}
 .fkhero{position:relative;display:grid;place-items:center}
 .fkbox{position:absolute;inset:0;width:100%;height:100%;display:block}   /* 金の漆の箱と紫の組紐（ui/fukubox.js が描く・Codex の絵） */
-.fkreveal{position:absolute;inset:0;display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:18px;z-index:2}
-.fkreveal>b{writing-mode:vertical-rl;--max:60px;--room:calc(100cqh - 24px);letter-spacing:.08em;line-height:1.1;white-space:nowrap}
-.fkreveal:is([data-kind=word],[data-kind=title])>b{--max:92px}
-.fkreveal[data-tier=tokujo]>b{background:var(--b-shuv) center/100% 100% no-repeat;padding:14px 6px}
-.fkreveal[data-tier=kiwami]>b{color:var(--kin)}
-.fkmeta{writing-mode:vertical-rl;display:flex;align-items:center;gap:12px;font-size:13px;letter-spacing:.12em;color:var(--washi2);max-height:100%}
-.fkmeta em{font-style:normal;color:var(--kin)}
+/* 中身の札（11/27 しょーくん「福箱の見せ方を豪華にして」・ui/fukureveal.js）：和紙の短冊に二重の罫。裏は漆に金の「福」。
+   箱の口から舞い上がって（translate・scale）くるっと表へ（transform）→ 名前を筆で → 判子をドン。段で札の紙・罫・判子の色が変わる（時間は --fk-*） */
+.fkreveal{position:absolute;inset:0;display:grid;place-items:center;z-index:2;--cardh:min(84cqh,440px)}
+.fkback-cv{z-index:0}
+.fkfront-cv{z-index:3}
+/* 舞い上がる（うすい→こい）は外の箱、くるっと裏返るのは中の札（うすさの動きと3Dを同じ要素にすると、裏表がつぶれる） */
+.fkcardw{position:relative;height:var(--cardh);width:calc(var(--cardh) * .44);perspective:900px}
+.fkcard{position:absolute;inset:0;transform-style:preserve-3d;--ink:#201E1B;--rule:#201E1B;--stamp:#201E1B;--tint:rgba(32,30,27,0)}
+.fkreveal:not([data-kind=word]):not([data-kind=title]) .fkcardw{width:min(86cqw,calc(var(--cardh) * .66))}
+.fkreveal[data-tier=kiwami]{--cardh:min(74cqh,400px)}   /* 極は札を少し小さく＝うしろの金屏風が見えるように */
+.fkreveal[data-tier=jo] .fkcard{--rule:#2f4f78;--stamp:#2f4f78}
+.fkreveal[data-tier=tokujo] .fkcard{--rule:var(--shu);--stamp:var(--shu)}
+.fkreveal[data-tier=kiwami] .fkcard{--stamp:#9a2217;--tint:rgba(60,36,8,.16)}
+.fkreveal[data-tier=kiwami] .fkface{box-shadow:0 0 0 2px #1a110c,0 12px 28px rgba(0,0,0,.6),inset 0 0 0 999px var(--tint)}
+.fkreveal[data-tier=kiwami] .fkface .hanko{background:rgba(238,233,222,.6)}
+.fkface,.fkcback{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:3px;box-shadow:0 12px 28px rgba(0,0,0,.6),inset 0 0 0 999px var(--tint,transparent)}
+.fkface{container-type:size;background:var(--fk-tex,none) center/240px repeat var(--washi);color:var(--ink);display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:12px;padding:30px 20px}
+.fkface::before,.fkcback::before{content:'';position:absolute;inset:8px;border:5px double var(--rule);pointer-events:none}
+.fkcback{transform:rotateY(180deg);background:#191310;display:grid;place-items:center;color:var(--kin);--rule:var(--kin)}
+.fkcback b{font-size:calc(var(--cardh) * .2);line-height:1}
+.fkface>b{writing-mode:vertical-rl;--max:64px;--room:calc(100cqh - 64px);letter-spacing:.08em;line-height:1.1;white-space:nowrap;flex:none}
+.fkreveal:is([data-kind=word],[data-kind=title]) .fkface>b{--max:96px}
+.fkreveal[data-tier=tokujo] .fkface>b{background:var(--b-shuv) center/100% 100% no-repeat;padding:16px 8px;color:var(--washi)}
+.fkface .hanko{position:absolute;left:18px;top:20px;color:var(--stamp);font-size:23px;border-width:3px}
+.fkmeta{writing-mode:vertical-rl;display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:.12em;color:#5d564c;max-height:100%;flex:none}
+.fkreveal[data-tier=kiwami] .fkmeta{color:#241a0e}
+.fkreveal[data-tier=kiwami] .fkmeta em{color:#8a1f16}
+.fkmeta em{font-style:normal;color:var(--shu)}
 .hanko{display:inline-grid;place-items:center;border:2px solid currentColor;border-radius:4px;font-style:normal;padding:5px 3px;font-size:20px;line-height:1.05;letter-spacing:0;transform:rotate(-6deg)}
-.fkprev{position:relative;width:min(34cqw,38cqh);aspect-ratio:3/4;flex:none}
+.fkprev{position:relative;width:min(42cqw,56cqh * .75);aspect-ratio:3/4;flex:none;background:var(--sumi);border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px var(--kin),0 0 0 4px var(--sumi)}
 .fkreveal:is([data-kind=word],[data-kind=title]) .fkprev{display:none}
-.fkreveal[data-kind=dohyo] .fkprev{aspect-ratio:4/3;width:min(46cqw,42cqh)}
+.fkreveal[data-kind=dohyo] .fkprev{aspect-ratio:4/3;width:min(50cqw,40cqh)}
 .fkprev #fk-cv{display:block;width:100%;height:100%}
 .fkprev .aura-cv{position:absolute;inset:-25%;width:150%;height:150%;pointer-events:none;z-index:1}
-.fkreveal.in .fkprev{animation:rise .4s both}
-.fkreveal.in>b{animation:inkdown .5s .08s both}
-.fkreveal.in .fkmeta{animation:rise .35s .3s both}
-.fkreveal.in .hanko{animation:fkstamp .3s .5s both}
-@keyframes fkstamp{0%{opacity:0;transform:scale(2) rotate(-14deg)}100%{opacity:1;transform:rotate(-6deg)}}
+.fkreveal.in .fkcardw{animation:fkrise var(--fk-rise,480ms) cubic-bezier(.15,.8,.3,1) both}
+.fkreveal.in .fkcard{animation:fkflip var(--fk-flip,440ms) var(--fk-rise,480ms) cubic-bezier(.45,0,.25,1.25) both}
+.fkreveal.in .fkface>b{animation:inkdown .55s var(--fk-write,860ms) both}
+.fkreveal.in .fkprev{animation:rise .4s var(--fk-write,860ms) both}
+.fkreveal.in .fkmeta{animation:rise .35s var(--fk-meta,1420ms) both}
+.fkreveal.in .hanko{animation:fkstamp .26s var(--fk-stamp,1220ms) cubic-bezier(.5,0,.8,.4) both}
+.fkreveal.in .fkface{animation:fkbump .3s calc(var(--fk-stamp,1220ms) + .22s) both}
+.fkhero.shake1{--amp:3px;animation:fkshake .34s calc(var(--fk-stamp,1220ms) + .22s) both}
+.fkhero.shake2{--amp:6px;animation:fkshake .42s calc(var(--fk-stamp,1220ms) + .22s) both}
+@keyframes fkrise{from{translate:0 34cqh;scale:.28;opacity:0}35%{opacity:1}to{translate:0 0;scale:1;opacity:1}}
+@keyframes fkflip{from{transform:rotateY(180deg)}to{transform:rotateY(0)}}
+@keyframes fkstamp{0%{opacity:0;transform:scale(3.2) rotate(-16deg)}60%{opacity:1}100%{opacity:1;transform:rotate(-6deg)}}
+@keyframes fkbump{0%,100%{transform:none}35%{transform:scale(1.03)}}
+@keyframes fkshake{0%,100%{translate:0 0}20%{translate:calc(var(--amp) * -1) calc(var(--amp) * .6)}40%{translate:var(--amp) calc(var(--amp) * -.5)}60%{translate:calc(var(--amp) * -.6) calc(var(--amp) * .3)}80%{translate:calc(var(--amp) * .3) 0}}
 #s-odds .bar h1{font-size:22px}
 .odds{border-top:1px solid var(--line);padding:12px 0 6px;margin-top:10px}
 .odds h2{display:flex;align-items:center;gap:12px;margin:0 0 6px;font-size:16px}
