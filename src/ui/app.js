@@ -7,7 +7,8 @@ import { setRapier } from '../sim/battle.js';
 import { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } from '../game/save.js';
 import { shikonaText, titleText, randomShikona, ownedWords } from '../game/names.js';
 import { CPU_SHAPES } from '../data/cpu-shapes.js';
-import { rankOf, eloDelta } from '../game/rating.js';
+import { rankOf, rankIdx, eloDelta } from '../game/rating.js';
+import { BANZUKE } from '../data/banzuke.js';
 import { drawStage } from '../game/jungyo.js';
 import { makeFoe } from '../game/foe.js';
 import { initCut } from './cut.js';
@@ -24,6 +25,7 @@ import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
 import { loadPaperTextures } from './papertex.js';
+import { loadVenueArt } from './venue.js';
 import { initTitleList } from './titlelist.js';
 import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
 import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
@@ -97,6 +99,7 @@ function loadLibs() {
         if (el) { window.SUMO_SFX = JSON.parse(el.textContent); el.remove(); sfxReady(); }
       } catch (e) { /* 音なしで続ける */ }
       loadPaperTextures();   // 紙質のテクスチャ（Codex の絵・タイトルの間に読む。読む前はコードのもよう）
+      loadVenueArt();        // 本場所の会場の絵（Codex・読む前はコードの切り絵）
     })
     .then(() => run('lib-rapier'))
     .then(() => pause().then(() => unpackLib('lib-wasm')))
@@ -205,6 +208,10 @@ function boot() {
       a: Object.assign(who(me), { rank: rankOf(state.rate).name }), b: Object.assign(who(foe), { rank: rankOf(foe.rate).name }),
       papers: [me.paper, foe.paper], auras: [me.aura, foe.aura],
       look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
+      // 本場所の会場の飾り（番付が上がるほど賑やかに・11/27 しょーくん）。道具の「本場所の会場」で見る番付をかえられる
+      venue: m.mode === 'honbasho' ? (state.venueView != null ? state.venueView : rankIdx(state.rate)) : -1,
+      // 決着の演出（11/27）：番付が上の相手に勝てば座布団が舞う（upset＝番付の差）。道具の「いつも見る」では勝ち負けによらず
+      cheer: { upset: rankIdx(foe.rate) - rankIdx(state.rate), test: !!state.cheerTest },
       onResult(r, kima) {
         addRec(me.rec, r.winner);
         // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
@@ -373,6 +380,15 @@ function boot() {
   toggle('b-mute', 'mute', () => setMuted(state.mute));
   toggle('b-short', 'short');
   toggle('b-unlock', 'unlockAll');
+  state.cheerTest = false;   // 道具の「勝ったときの演出をいつも見る」（試しだけ・保存しない）
+  toggle('b-cheer', 'cheerTest');
+  const venueBtn = document.getElementById('b-venue');
+  const paintVenue = () => { venueBtn.textContent = T.venueView(state.venueView != null ? BANZUKE[state.venueView].name : ''); };
+  paintVenue();
+  venueBtn.addEventListener('click', () => {   // 番付どおり → 序ノ口 → … → 横綱 → 番付どおり
+    state.venueView = state.venueView == null ? 0 : state.venueView + 1 < BANZUKE.length ? state.venueView + 1 : null;
+    paintVenue(); save();
+  });
   document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });

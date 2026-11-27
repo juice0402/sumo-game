@@ -8,7 +8,7 @@
 //   titles：手に入れた称号（はじめから持っている TITLE_START のほか。実績と福箱・11/26〜）・streak：巡業と本場所の連勝・keikoWon：稽古で勝った CPU の形
 import { checkShape } from '../geom/check.js';
 import { validShikona, validTitle, randomShikona, startTitle, ownedWords, isStartWord, isWord } from './names.js';
-import { RATE } from '../data/banzuke.js';
+import { RATE, BANZUKE } from '../data/banzuke.js';
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
 import { AURAS, AURA_DEFAULT } from '../data/auras.js';
 import { DOHYO } from '../data/dohyo.js';
@@ -38,13 +38,14 @@ function cleanSlot(s) {
 }
 
 export function loadState() {
-  const st = { drive: 'hop', mute: false, short: false, unlockAll: true, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
+  const st = { drive: 'hop', mute: false, short: false, unlockAll: true, venueView: null, slots: [null, null, null], active: 0, rate: RATE.start, hon: rec(), jun: rec(), words: [], koban: 0, kobanDay: '', items: [], dohyo: 'kami', titles: [], streak: 0, keikoWon: [] };
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     if (d.drive === 'push' || d.drive === 'hop') st.drive = d.drive;
     st.mute = d.mute === true;
     st.short = d.short === true;
     st.unlockAll = d.unlockAll !== false;   // 道具の「ぜんぶ持っている」（試しだけ・はじめは入）
+    if (Number.isInteger(d.venueView) && d.venueView >= 0 && d.venueView < BANZUKE.length) st.venueView = d.venueView;   // 道具の「本場所の会場」（試しだけ・null＝番付どおり）
     if (Array.isArray(d.slots)) for (let i = 0; i < SLOT_COUNT; i++) st.slots[i] = cleanSlot(d.slots[i]);
     else if (d.shape && checkShape(d.shape).ok) st.slots[0] = newRikishi(d.shape);   // 試作①②の形 → 1枠目へ
     if (Number.isInteger(d.active) && d.active >= 0 && d.active < SLOT_COUNT) st.active = d.active;
@@ -72,7 +73,7 @@ export function saveState(st) {
   const cur = st.slots[st.active];
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short, unlockAll: st.unlockAll,
+      shape: cur ? cur.shape : null, drive: st.drive, mute: st.mute, short: st.short, unlockAll: st.unlockAll, venueView: st.venueView,
       slots: st.slots, active: st.active, rate: st.rate, hon: st.hon, jun: st.jun, words: st.words,
       koban: st.koban, kobanDay: st.kobanDay, items: st.items, dohyo: st.dohyo,
       titles: st.titles, streak: st.streak, keikoWon: st.keikoWon,

@@ -7,7 +7,8 @@ import { createBout, toLocal } from '../sim/battle.js';
 import { decideKimarite } from '../data/kimarite.js';
 import { createStage } from './stage3d.js';
 import { createFx } from './fx.js';
-import { playSfx } from './sound.js';
+import { playSfx, loopSfx } from './sound.js';
+import { VENUE, VL } from '../data/venue.js';
 import { createAura } from './aura.js';
 import { drawShapeThumb } from './pick.js';
 
@@ -59,6 +60,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
 
   function stop() {
     cancelAnimationFrame(raf);
+    if (st && st.zawa) st.zawa.stop(0.4);   // 会場のざわめき
     if (st && st.bout) st.bout.free();
     st = null;
     cutin.classList.remove('go');
@@ -91,7 +93,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
 
   // opt：{ mode（keiko・jungyo・honbasho）, stage（data/stages.js の id）, a・b（{ name, sub, rank }）,
   //        onResult(結果, 決まり手)→ひとこと か { text, titles（新しく手に入れた称号の字） },
-  //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ） }
+  //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ）,
+  //        venue（本場所の会場の飾り＝番付の順 0〜9・なしは -1） }
   function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
@@ -108,6 +111,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     }
     const look = opt.look || S.look;   // 本場所は、えらんだ土俵スキン（見た目だけ・物理は S.phys のまま）
     if (curLook !== look) { stage.setDohyo(look); curLook = look; }
+    stage.setVenue(typeof opt.venue === 'number' ? opt.venue : -1);   // 本場所の会場の飾り（番付で増える・見た目だけ）
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
     setName(document.getElementById('n-b'), b);
@@ -151,6 +155,9 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
       auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], outlines: [la.outline, lb.outline], idle3d: false,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
+      // 本場所の会場（11/27 空気感）：ざわめき・沸く・紙吹雪と座布団。V＝番付の会場の行・cheer＝{ upset（相手の番付が上の差）, test（道具のためし） }
+      V: typeof opt.venue === 'number' && opt.venue >= 0 ? VENUE[Math.min(VENUE.length - 1, opt.venue)] : null, cheer: opt.cheer || {},
+      zawa: null, hushed: false, vtt: -1, vBusy: false,
       t: 0, last: performance.now(), play: false, idx: 0, hold: 0, endHold: 0,
       firstHit: true, prevTouch: 0, prevTon: 0, ended: false, shown: false, went: false, kima: null,
     };
@@ -234,8 +241,11 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       const u = Math.min(1, tt / LOOK.orbitSec);
       const d = smoother(LOOK.orbitSec * LOOK.descendFrom, LOOK.orbitSec + LOOK.descendSec, tt);
       stage.view(-TAU * (1 - orbitEase(u)), mix(LOOK.orbitElev, LOOK.elev, d), mix(LOOK.orbitFar, 1, d));
+      stage.venueTime(tt);   // 本場所の会場：懸賞旗が回る → 観客が湧く・屋根が降りる・明かりがパッ
+      if (s.V) { for (const c of stage.venueCues()) if (s.vtt < c.at && tt >= c.at) playSfx(c.name, c); s.vtt = tt; }   // 幕がストン・明かりがパッの音
     } else {
       stage.view(0, LOOK.elev, 1);
+      stage.venueTime(99);   // 真横で止まったあと（旋回を飛ばしたとき・演出を短くも）は、会場ができあがった姿
     }
   }
 
@@ -300,7 +310,14 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     if (touch && !s.prevTouch && s.play) {
       const mx = (f[o] + f[o + 3]) / 2, my = (f[o + 1] + f[o + 4]) / 2 - ry + 0.45;
       fx.splash(mx, my, s.firstHit ? 1 : 0.3);
-      if (s.firstHit) { fx.burst(mx, my, 1); s.hold = LOOK.hitStop; playSfx('taiko', { vol: 0.85 }); }
+      if (s.firstHit) {
+        fx.burst(mx, my, 1); s.hold = LOOK.hitStop; playSfx('taiko', { vol: 0.85 });
+        if (s.V) {   // 会場がどよめいて、観客がはねる
+          stage.venueCheer('clash');
+          playSfx('doyo', { vol: Math.min(1, 0.3 + s.V.zawa * 1.5) });
+          if (s.zawa) s.zawa.vol(s.V.zawa * 1.15, 0.35);
+        }
+      }
       s.firstHit = false;
     }
     s.prevTouch = touch;
@@ -309,6 +326,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     if (s.play && !s.ended && ton > 0.3 && s.prevTon <= 0.3) playSfx('ton', { vol: 0.22 });
     s.prevTon = ton;
     camera(s);
+    if (s.V) venueMood(s, fdt);
     fx.step(fdt);
     if (!s.idle3d) stage.render();   // 結果が出て動かなくなったら 3D は描かない（気だけ動かすとき）
     // 気：力士のまん中（まわっていても）を画面に写して、そのまわりに
@@ -335,7 +353,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     fx.draw({ stage, P, ton: s.play ? ton : 0, mark, sweep: s.t < LOOK.inkSec ? s.t / LOOK.inkSec : null, auras: auraDraw });
     // 結果が出て、もう何も動かない（しぶき・集中線・朱の丸を描き終えた）なら、描くのを休む（電池と熱のため・11/25）。
     // 画面の大きさが変わったら起こす（下の resize）。もう一度見る・もう一番は start からまた動く
-    const idle = s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1;
+    const idle = s.shown && !fx.busy() && s.t - s.endedAt > LOOK.ringSec + 0.1 && !s.vBusy;   // 紙吹雪・座布団が舞っているあいだは描く
     if (idle && !auraDraw) { s.sleep = true; return; }
     s.idle3d = idle;   // 気があるときは、気（2D）だけ動かしつづける
     raf = requestAnimationFrame(frame);
@@ -354,6 +372,26 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     fx.splash(x, y, 1.4, r.loser === 'b' ? 1 : r.loser === 'a' ? -1 : 0);
     playSfx('taiko-end', { vol: 0.9 });
     playSfx('sumi', { vol: 0.6 });
+    if (s.V) venueEnd(s, r);
+  }
+
+  // 本場所の会場：ざわめきのループ（観客が湧くころから）・「勝負」の前は静まる・毎こまのゆれ
+  function venueMood(s, fdt) {
+    if (!s.zawa && (s.t >= s.orbitStart + VL.t.back[0] || s.t >= s.orbitEnd)) s.zawa = loopSfx('zawa', { vol: s.V.zawa, fade: 1.6, loop: [0.25, 8.25] });
+    if (s.zawa && !s.hushed && s.t >= s.goAt - 0.7) { s.hushed = true; s.zawa.vol(s.V.zawa * 0.35, 0.6); }
+    s.vBusy = stage.venueTick(fdt);
+  }
+  // 決着：歓声と拍手・観客が立ち上がる。自分が勝てば紙吹雪、番付が上の相手に勝てば座布団が舞う（道具のためしでは、いつも）
+  function venueEnd(s, r) {
+    const win = r.winner === 'a', test = !!s.cheer.test, up = s.cheer.upset || 0;
+    const zab = test ? VL.zabuton.n[1] : win && up > 0 ? VL.zabuton.n[Math.min(up, 2) - 1] : 0;
+    stage.venueCheer('end', { win: win || test, conf: win || test, zabuton: zab });
+    playSfx('kansei', { vol: Math.min(1, s.V.roar * (win || test ? 1 : 0.75) + (zab ? 0.15 : 0)) });
+    setTimeout(() => { if (st === s) playSfx('hakushu', { vol: Math.min(1, 0.25 + s.V.roar * 0.6) }); }, 280);
+    if (s.zawa) {
+      s.zawa.vol(Math.min(1, s.V.zawa * 1.7), 0.3);
+      setTimeout(() => { if (st === s && s.zawa) s.zawa.vol(s.V.zawa * 0.7, 3); }, 3500);
+    }
   }
 
   function showResult() {

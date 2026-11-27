@@ -6,6 +6,7 @@ export function rankOf(rate) {
   for (const b of BANZUKE) if (rate >= b.min) r = b;
   return r;
 }
+export function rankIdx(rate) { return BANZUKE.indexOf(rankOf(rate)); }   // 0 序ノ口〜 横綱
 export function nextRank(rate) { return BANZUKE.find((b) => b.min > rate) || null; }
 
 // Elo：score は 勝ち1・引き分け0.5・負け0
