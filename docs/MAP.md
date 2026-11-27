@@ -4,7 +4,7 @@
 
 ## ビルドと点検
 - はじめに `npm ci`（物理 @dimforge/rapier2d-deterministic-compat 0.21.0 と 3D の three 0.160.1。three は UMD の build/three.min.js をそのまま入れて window.THREE）
-- `node tools/build.mjs [--artifact 出力.html]` → index.html（約1.75MB。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。絵 assets/art/*.webp は base64 で絵ごとの script（`art-<名前>`）に入り、ui/art.js が使うときに1枚ずつ画像にする（画像にしたら script は消す）。`--artifact` は試しのページ用（head なし）
+- `node tools/build.mjs [--artifact 出力.html]` → index.html（約3.1MB。ゲームのコードと CSS は esbuild で小さくする〔ないときはそのまま〕。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。絵 assets/art/*.webp は base64 で絵ごとの script（`art-<名前>`）に入り、ui/art.js が使うときに1枚ずつ画像にする（画像にしたら script は消す）。`--artifact` は試しのページ用（head なし）
 - `node tools/test.mjs` → だめな所だけ出して最後に「OK（指紋 ……）」
 - `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--write]` → 相性表（`--write` で docs/balance.md）
 - `node tools/bout-sheet.mjs <左id> <右id> [シード] [出力.svg] [--set key=value]` → 1番をこま割りの絵に（物理の調整用。`rsvg-convert` で png に）

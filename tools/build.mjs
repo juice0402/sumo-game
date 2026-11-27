@@ -3,6 +3,7 @@
 // - src/ の ES モジュールを、import/export を外して順につなぐ（import は1行で `import { a, b } from './x.js';` の形だけ）
 // - 物理（Rapier 決定論版）と 3D（Three.js r160 の three.min.js・window.THREE）は node_modules から読み、gzip して base64 で入れる
 //   （wasm も別に gzip。ほどくのは src/ui/unpack.js・11/25 の軽量化：4.39MB → 約1.7MB）
+// - ゲームのコードと CSS は esbuild で小さくする（コメント・空白・中の名前。11/27 の軽量化：コード 331KB → 166KB。esbuild は devDependencies）
 // - 効果音 assets/sfx/*.mp3 は base64 にして window.SUMO_SFX に入れる（コードには埋めこまない）
 // - 絵 assets/art/*.webp は base64 にして絵ごとの script（art-<名前>）に入れる（ui/art.js が使うときに1枚ずつ画像にする）
 // - 「指紋」の正しい値を、ここで計算して入れる（道具の画面でくらべる）
@@ -45,7 +46,13 @@ function wrap(file) {
   if (/^export\s/m.test(src)) throw new Error(`${rel(file)}: export の形が対応していない`);
   return `__m['${rel(file)}'] = (function () {\n${src}\nreturn { ${names.join(', ')} };\n})();\n`;
 }
-const bundle = `(function () {\n'use strict';\nconst __m = {};\n${order.map(wrap).join('\n')}})();\n`;
+const rawBundle = `(function () {\n'use strict';\nconst __m = {};\n${order.map(wrap).join('\n')}})();\n`;
+// 小さくする（11/27 の軽量化）：コメント・空白をとり、中の名前を短くする（esbuild・日本語の字はそのまま＝charset utf8）。
+// esbuild がないとき（npm ci の前）は、そのまま入れる（動きは同じ・大きいだけ）
+let esbuild = null;
+try { esbuild = await import('esbuild'); } catch (e) { console.warn('esbuild がないので小さくしない（npm ci で入る）'); }
+const mini = (code, loader) => (esbuild ? esbuild.transformSync(code, { loader, minify: true, charset: 'utf8', legalComments: 'none', target: loader === 'css' ? 'safari14' : 'es2020' }).code : code);
+const bundle = mini(rawBundle, 'js');
 
 const rapierPkg = JSON.parse(readFileSync(resolve(root, 'node_modules/@dimforge/rapier2d-deterministic-compat/package.json'), 'utf8'));
 const rapierSrc = readFileSync(resolve(root, 'node_modules/@dimforge/rapier2d-deterministic-compat/dist/rapier.cjs'), 'utf8')
@@ -87,7 +94,7 @@ await RAPIER.init();
 setRapier(RAPIER);
 const info = { fp: fingerprint(), rapier: rapierPkg.version, three: threePkg.version, config: CONFIG_VERSION };
 
-const css = readFileSync(resolve(root, 'src/ui/style.css'), 'utf8');
+const css = mini(readFileSync(resolve(root, 'src/ui/style.css'), 'utf8'), 'css');
 const page = readFileSync(resolve(root, 'src/ui/page.html'), 'utf8').replace('/*STYLE*/', () => css);
 // はじめの画面を早く出すため、ゲームのコードを先に・重いもの（物理・3D・効果音）は最後に「まだ動かさない形」で入れる。
 // ゲームのコードが切る画面を出してから、ui/app.js の loadLibs が順に動かす
@@ -115,4 +122,4 @@ ${content.slice(cut)}</body>
 writeFileSync(resolve(root, 'index.html'), html);
 const ai = process.argv.indexOf('--artifact');
 if (ai >= 0) writeFileSync(resolve(process.argv[ai + 1]), content);
-console.log(`index.html ${(html.length / 1e6).toFixed(2)}MB・モジュール ${order.length}・効果音 ${Object.keys(sfx).length}・絵 ${Object.keys(art).length}・指紋 ${info.fp}`);
+console.log(`index.html ${(Buffer.byteLength(html) / 1e6).toFixed(2)}MB（コード ${(Buffer.byteLength(rawBundle) / 1e3).toFixed(0)}KB → ${(Buffer.byteLength(bundle) / 1e3).toFixed(0)}KB）・モジュール ${order.length}・効果音 ${Object.keys(sfx).length}・絵 ${Object.keys(art).length}・指紋 ${info.fp}`);

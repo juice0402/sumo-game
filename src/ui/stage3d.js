@@ -271,12 +271,18 @@ export function createStage(cv, P) {
     v3.set(x, y, z).project(camera);
     return [((v3.x + 1) / 2) * cssW, ((1 - v3.y) / 2) * cssH, v3.z < 1];
   }
+  // 毎こま たくさん写すとき用：答えを out（[x, y]）に書く（配列を作らない）
+  function projectTo(out, x, y) {
+    v3.set(x, y, 0).project(camera);
+    out[0] = ((v3.x + 1) / 2) * cssW; out[1] = ((1 - v3.y) / 2) * cssH;
+    return out;
+  }
 
   function render() { renderer.render(scene, camera); }
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setVenue, venueTime, venueTick, venueCheer, venueCues, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, venueTime, venueTick, venueCheer, venueCues, projectTo, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };

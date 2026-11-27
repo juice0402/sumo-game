@@ -56,7 +56,7 @@ function loadBufs() {
     for (const name of Object.keys(src)) {
       if (bufs[name]) continue;
       try {
-        decode(dataToBuffer(src[name])).then((b) => { bufs[name] = b; }, () => {});
+        decode(dataToBuffer(src[name])).then((b) => { bufs[name] = b; delete src[name]; }, () => {});   // ほどいたら文字は捨てる（メモリを軽く）
       } catch (e) { /* その音だけあきらめる */ }
     }
   } catch (e) { /* 音が出なくてもゲームは続く */ }

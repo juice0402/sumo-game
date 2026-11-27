@@ -270,34 +270,40 @@ export function buildVenue(THREE, lv) {
     let last = -1, cur = 0;
     for (const f of figs) { f.ph = r() * TAU; f.sp = 1.6 + r() * 2.2; f.dl = r() * 0.18; f.jr = 2.1 + r() * 0.9; f.st = r(); }
     // ゆれ（上へ伸びる・左右にかたむく。下のはしは動かさない＝すきまが見えない）と、沸く（はねる・立ち上がる）
+    // 毎こま動くので、配列を作らずに直接書く（11/27 の最適化・スマホで GC のひっかかりを出さない）
+    let lift = 0, lean = 0, uvDone = false;   // uvDone：みな座りきった（絵の切り口はもう変わらない）
     const motion = (f) => {
       const c = mood.clock;
-      let lift = VL.sway * (0.5 + 0.5 * Math.sin(c * f.sp + f.ph));
-      const lean = VL.lean * Math.sin(c * f.sp * 0.55 + f.ph * 1.7);
+      lift = VL.sway * (0.5 + 0.5 * Math.sin(c * f.sp + f.ph));
+      lean = VL.lean * Math.sin(c * f.sp * 0.55 + f.ph * 1.7);
       const e = c - mood.at - f.dl;
       if (e > 0 && e < VL.cheerSec) {
         lift += mood.hop * Math.abs(Math.sin(e * Math.PI * f.jr)) * Math.exp(-e / 1.1);
         if (f.st < mood.stand) lift += VL.standH * smooth(0, 0.3, e) * (1 - smooth(VL.cheerSec - 0.8, VL.cheerSec, e));
       }
-      return [lift, lean];
     };
     // p：0＝床の下（見えない）→ 1＝座りきった。上のはしと絵の切り口がいっしょに上がる＝床の切れ目から湧いてくる
     const place = (tt) => {
-      let moving = false;
-      figs.forEach((f, i) => {
+      let rising = false;
+      for (let i = 0; i < n; i++) {
+        const f = figs[i];
         const a = clamp01((tt - f.t0) / VL.t.rise), p = 1 - (1 - a) ** 3, hop = a >= 1 ? 0 : Math.sin(Math.PI * a) * 0.04;
-        if (a > 0 && a < 1) moving = true;
-        const [lift, lean] = p > 0 ? motion(f) : [0, 0];
-        const h = f.h * p, x0 = f.x - f.w / 2, x1 = f.x + f.w / 2, y0 = f.y + hop, y1 = f.y + h + hop + lift * p, z = f.z;
-        pos.set([x0, y0, z, x1, y0, z, x1 + lean * p, y1, z, x0 + lean * p, y1, z], i * 12);
-        const vb = f.v1 - (f.v1 - f.v0) * p;   // 下のはしの絵の位置（見えているのは上から p の分）
-        uv.set([f.u0, vb, f.u1, vb, f.u1, f.v1, f.u0, f.v1], i * 8);
-      });
-      pa.needsUpdate = true; ua.needsUpdate = true;
-      return moving;
+        if (a < 1) rising = true;
+        if (p > 0) motion(f); else lift = lean = 0;
+        const x0 = f.x - f.w / 2, x1 = f.x + f.w / 2, y0 = f.y + hop, y1 = f.y + f.h * p + hop + lift * p, z = f.z, xl = lean * p, o = i * 12;
+        pos[o] = x0; pos[o + 1] = y0; pos[o + 2] = z; pos[o + 3] = x1; pos[o + 4] = y0; pos[o + 5] = z;
+        pos[o + 6] = x1 + xl; pos[o + 7] = y1; pos[o + 8] = z; pos[o + 9] = x0 + xl; pos[o + 10] = y1; pos[o + 11] = z;
+        if (!uvDone) {
+          const vb = f.v1 - (f.v1 - f.v0) * p, u = i * 8;   // 下のはしの絵の位置（見えているのは上から p の分）
+          uv[u] = f.u0; uv[u + 1] = vb; uv[u + 2] = f.u1; uv[u + 3] = vb; uv[u + 4] = f.u1; uv[u + 5] = f.v1; uv[u + 6] = f.u0; uv[u + 7] = f.v1;
+        }
+      }
+      pa.needsUpdate = true;
+      if (!uvDone) { ua.needsUpdate = true; uvDone = !rising; }
     };
     timers.push((tt) => {
       cur = Math.min(tt, 99);
+      if (cur < last) uvDone = false;   // 次の一番（旋回のはじめから湧きなおす）
       if (cur === last) return;
       if (last >= 99 && cur >= 99) return;
       place(cur);
@@ -523,7 +529,7 @@ export function buildVenue(THREE, lv) {
 
   // ---- 紙吹雪（勝ったとき）：上から舞い落ちる。くるくる回り、ひらひら裏返る。土俵に落ちたものはそのまま残る ----
   const CF = VL.conf, confN = V.conf, confP = [];
-  let confAt = -1, confMesh = null, confPos = null;
+  let confAt = -1, confMesh = null, confPos = null, confLive = 0;   // confLive：まだ落ちている（落ちる前の）紙吹雪の数。0 になったら止める
   if (confN) {
     const at = confAtlas(), t = tex(at.img);
     confPos = new Float32Array(confN * 12);
@@ -541,21 +547,25 @@ export function buildVenue(THREE, lv) {
     confMesh.frustumCulled = false; confMesh.visible = false;
     group.add(confMesh);
     tickers.push(() => {
-      if (confAt < 0) return;
+      if (confAt < 0 || !confLive) return;
       const now = mood.clock - confAt;
+      let live = 0;
       confP.forEach((p, i) => {
         let e = now - p.t0;
-        if (e < 0) { confPos.fill(0, i * 12, i * 12 + 12); return; }
+        if (e < 0) { confPos.fill(0, i * 12, i * 12 + 12); live++; return; }
         let y = p.y0 - p.vy * e, fl = Math.cos(p.fph + p.fs * e);
         if (p.land >= 0 || (y < 0.72 && Math.abs(p.x0) < 1.35 && Math.abs(p.z) < 1.3)) {   // 土俵に落ちた
           if (p.land < 0) p.land = e;
           e = p.land; y = 0.715 + p.lay; fl = 0.22;
-        } else if (y < -0.4) { confPos.fill(0, i * 12, i * 12 + 12); return; }
+        } else if (y < -0.4) { confPos.fill(0, i * 12, i * 12 + 12); return; } else live++;
         const x = p.x0 + 0.14 * Math.sin(e * p.sp + p.ph), ang = p.rot + p.rs * e, c = Math.cos(ang), s = Math.sin(ang);
-        const hw = p.s / 2, hh = (p.s * p.ar) / 2 * fl;
-        const v = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
-        for (let j = 0; j < 4; j++) confPos.set([x + v[j][0] * c - v[j][1] * s, y + v[j][0] * s + v[j][1] * c, p.z], i * 12 + j * 3);
+        const hw = p.s / 2, hh = (p.s * p.ar) / 2 * fl, ax = hw * c, ay = hw * s, bx = -hh * s, by = hh * c, o = i * 12;   // 四すみ＝まん中 ±a ±b（配列を作らない）
+        confPos[o] = x - ax - bx; confPos[o + 1] = y - ay - by; confPos[o + 2] = p.z;
+        confPos[o + 3] = x + ax - bx; confPos[o + 4] = y + ay - by; confPos[o + 5] = p.z;
+        confPos[o + 6] = x + ax + bx; confPos[o + 7] = y + ay + by; confPos[o + 8] = p.z;
+        confPos[o + 9] = x - ax + bx; confPos[o + 10] = y - ay + by; confPos[o + 11] = p.z;
       });
+      confLive = live;
       pa.needsUpdate = true;
     });
   }
@@ -606,7 +616,7 @@ export function buildVenue(THREE, lv) {
         vy: CF.fall[0] + rr() * (CF.fall[1] - CF.fall[0]), sp: 1.5 + rr() * 2, ph: rr() * TAU, rot: rr() * TAU, rs: (rr() * 2 - 1) * 4,
         fph: rr() * TAU, fs: 5 + rr() * 7, s: CF.size * (0.75 + rr() * 0.5), land: -1, lay: rr() * 0.01,
       }));
-      confAt = mood.clock; confMesh.visible = true;
+      confAt = mood.clock; confLive = confN; confMesh.visible = true;
     }
     if (o.zabuton) {
       const rr = rand(Math.floor(mood.clock * 1000) + 9);
@@ -628,11 +638,11 @@ export function buildVenue(THREE, lv) {
     mood.clock += dt;
     for (const f of tickers) f(dt);
     const c = mood.clock;
-    return c - mood.at < VL.cheerSec || (confAt >= 0 && c - confAt < CF.spawn + CF.life) || (zabAt >= 0 && zabs.some((z, i) => i < zabN && !z.landed));
+    return c - mood.at < VL.cheerSec || (confAt >= 0 && confLive > 0) || (zabAt >= 0 && zabs.some((z, i) => i < zabN && !z.landed));
   };
   // もう一度見る・次の一番：演出を消す（会場は作りなおさない）
   group.userData.reset = () => {
-    mood.at = -99; confAt = -1; zabAt = -1; zabN = 0;
+    mood.at = -99; confAt = -1; confLive = 0; zabAt = -1; zabN = 0;
     if (confMesh) confMesh.visible = false;
     for (const z of zabs) { z.m.visible = false; z.landed = false; }
   };

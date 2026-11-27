@@ -99,7 +99,6 @@ function loadLibs() {
         if (el) { window.SUMO_SFX = JSON.parse(el.textContent); el.remove(); sfxReady(); }
       } catch (e) { /* 音なしで続ける */ }
       loadPaperTextures();   // 紙質のテクスチャ（Codex の絵・タイトルの間に読む。読む前はコードのもよう）
-      loadVenueArt();        // 本場所の会場の絵（Codex・読む前はコードの切り絵）
     })
     .then(() => run('lib-rapier'))
     .then(() => pause().then(() => unpackLib('lib-wasm')))
@@ -342,7 +341,8 @@ function boot() {
       choose(btn, back, state.short);
     },
   });
-  onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
+  // 本場所の会場の絵（Codex・紙吹雪も）は、番付表を開いたときに読む（本場所に行かない人は読まない・11/27 の軽量化）
+  onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); loadVenueArt(); };
   document.getElementById('bz-go').addEventListener('click', () => {
     if (!hasRikishi()) { go('s-roster'); return; }
     openSelect('honbasho', true);

@@ -333,13 +333,13 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     let auraDraw = null;
     if (s.auras && s.t > LOOK.inkSec) {
       auraDraw = [];
-      const polys = [];   // ふたりの紙の形を画面に写す（うしろの気の粒を、ふたりの形でかくす）
+      if (!s.polys) s.polys = s.outlines.map((ol) => ol.map(() => [0, 0]));   // 毎こま使いまわす（配列を作らない）
+      const polys = s.polys;   // ふたりの紙の形を画面に写す（うしろの気の粒を、ふたりの形でかくす）
       for (let i = 0; i < 2; i++) {
         const au = s.auras[i];
         const bx = s.boxes[i], x = f[o + i * 3], y = f[o + i * 3 + 1] - ry, rz = f[o + i * 3 + 2], c = Math.cos(rz), sn = Math.sin(rz);
-        const ol = s.outlines[i], poly = new Array(ol.length);
-        for (let j = 0; j < ol.length; j++) { const p = ol[j]; poly[j] = stage.project(x + p[0] * c - p[1] * sn, y + p[0] * sn + p[1] * c); }
-        polys.push(poly);
+        const ol = s.outlines[i], poly = polys[i];
+        for (let j = 0; j < ol.length; j++) { const p = ol[j]; stage.projectTo(poly[j], x + p[0] * c - p[1] * sn, y + p[0] * sn + p[1] * c); }
         if (!au) continue;
         au.step(fdt);
         const wx = x + bx.cx * c - bx.cy * sn, wy = y + bx.cx * sn + bx.cy * c;
