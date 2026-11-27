@@ -25,7 +25,7 @@
 | data/fukuart.js | 福箱の絵（Codex）の名前と寸法（上の面のかど・結び目・本体とふたの位置・紐と房の倍率） |
 | data/auras.js | 気（オーラ）の種類と色。AURA_DEFAULT＝なし |
 | data/look.js | 演出の数字（旋回・カメラ・紙の厚み・スロー）。物理にさわらないので CONFIG_VERSION は上げない |
-| data/venue.js | 本場所の会場（見た目だけ）：番付ごとの数 VENUE（奥の観客 back・手前の観客 front・屋根 roof・垂れ幕 tare・提灯 lamp・懸賞旗 kensho・明かり light・金雲 kumo・紙吹雪 conf・ざわめき zawa・歓声 roar）と、置き場所・時間・色 VL（湧く・降りる・パッの秒は VL.t・ゆれ sway・ちり chiri・金雲 kumo・紙吹雪 conf・座布団 zabuton） |
+| data/venue.js | 本場所の会場（見た目だけ）：番付ごとの数 VENUE（奥の観客 back・手前の観客 front・屋根 roof・垂れ幕 tare・提灯 lamp・懸賞旗 kensho・明かり light・金雲 kumo・紙吹雪 conf・ざわめき zawa・歓声 roar）と、置き場所・時間・色 VL（湧く・降りる・パッの秒は VL.t・ゆれ sway・ちり chiri〔chiri.from の番付から〕・金雲 kumo・紙吹雪 conf・座布団 zabuton・観客の席のくじ seatJitter・seatMid〔一番ごとに埋まる席・ずれ・絵をくじびき〕） |
 | data/kaijoart.js | 会場の Codex の絵（assets/art/kaijo-*）の部品の四角と合わせる所（tools/kaijo_cut.py が書く）。ない絵はコードの切り絵 |
 | data/kimarite.js | 決まり手（取組の記録から決める・見た目だけ）。数字は KIMARITE |
 | geom/poly.js | 多角形の基本（面積・自己交差・帯で切る・反転） |
