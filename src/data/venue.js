@@ -9,17 +9,19 @@
 //   roof：吊り屋根と紫の幕・四房（0 なし・1 あり・2 金のふち）／tare：垂れ幕の数（屋根がないとき）／lamp：提灯の列（0〜3）
 //   kensho：懸賞旗の数（11/27 しょーくん「宣伝？スポンサーの旗？みたいなやつは横綱のときに出してほしい」・旋回のあいだ回る）
 //   light：明かりがついたときの明るさ（1＝ふつう）
+//   11/27 しょーくん「空気感とか演出とかも、かなり豪華なものに」→ 観客が動く・金雲と光の中のちり・紙吹雪と座布団の舞・会場の音
+//   kumo：奥を流れる金雲の数／conf：勝ったときの紙吹雪の枚数／zawa：会場のざわめきの大きさ（0〜1）／roar：決着の歓声の大きさ
 export const VENUE = [
-  { back: [1, 0.2], front: [0, 0], roof: 0, tare: 0, lamp: 0, kensho: 0, light: 0.9 },      // 序ノ口：がらんとした会場
-  { back: [1, 0.45], front: [0, 0], roof: 0, tare: 2, lamp: 0, kensho: 0, light: 0.95 },    // 序二段：垂れ幕
-  { back: [2, 0.5], front: [1, 0.3], roof: 0, tare: 2, lamp: 1, kensho: 0, light: 1 },      // 三段目：提灯が灯る
-  { back: [2, 0.75], front: [1, 0.6], roof: 0, tare: 4, lamp: 1, kensho: 0, light: 1 },     // 幕下
-  { back: [3, 0.8], front: [2, 0.7], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05 },   // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
-  { back: [3, 0.88], front: [2, 0.8], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05 },  // 前頭：幕内
-  { back: [4, 0.9], front: [2, 0.85], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.08 },  // 小結
-  { back: [4, 0.95], front: [2, 0.9], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.08 },  // 関脇
-  { back: [4, 1], front: [2, 1], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.1 },        // 大関
-  { back: [4, 1], front: [2, 1], roof: 2, tare: 0, lamp: 3, kensho: 12, light: 1.15 },      // 横綱：満員・金・懸賞旗（大きな山）
+  { back: [1, 0.2], front: [0, 0], roof: 0, tare: 0, lamp: 0, kensho: 0, light: 0.9, kumo: 0, conf: 30, zawa: 0.1, roar: 0.3 },      // 序ノ口：がらんとした会場
+  { back: [1, 0.45], front: [0, 0], roof: 0, tare: 2, lamp: 0, kensho: 0, light: 0.95, kumo: 0, conf: 40, zawa: 0.13, roar: 0.34 },    // 序二段：垂れ幕
+  { back: [2, 0.5], front: [1, 0.3], roof: 0, tare: 2, lamp: 1, kensho: 0, light: 1, kumo: 1, conf: 50, zawa: 0.16, roar: 0.4 },      // 三段目：提灯が灯る
+  { back: [2, 0.75], front: [1, 0.6], roof: 0, tare: 4, lamp: 1, kensho: 0, light: 1, kumo: 1, conf: 60, zawa: 0.19, roar: 0.45 },     // 幕下
+  { back: [3, 0.8], front: [2, 0.7], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05, kumo: 2, conf: 80, zawa: 0.23, roar: 0.55 },   // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
+  { back: [3, 0.88], front: [2, 0.8], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05, kumo: 3, conf: 90, zawa: 0.25, roar: 0.6 },  // 前頭：幕内
+  { back: [4, 0.9], front: [2, 0.85], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.08, kumo: 3, conf: 100, zawa: 0.27, roar: 0.64 },  // 小結
+  { back: [4, 0.95], front: [2, 0.9], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.08, kumo: 4, conf: 110, zawa: 0.29, roar: 0.68 },  // 関脇
+  { back: [4, 1], front: [2, 1], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.1, kumo: 4, conf: 130, zawa: 0.31, roar: 0.72 },        // 大関
+  { back: [4, 1], front: [2, 1], roof: 2, tare: 0, lamp: 3, kensho: 12, light: 1.15, kumo: 5, conf: 160, zawa: 0.34, roar: 0.8 },      // 横綱：満員・金・懸賞旗（大きな山）
 ];
 
 // 置き場所と大きさ（m・床の高さが 0。土俵は半分の幅 1.4・高さ 0.7）・時間（旋回のはじめからの秒）・色
@@ -56,6 +58,19 @@ export const VL = {
   wood: '#3a2b22', woodLine: '#6b5644',
   curtain: '#4a3160', curtainFold: '#3a2550',
   tareCol: ['#4a3160', '#7a2a24', '#2f4060'],          // 垂れ幕：紫・えんじ・藍
+  // ---- 空気感（11/27） ----
+  // 観客のゆれ：ふだんの小さなゆれ（上下に伸びる m・左右にかたむく m）・沸く（ぶつかったとき・決着で はねる m）・決着で立ち上がる人の割合
+  sway: 0.02, lean: 0.02, hop: { clash: 0.05, end: 0.09 }, stand: 0.45, standH: 0.05, cheerSec: 3.2,
+  // 光の中のちり（紙の小さなかけら・光る絵は使わない）：数・土俵の上の高さの範囲・大きさ（点の大きさ＝three の決まりで 約 1/5 に見える）・落ちる速さ（m/秒）・明かりがついてから見えるまで（秒）
+  chiri: { n: 64, y: [0.85, 3.4], size: 0.2, fall: 0.045, inSec: 0.8, col: '#f4ecd8', opacity: 0.85 },
+  // 金雲（屏風の金の雲）：奥行き・高さ・幅（1つずつ・数は番付の kumo）・流れる速さ（m/秒）・出てくる時間（明かりと同じころ）
+  kumo: { z: [-6.4, -6.9, -6.6, -7.1, -6.5], y: [1.8, 2.5, 1.45, 2.2, 2.85], x: [-2.2, 1.9, 0.2, -0.6, 2.9], w: [3.0, 2.2, 1.5, 1.2, 2.8],
+    speed: 0.05, span: 6, t: [3.85, 4.5], shade: 0.82, col: '#B79A53', ink: '#6b5a2e' },
+  // 紙吹雪（勝ったとき）：上から降らせる範囲（x・z）・大きさ・落ちる速さ・まく時間（秒）・色（絵がないとき）
+  conf: { x: 2.4, z: [-0.8, 1.8], top: [3.6, 5.2], size: 0.11, fall: [0.55, 0.95], spawn: 1.6, life: 6, col: ['#AB392F', '#B79A53', '#EEE9DE', '#2f4f6f', '#3d5a3a'] },
+  // 座布団の舞（番付が上の相手に勝ったとき）：数（番付の差 1・2）・大きさ・飛ぶ秒・高さ・投げはじめの間・色（絵がないとき）
+  zabuton: { n: [6, 12], size: 0.32, sec: [1.0, 1.5], arc: [1.0, 1.9], spawn: 1.3, col: ['#AB392F', '#5b3a6b', '#2f4f6f', '#b58a3a'] },
+
   // 四房：東北 青・東南 赤・西南 白・西北 黒（正面＝カメラの側＝北。正面から見て左が東＝ -x）
   fusa: { ne: '#3d6b80', se: '#AB392F', sw: '#e6e0d2', nw: '#151311' },
 };

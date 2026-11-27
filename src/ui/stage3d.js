@@ -172,7 +172,7 @@ export function createStage(cv, P) {
   // 本場所の会場の飾り（ui/venue.js・見た目だけ）。lv＝番付の順（0 序ノ口〜9 横綱）・-1 なし。同じ番付なら作りなおさない
   let venue = null, venueLv = -1, venueArt = 0;
   function setVenue(lv) {
-    if (lv === venueLv && venueArt === venueArtCount()) return;   // 同じ番付でも、Codex の絵が届いたら作りなおす
+    if (lv === venueLv && venueArt === venueArtCount()) { if (venue) venue.userData.reset(); return; }   // 同じ番付でも、Codex の絵が届いたら作りなおす
     venueArt = venueArtCount();
     if (venue) { scene.remove(venue); venue.userData.free(); venue = null; }
     venueLv = lv;
@@ -193,6 +193,10 @@ export function createStage(cv, P) {
     if (!venue) return;
     lights(venue.userData.time(tt), 1);
   }
+  // 毎こま（ゆれ・雲・ちり・紙吹雪・座布団）。もどり値＝まだ動いている演出がある
+  const venueTick = (dt) => (venue ? venue.userData.tick(dt) : false);
+  const venueCheer = (kind, o) => { if (venue) venue.userData.cheer(kind, o); };
+  const venueCues = () => (venue ? venue.userData.cues : []);
 
   function makeFighter(ol, dark, paper) {
     const pts = ol.outline, pad = 0.03;
@@ -272,7 +276,7 @@ export function createStage(cv, P) {
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setVenue, venueTime, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, venueTime, venueTick, venueCheer, venueCues, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };

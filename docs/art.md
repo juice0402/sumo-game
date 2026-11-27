@@ -19,6 +19,8 @@
 | kaijo-yane | 本場所の会場：吊り屋根（正面）と紫の幕・四房（`tools/kaijo_cut.py yane`＝幕の上下のふちと幅を測る・半分の大きさ） | A | Codex・2026-11-27 | requests/sumo/kaijo-yane.md（枝 art/sumo-kaijo-yane） |
 | kaijo-ushiro | 本場所の会場：観客（うしろ姿）12人のシート（手前の列・`tools/kaijo_cut.py crowd … --dilate 2`＝となりとくっつかないように） | A | Codex・2026-11-27 | requests/sumo/kaijo-ushiro.md（枝 art/sumo-kaijo-ushiro） |
 | kaijo-kazari | 本場所の会場：提灯3つ（白に朱の丸・朱・生成りに藍の丸）と垂れ幕3つ（紫・えんじ・藍・字なし）を1列に（シートのまま・四角は kaijoart.js） | A | Codex・2026-11-27 | requests/sumo/kaijo-kazari.md（枝 art/sumo-kaijo-kazari） |
+| kaijo-kumo | 本場所の会場：屏風の金雲4つ（金箔の切り絵・観客のうしろを流れる・十両から多く・`tools/kaijo_cut.py crowd`） | A | Codex・2026-11-27 | requests/sumo/kaijo-kumo.md（枝 art/sumo-kaijo-kumo） |
+| kaijo-zabuton | 本場所の会場：舞う座布団4色（朱・紫・藍・黄・真上から・番付が上の相手に勝ったとき土俵へ飛ぶ・`tools/kaijo_cut.py crowd`） | A | Codex・2026-11-27 | requests/sumo/kaijo-zabuton.md（枝 art/sumo-kaijo-zabuton） |
 
 - ほかの絵（番付表の画面・筆・土俵・紙のもよう）はコードで描く C
 - 紙質13種はぜんぶ Codex のテクスチャ（読みこむ前はコードのもよう）

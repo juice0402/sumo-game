@@ -210,6 +210,8 @@ function boot() {
       look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
       // 本場所の会場の飾り（番付が上がるほど賑やかに・11/27 しょーくん）。道具の「本場所の会場」で見る番付をかえられる
       venue: m.mode === 'honbasho' ? (state.venueView != null ? state.venueView : rankIdx(state.rate)) : -1,
+      // 決着の演出（11/27）：番付が上の相手に勝てば座布団が舞う（upset＝番付の差）。道具の「いつも見る」では勝ち負けによらず
+      cheer: { upset: rankIdx(foe.rate) - rankIdx(state.rate), test: !!state.cheerTest },
       onResult(r, kima) {
         addRec(me.rec, r.winner);
         // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
@@ -378,6 +380,8 @@ function boot() {
   toggle('b-mute', 'mute', () => setMuted(state.mute));
   toggle('b-short', 'short');
   toggle('b-unlock', 'unlockAll');
+  state.cheerTest = false;   // 道具の「勝ったときの演出をいつも見る」（試しだけ・保存しない）
+  toggle('b-cheer', 'cheerTest');
   const venueBtn = document.getElementById('b-venue');
   const paintVenue = () => { venueBtn.textContent = T.venueView(state.venueView != null ? BANZUKE[state.venueView].name : ''); };
   paintVenue();

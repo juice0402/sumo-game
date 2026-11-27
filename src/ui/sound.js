@@ -32,6 +32,10 @@ export function unlockAudio() {
       master = ctx.createGain();
       master.gain.value = muted ? 0 : 1;
       master.connect(ctx.destination);
+      // ほかのアプリへ行ったら音を止める（会場のざわめきが鳴りつづけないように・11/27）
+      document.addEventListener('visibilitychange', () => {
+        try { const r = document.hidden ? ctx.suspend() : ctx.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* 何もしない */ }
+      });
     }
     if (ctx.state === 'suspended') {
       const r = ctx.resume();
@@ -79,6 +83,45 @@ export function playSfx(name, opts) {
     g.connect(master);
     s.start(0);
   } catch (e) { /* 何もしない */ }
+}
+
+// 鳴らしつづける音（本場所の会場のざわめき）。opts: { vol, fade（はじめの秒）, loop: [はじめ, おわり]（秒・mp3 の頭と後ろのすきまを飛ばす） }
+// もどり値の vol(大きさ, 秒) で大きさを変え、stop(秒) で止める。音がまだ入っていないときは何もしない手を返す
+export function loopSfx(name, opts) {
+  const o = opts || {};
+  let src = null, g = null;
+  const h = {
+    vol(v, sec) {
+      try {
+        if (!g) return;
+        const now = ctx.currentTime, p = g.gain;
+        p.cancelScheduledValues(now); p.setValueAtTime(p.value, now);
+        p.linearRampToValueAtTime(Math.max(0, Math.min(1, v)), now + Math.max(0.02, sec || 0));
+      } catch (e) { /* 何もしない */ }
+    },
+    stop(sec) {
+      try {
+        if (!src) return;
+        h.vol(0, sec || 0.2);
+        src.stop(ctx.currentTime + (sec || 0.2) + 0.05);
+        src = null;
+      } catch (e) { /* 何もしない */ }
+    },
+  };
+  try {
+    if (!ctx || !bufs[name]) return h;
+    src = ctx.createBufferSource();
+    src.buffer = bufs[name];
+    src.loop = true;
+    if (o.loop) { src.loopStart = o.loop[0]; src.loopEnd = Math.min(o.loop[1], src.buffer.duration); }
+    g = ctx.createGain();
+    g.gain.value = 0;
+    src.connect(g);
+    g.connect(master);
+    src.start(0, o.loop ? o.loop[0] : 0);
+    h.vol(o.vol === undefined ? 0.5 : o.vol, o.fade || 1);
+  } catch (e) { src = null; g = null; }
+  return h;
 }
 
 export function setMuted(on) {

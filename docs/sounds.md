@@ -18,5 +18,22 @@
 | shu | 画面の札が右からシュッと入る（紙のシュッ） | — コードで作った音（tools/sfx_synth.py の shu） | 0.2秒 | 3KB | C（コードで作った音） | Claude |
 | kin | 本場所のカットインのガキーン（金床を打つ） | sfx/oculus/metal/METLImpt_HammerAnvil_OS_01（頭の無音を切り・おしりに fade out） | 1.31秒 | 14KB | CC BY 4.0（クレジットがいる＝text.js の T.credits に1行） | Oculus VR, LLC |
 
+
 - ぴったりではないもの：fude（ペンの音）・sumi（水のしぶき）・hyoshigi（ノック）・taiko（洋の大太鼓）。聞いて合わなければ、ほかを koe-irai の catalog から選び直す
 - Oculus（CC BY 4.0）は kin だけ。クレジット画面（text.js の T.credits）に koe-irai の sfx/README.md の1行をそのまま書いた。11/26 しょーくん：カットインは「シュッ2回 → ガキーン（E）」・拍子木のポポンとドンはいらない
+
+## 本場所の会場の音（11/27）
+11/27 しょーくん「空気感とか演出とかも、かなり豪華なものに」→ 会場のざわめき・歓声と拍手・ストンとパッの音。作り直しは `python3 -I tools/kaijo_sfx.py --koe <koe-irai のフォルダ>`（同じ順番で作るので同じ音になる）。
+人の声は、のどの音（のこぎり波）を母音の共鳴に通して、たくさん重ねて会場の響きに入れた（言葉は聞きとれない）。
+
+| 名前 | 使う所 | もと | 長さ | 大きさ | ライセンス | 作者 |
+|---|---|---|--:|--:|---|---|
+| zawa | 会場のざわめき（ループ・観客が湧くころから・「勝負」の前は静まる・番付で大きく） | — コードで作った音（30人のおしゃべり・8秒で1周＝前後0.25秒は飛ばす） | 8.5秒 | 43KB | C（コードで作った音） | Claude |
+| doyo | はじめてぶつかったときのどよめき「おおっ」 | — コードで作った音 | 2.1秒 | 13KB | C（コードで作った音） | Claude |
+| kansei | 決着の歓声「わあーっ」 | — コードで作った音 | 3.5秒 | 21KB | C（コードで作った音） | Claude |
+| pa | 明かりがパッとつく（大きなスイッチのガシャン） | — コードで作った音 | 1.6秒 | 13KB | C（コードで作った音） | Claude |
+| hakushu | 決着の拍手（歓声のすぐあと） | koe-irai・sfx:wyzowl/celebration/celebration-applause-big（4.2秒に切った） | 4.3秒 | 26KB | CC0 | Wyzowl |
+| suton | 屋根と幕・提灯がストン・座布団が落ちる | koe-irai・sfx:wyzowl/impacts/impact-heavy-soft | 0.37秒 | 3KB | CC0 | Wyzowl |
+
+- 幕が降りはじめに shu（低く）、着いたら suton、明かりで pa（ui/venue.js の cues・bout.js が鳴らす）
+- 聞いて合わなければ、ざわめき・歓声は tools/kaijo_sfx.py の数（人数・響き）で作り直す

@@ -3,11 +3,13 @@
 // 上からストンと降り、明かりがパッとつく（11/27 しょーくん）。横綱は旋回のあいだ懸賞旗が回る。数と時間は data/venue.js。
 // 絵は Codex（data/kaijoart.js・assets/art/kaijo-*）。まだない絵は、コードの切り絵で同じ動き。
 // 軽く：観客は段ごとに1つの形にまとめて1回で描く（湧くあいだだけ形を書きかえる）・影は落とさない
+// 11/27 空気感：観客がゆれて沸く・奥を金雲が流れる・明かりの中に紙のちり・勝てば紙吹雪・番付が上の相手に勝てば座布団が舞う
 import { COL, rand, fiberPattern } from './ink.js';
 import { VENUE, VL } from '../data/venue.js';
 import { KAIJO_ART } from '../data/kaijoart.js';
 import { T } from '../data/text.js';
 import { artImages } from './art.js';
+import { playSfx } from './sound.js';
 
 const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 const TAU = Math.PI * 2;
@@ -17,8 +19,9 @@ const BRUSH = '"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",serif';
 
 // Codex の絵（使うときに1枚ずつ）。読みこむ前はコードの切り絵
 let ART = {}, artLoad = null;
+const CONF_IDS = ['ki-conf-shu', 'ki-conf-ai', 'ki-conf-kin', 'ki-conf-midori', 'ki-conf-kinari'];   // 紙吹雪は気の紙吹雪と同じ絵
 export function loadVenueArt() {
-  const ids = Object.values(KAIJO_ART).map((a) => a.id);
+  const ids = Object.values(KAIJO_ART).map((a) => a.id).concat(CONF_IDS);
   if (!ids.length) return Promise.resolve();
   if (!artLoad) artLoad = artImages(ids).then((m) => { ART = m; }).catch(() => { artLoad = null; });
   return artLoad;
@@ -171,6 +174,61 @@ function kenshoCanvas(c, name, bg, ink) {
 }
 
 // lv：番付の順（0 序ノ口〜9 横綱）。もどり値の group.userData：time(秒)→明かり（0〜1・パッのときは少し上）・free()
+// 金雲（屏風の金の雲・絵が届くまで）：丸い波のふちの横長の帯。墨のふち・金箔の砂子
+function kumoCanvas(i) {
+  const W = 512, H = 128, c = cv(W, H), g = c.getContext('2d'), rr = rand(31 + i * 7);
+  const len = [0.95, 0.7, 0.55, 0.82, 0.6][i % 5], x0 = (W * (1 - len)) / 2, x1 = W - x0, step = i % 2 ? [0.55, 0.45] : null;
+  const shape = (grow) => {
+    g.beginPath();
+    const top = (x) => (step && x > x0 + (x1 - x0) * step[0] ? 34 : 50), bot = (x) => (step && x < x0 + (x1 - x0) * step[1] ? 94 : 82);
+    g.rect(x0 + 18 - grow, top(x0) - grow, x1 - x0 - 36 + grow * 2, bot(x0) - top(x0) + grow * 2);
+    for (let x = x0 + 18; x <= x1 - 18; x += 30) {
+      const rt = 16 + rr() * 6, rb = 13 + rr() * 5;
+      g.moveTo(x + rt + grow, top(x)); g.arc(x, top(x), rt + grow, 0, TAU);
+      g.moveTo(x + rb + grow, bot(x)); g.arc(x, bot(x), rb + grow, 0, TAU);
+    }
+    g.moveTo(x0 + 18 + grow, (top(x0) + bot(x0)) / 2); g.arc(x0 + 18, (top(x0) + bot(x0)) / 2, (bot(x0) - top(x0)) / 2 + grow, 0, TAU);
+    g.moveTo(x1 - 18 + (bot(x1) - top(x1)) / 2 + grow, (top(x1) + bot(x1)) / 2); g.arc(x1 - 18, (top(x1) + bot(x1)) / 2, (bot(x1) - top(x1)) / 2 + grow, 0, TAU);
+  };
+  g.fillStyle = VL.kumo.ink; shape(3); g.fill('nonzero');
+  g.fillStyle = VL.kumo.col; shape(0); g.fill('nonzero');
+  g.fillStyle = fiberPattern(g); shape(0); g.fill('nonzero');
+  g.save(); shape(0); g.clip('nonzero');
+  for (let k = 0; k < 90; k++) { g.fillStyle = rr() < 0.5 ? '#d8bd72' : '#9c8240'; g.fillRect(x0 + rr() * (x1 - x0), 20 + rr() * 90, 2 + rr() * 5, 2 + rr() * 4); }   // 金箔の砂子
+  g.restore();
+  return c;
+}
+// 座布団（絵が届くまで）：真上から見た四角・ふちの縫い目・まん中と四すみの房
+function zabutonCanvas(col) {
+  const c = cv(128, 128), g = c.getContext('2d');
+  rrect(g, 8, 8, 112, 112, 16); g.fillStyle = col; g.fill(); g.fillStyle = fiberPattern(g); g.fill();
+  g.strokeStyle = COL.sumi; g.lineWidth = 4; g.stroke();
+  g.setLineDash([6, 5]); g.strokeStyle = 'rgba(238,233,222,0.55)'; g.lineWidth = 2; rrect(g, 20, 20, 88, 88, 10); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#d8bd72'; g.strokeStyle = COL.sumi; g.lineWidth = 2;
+  g.beginPath(); g.arc(64, 64, 7, 0, TAU); g.fill(); g.stroke();
+  for (const [x, y] of [[14, 14], [114, 14], [114, 114], [14, 114]]) { g.beginPath(); g.arc(x, y, 5, 0, TAU); g.fill(); g.stroke(); }
+  return c;
+}
+// 紙吹雪の絵：気の紙吹雪（Codex）を横に5つ並べた1枚。なければコードの紙の四角
+function confAtlas() {
+  const imgs = CONF_IDS.map((id) => ART[id]);
+  if (imgs.every(Boolean)) {
+    const c = cv(112 * 5, 96), g = c.getContext('2d');
+    imgs.forEach((im, i) => g.drawImage(im, i * 112 + (112 - im.width) / 2, (96 - im.height) / 2));
+    return { img: c, n: 5, ar: 96 / 112 };
+  }
+  const c = cv(64 * 5, 40), g = c.getContext('2d');
+  VL.conf.col.forEach((col, i) => { g.fillStyle = col; g.fillRect(i * 64 + 4, 4, 56, 32); g.fillStyle = fiberPattern(g); g.fillRect(i * 64 + 4, 4, 56, 32); g.strokeStyle = COL.sumi; g.lineWidth = 2; g.strokeRect(i * 64 + 4, 4, 56, 32); });
+  return { img: c, n: 5, ar: 40 / 64 };
+}
+// 光の中のちり：紙の小さなかけら（光る輪ではない）
+function chiriCanvas() {
+  const c = cv(32, 32), g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(9, 7); g.lineTo(24, 10); g.lineTo(26, 22); g.lineTo(14, 26); g.lineTo(6, 18); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(32,30,27,0.35)'; g.lineWidth = 2; g.stroke();
+  return c;
+}
+
 export function buildVenue(THREE, lv) {
   const V = VENUE[Math.max(0, Math.min(VENUE.length - 1, lv))];
   const group = new THREE.Group();
@@ -181,6 +239,8 @@ export function buildVenue(THREE, lv) {
   const lit = [];   // 明かりで明るさが変わる材質
   const shifts = {}; let roofBand = 0;   // 画面の上のはしに合わせて上下にずらす群れ（layout）
   const timers = []; // time(秒) ごとに動かすもの
+  const tickers = [];   // 毎こま動かすもの（ゆれ・雲・ちり・紙吹雪・座布団）。mood.clock＝会場の時計（秒）
+  const mood = { clock: 0, at: -99, hop: 0, stand: 0 };
 
   // ---- 観客（奥・手前）：段ごとに1つの形。1人＝四角1つ。湧くあいだは、四角の上のはしと絵の切り口を上げていく ----
   function crowd(atlas, rows) {
@@ -207,15 +267,29 @@ export function buildVenue(THREE, lv) {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.frustumCulled = false;
     group.add(mesh);
-    let last = -1;
+    let last = -1, cur = 0;
+    for (const f of figs) { f.ph = r() * TAU; f.sp = 1.6 + r() * 2.2; f.dl = r() * 0.18; f.jr = 2.1 + r() * 0.9; f.st = r(); }
+    // ゆれ（上へ伸びる・左右にかたむく。下のはしは動かさない＝すきまが見えない）と、沸く（はねる・立ち上がる）
+    const motion = (f) => {
+      const c = mood.clock;
+      let lift = VL.sway * (0.5 + 0.5 * Math.sin(c * f.sp + f.ph));
+      const lean = VL.lean * Math.sin(c * f.sp * 0.55 + f.ph * 1.7);
+      const e = c - mood.at - f.dl;
+      if (e > 0 && e < VL.cheerSec) {
+        lift += mood.hop * Math.abs(Math.sin(e * Math.PI * f.jr)) * Math.exp(-e / 1.1);
+        if (f.st < mood.stand) lift += VL.standH * smooth(0, 0.3, e) * (1 - smooth(VL.cheerSec - 0.8, VL.cheerSec, e));
+      }
+      return [lift, lean];
+    };
     // p：0＝床の下（見えない）→ 1＝座りきった。上のはしと絵の切り口がいっしょに上がる＝床の切れ目から湧いてくる
     const place = (tt) => {
       let moving = false;
       figs.forEach((f, i) => {
         const a = clamp01((tt - f.t0) / VL.t.rise), p = 1 - (1 - a) ** 3, hop = a >= 1 ? 0 : Math.sin(Math.PI * a) * 0.04;
         if (a > 0 && a < 1) moving = true;
-        const h = f.h * p, x0 = f.x - f.w / 2, x1 = f.x + f.w / 2, y0 = f.y + hop, y1 = f.y + h + hop, z = f.z;
-        pos.set([x0, y0, z, x1, y0, z, x1, y1, z, x0, y1, z], i * 12);
+        const [lift, lean] = p > 0 ? motion(f) : [0, 0];
+        const h = f.h * p, x0 = f.x - f.w / 2, x1 = f.x + f.w / 2, y0 = f.y + hop, y1 = f.y + h + hop + lift * p, z = f.z;
+        pos.set([x0, y0, z, x1, y0, z, x1 + lean * p, y1, z, x0 + lean * p, y1, z], i * 12);
         const vb = f.v1 - (f.v1 - f.v0) * p;   // 下のはしの絵の位置（見えているのは上から p の分）
         uv.set([f.u0, vb, f.u1, vb, f.u1, f.v1, f.u0, f.v1], i * 8);
       });
@@ -223,12 +297,13 @@ export function buildVenue(THREE, lv) {
       return moving;
     };
     timers.push((tt) => {
-      const tq = Math.min(tt, 99);
-      if (tq === last) return;
-      if (last >= 99 && tq >= 99) return;
-      place(tq);
-      last = tq;
+      cur = Math.min(tt, 99);
+      if (cur === last) return;
+      if (last >= 99 && cur >= 99) return;
+      place(cur);
+      last = cur;
     });
+    tickers.push(() => place(cur));
   }
   const pickRows = (zs, ys, shades, count, fill, span, step, h, t0, t1) => {
     const rows = [];
@@ -386,6 +461,188 @@ export function buildVenue(THREE, lv) {
       });
     });
   }
+
+  // ---- 金雲（屏風の金の雲）：観客のうしろを、ゆっくり横へ流れる。明かりといっしょに、左右から寄ってきて見えてくる ----
+  if (V.kumo) {
+    const K = VL.kumo, a = art('kumo'), clouds = new THREE.Group();
+    for (let i = 0; i < V.kumo; i++) {
+      let map, h;
+      const w = K.w[i % K.w.length];
+      if (a) { const rg = region(a, i % a.rects.length); map = rg.t; h = (w * rg.h) / rg.w; } else { const c = kumoCanvas(i); map = tex(c); h = (w * c.height) / c.width; }
+      const m = k(new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, opacity: 0 }));
+      m.userData.lit = K.shade; lit.push(m);
+      const mesh = new THREE.Mesh(k(new THREE.PlaneGeometry(w, h)), m);
+      mesh.position.set(K.x[i % K.x.length], K.y[i % K.y.length], K.z[i % K.z.length]);
+      mesh.userData.x0 = mesh.position.x; mesh.userData.w = w;
+      clouds.add(mesh);
+    }
+    group.add(clouds);
+    let show = 0;
+    timers.push((tt) => { show = smooth(K.t[0], K.t[1], tt); });
+    tickers.push(() => {
+      clouds.children.forEach((c, i) => {
+        const dir = i % 2 ? -1 : 1, W = K.span + c.userData.w / 2;
+        let x = c.userData.x0 + mood.clock * K.speed * dir * (0.7 + 0.15 * i);
+        x = ((((x + W) % (2 * W)) + 2 * W) % (2 * W)) - W;
+        c.position.x = x - (1 - show) * 0.9 * dir;
+        c.material.opacity = show;
+        c.visible = show > 0;
+      });
+    });
+  }
+
+  // ---- 光の中のちり：明かりがパッとついたあと、土俵の上の光の中を、紙の小さなかけらがゆっくり落ちる ----
+  {
+    const C = VL.chiri, n = Math.round(C.n * (0.5 + (0.5 * lv) / 9)), pos = new Float32Array(n * 3), dots = [];
+    for (let i = 0; i < n; i++) {
+      const y = C.y[0] + r() * (C.y[1] - C.y[0]), half = 0.45 + (C.y[1] + 0.3 - y) * 0.38;
+      dots.push({ x: (r() * 2 - 1) * half, y, z: -0.7 + r() * 1.9, ph: r() * TAU, sp: 0.3 + r() * 0.5, fall: C.fall * (0.6 + r() * 0.8) });
+    }
+    const geo = k(new THREE.BufferGeometry()), pa = new THREE.BufferAttribute(pos, 3);
+    pa.setUsage(THREE.DynamicDrawUsage); geo.setAttribute('position', pa);
+    const mat = k(new THREE.PointsMaterial({ size: C.size, map: tex(chiriCanvas()), color: C.col, transparent: true, depthWrite: false, opacity: 0, fog: false }));
+    const pts = new THREE.Points(geo, mat);
+    pts.frustumCulled = false; pts.visible = false;
+    group.add(pts);
+    let show = 0;
+    timers.push((tt) => { show = smooth(VL.t.light, VL.t.light + C.inSec, tt); });
+    tickers.push((dt) => {
+      pts.visible = show > 0;
+      if (!pts.visible) return;
+      mat.opacity = show * C.opacity;
+      dots.forEach((d, i) => {
+        d.y -= d.fall * dt;
+        if (d.y < C.y[0]) d.y = C.y[1];
+        pos[i * 3] = d.x + 0.07 * Math.sin(mood.clock * d.sp + d.ph);
+        pos[i * 3 + 1] = d.y;
+        pos[i * 3 + 2] = d.z + 0.04 * Math.sin(mood.clock * d.sp * 0.7 + d.ph * 2);
+      });
+      pa.needsUpdate = true;
+    });
+  }
+
+  // ---- 紙吹雪（勝ったとき）：上から舞い落ちる。くるくる回り、ひらひら裏返る。土俵に落ちたものはそのまま残る ----
+  const CF = VL.conf, confN = V.conf, confP = [];
+  let confAt = -1, confMesh = null, confPos = null;
+  if (confN) {
+    const at = confAtlas(), t = tex(at.img);
+    confPos = new Float32Array(confN * 12);
+    const uv = new Float32Array(confN * 8), idx = [];
+    for (let i = 0; i < confN; i++) {
+      const c = i % at.n, u0 = c / at.n, u1 = (c + 1) / at.n;
+      uv.set([u0, 0, u1, 0, u1, 1, u0, 1], i * 8);
+      idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
+      confP.push({ ar: at.ar });
+    }
+    const geo = k(new THREE.BufferGeometry()), pa = new THREE.BufferAttribute(confPos, 3);
+    pa.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('position', pa); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setIndex(idx);
+    confMesh = new THREE.Mesh(geo, k(new THREE.MeshBasicMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide, fog: false })));
+    confMesh.frustumCulled = false; confMesh.visible = false;
+    group.add(confMesh);
+    tickers.push(() => {
+      if (confAt < 0) return;
+      const now = mood.clock - confAt;
+      confP.forEach((p, i) => {
+        let e = now - p.t0;
+        if (e < 0) { confPos.fill(0, i * 12, i * 12 + 12); return; }
+        let y = p.y0 - p.vy * e, fl = Math.cos(p.fph + p.fs * e);
+        if (p.land >= 0 || (y < 0.72 && Math.abs(p.x0) < 1.35 && Math.abs(p.z) < 1.3)) {   // 土俵に落ちた
+          if (p.land < 0) p.land = e;
+          e = p.land; y = 0.715 + p.lay; fl = 0.22;
+        } else if (y < -0.4) { confPos.fill(0, i * 12, i * 12 + 12); return; }
+        const x = p.x0 + 0.14 * Math.sin(e * p.sp + p.ph), ang = p.rot + p.rs * e, c = Math.cos(ang), s = Math.sin(ang);
+        const hw = p.s / 2, hh = (p.s * p.ar) / 2 * fl;
+        const v = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+        for (let j = 0; j < 4; j++) confPos.set([x + v[j][0] * c - v[j][1] * s, y + v[j][0] * s + v[j][1] * c, p.z], i * 12 + j * 3);
+      });
+      pa.needsUpdate = true;
+    });
+  }
+
+  // ---- 座布団の舞（番付が上の相手に勝ったとき）：手前と奥の客席から、くるくる回りながら土俵へ飛んで、平らに落ちる ----
+  const ZB = VL.zabuton, zabs = [];
+  let zabAt = -1, zabN = 0;
+  {
+    const a = art('zabuton'), maps = [];
+    for (let i = 0; i < 4; i++) maps.push(a ? region(a, i % a.rects.length).t : tex(zabutonCanvas(ZB.col[i])));
+    for (let i = 0; i < ZB.n[1]; i++) {
+      const m = new THREE.Mesh(k(new THREE.PlaneGeometry(ZB.size, ZB.size)), k(new THREE.MeshBasicMaterial({ map: maps[i % 4], alphaTest: 0.5, side: THREE.DoubleSide, fog: false })));
+      m.visible = false;
+      group.add(m);
+      zabs.push({ m });
+    }
+    tickers.push(() => {
+      if (zabAt < 0) return;
+      const now = mood.clock - zabAt;
+      zabs.forEach((z, i) => {
+        if (i >= zabN) { z.m.visible = false; return; }
+        const u = clamp01((now - z.t0) / z.d);
+        z.m.visible = now >= z.t0;
+        if (!z.m.visible) return;
+        const q = u;
+        z.m.position.set(z.s[0] + (z.e[0] - z.s[0]) * q, z.s[1] + (z.e[1] - z.s[1]) * q + 4 * z.h * q * (1 - q), z.s[2] + (z.e[2] - z.s[2]) * q);
+        if (u < 1) z.m.rotation.set(-Math.PI / 2 + z.tilt * Math.sin(now * z.tum + i), z.wob * Math.sin(now * 3.1 + i), z.rz + z.spin * u);   // くるくる・ひらりと面を見せる
+        else {
+          z.m.position.y += 0.03;
+          z.m.rotation.set(-Math.PI / 2 + 0.18, 0, z.rz + z.spin);   // 少しかたむいて重なる（真横から見ても座布団に見える）
+          if (!z.landed) { z.landed = true; if (i < 4) playSfx('suton', { vol: 0.16, rate: 1.5 + i * 0.1 }); }
+        }
+      });
+    });
+  }
+
+  // ---- 沸く・決着の演出（bout がよぶ）・音の合図 ----
+  // kind：'clash'（はじめてぶつかった）・'end'（決着）。o：{ win（自分の勝ち）, conf（紙吹雪）, zabuton（座布団の数） }
+  group.userData.cheer = (kind, o = {}) => {
+    mood.at = mood.clock;
+    mood.hop = kind === 'end' ? VL.hop.end : VL.hop.clash;
+    mood.stand = kind === 'end' ? VL.stand * (o.win ? 1 : 0.6) : 0;
+    if (kind !== 'end') return;
+    if (o.conf && confMesh) {
+      const rr = rand(Math.floor(mood.clock * 1000) + 5);
+      confP.forEach((p) => Object.assign(p, {
+        t0: rr() * CF.spawn, x0: (rr() * 2 - 1) * CF.x, z: CF.z[0] + rr() * (CF.z[1] - CF.z[0]), y0: CF.top[0] + rr() * (CF.top[1] - CF.top[0]),
+        vy: CF.fall[0] + rr() * (CF.fall[1] - CF.fall[0]), sp: 1.5 + rr() * 2, ph: rr() * TAU, rot: rr() * TAU, rs: (rr() * 2 - 1) * 4,
+        fph: rr() * TAU, fs: 5 + rr() * 7, s: CF.size * (0.75 + rr() * 0.5), land: -1, lay: rr() * 0.01,
+      }));
+      confAt = mood.clock; confMesh.visible = true;
+    }
+    if (o.zabuton) {
+      const rr = rand(Math.floor(mood.clock * 1000) + 9);
+      zabN = Math.min(zabs.length, o.zabuton);
+      zabs.forEach((z, i) => {
+        const front = i % 2 === 0, side = rr() < 0.5 ? -1 : 1;
+        Object.assign(z, {
+          t0: (i / Math.max(1, zabN)) * ZB.spawn + rr() * 0.15, d: ZB.sec[0] + rr() * (ZB.sec[1] - ZB.sec[0]), h: ZB.arc[0] + rr() * (ZB.arc[1] - ZB.arc[0]),
+          s: front ? [side * (0.8 + rr() * 1.8), 0.4, VL.frontZ[0] - 0.3] : [side * (0.8 + rr() * 2), 1.5, VL.backZ[1]],
+          e: [(rr() * 2 - 1) * 1.15, 0.72 + i * 0.004, (rr() * 2 - 1) * 0.95], tilt: 0.7 + rr() * 0.5, tum: 4 + rr() * 3, wob: rr() * 0.4,
+          rz: rr() * TAU, spin: (rr() < 0.5 ? -1 : 1) * (6 + rr() * 8), landed: false,
+        });
+      });
+      zabAt = mood.clock;
+    }
+  };
+  // 毎こま：会場の時計を進めて動かす。もどり値＝まだ動いている演出がある（bout は 3D を描きつづける）
+  group.userData.tick = (dt) => {
+    mood.clock += dt;
+    for (const f of tickers) f(dt);
+    const c = mood.clock;
+    return c - mood.at < VL.cheerSec || (confAt >= 0 && c - confAt < CF.spawn + CF.life) || (zabAt >= 0 && zabs.some((z, i) => i < zabN && !z.landed));
+  };
+  // もう一度見る・次の一番：演出を消す（会場は作りなおさない）
+  group.userData.reset = () => {
+    mood.at = -99; confAt = -1; zabAt = -1; zabN = 0;
+    if (confMesh) confMesh.visible = false;
+    for (const z of zabs) { z.m.visible = false; z.landed = false; }
+  };
+  // 音の合図（旋回のはじめからの秒）：幕がシュッと降りて・ストン、提灯がストン、明かりがパッ
+  const land = (t) => t[0] + (t[1] - t[0]) * 0.8;   // drop() のはねる前＝着いたとき
+  group.userData.cues = [
+    ...(V.roof || V.tare ? [{ at: VL.t.drop[0], name: 'shu', vol: 0.32, rate: 0.7 }, { at: land(VL.t.drop), name: 'suton', vol: 0.7, rate: 1 }] : []),
+    ...(V.lamp ? [{ at: land(VL.t.lamp), name: 'suton', vol: 0.3, rate: 1.35 }] : []),
+    { at: VL.t.light, name: 'pa', vol: 0.75, rate: 1 },
+  ];
 
   // ---- 明かり：パッとつく（少し明るすぎてから落ちつく）。0＝暗い会場 → 1＝明かりがついた ----
   const lightAt = (tt) => (tt < VL.t.light ? 0 : 1 + 0.35 * (1 - clamp01((tt - VL.t.light) / VL.t.flash)));
