@@ -10,16 +10,16 @@
 //   kensho：懸賞旗の数（11/27 しょーくん「宣伝？スポンサーの旗？みたいなやつは横綱のときに出してほしい」・旋回のあいだ回る）
 //   light：明かりがついたときの明るさ（1＝ふつう）
 //   11/27 しょーくん「空気感とか演出とかも、かなり豪華なものに」→ 観客が動く・金雲と光の中のちり・紙吹雪と座布団の舞・会場の音
-//   kumo：奥を流れる金雲の数／conf：勝ったときの紙吹雪の枚数／zawa：会場のざわめきの大きさ（0〜1）／roar：決着の歓声の大きさ
+//   kumo：奥を流れる金雲の数（11/27 しょーくん「金雲はもう少し後の段から」→ 十両から）／conf：勝ったときの紙吹雪の枚数／zawa：会場のざわめきの大きさ（0〜1）／roar：決着の歓声の大きさ
 export const VENUE = [
   { back: [1, 0.2], front: [0, 0], roof: 0, tare: 0, lamp: 0, kensho: 0, light: 0.9, kumo: 0, conf: 30, zawa: 0.1, roar: 0.3 },      // 序ノ口：がらんとした会場
   { back: [1, 0.45], front: [0, 0], roof: 0, tare: 2, lamp: 0, kensho: 0, light: 0.95, kumo: 0, conf: 40, zawa: 0.13, roar: 0.34 },    // 序二段：垂れ幕
-  { back: [2, 0.5], front: [1, 0.3], roof: 0, tare: 2, lamp: 1, kensho: 0, light: 1, kumo: 1, conf: 50, zawa: 0.16, roar: 0.4 },      // 三段目：提灯が灯る
-  { back: [2, 0.75], front: [1, 0.6], roof: 0, tare: 4, lamp: 1, kensho: 0, light: 1, kumo: 1, conf: 60, zawa: 0.19, roar: 0.45 },     // 幕下
-  { back: [3, 0.8], front: [2, 0.7], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05, kumo: 2, conf: 80, zawa: 0.23, roar: 0.55 },   // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
-  { back: [3, 0.88], front: [2, 0.8], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05, kumo: 3, conf: 90, zawa: 0.25, roar: 0.6 },  // 前頭：幕内
-  { back: [4, 0.9], front: [2, 0.85], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.08, kumo: 3, conf: 100, zawa: 0.27, roar: 0.64 },  // 小結
-  { back: [4, 0.95], front: [2, 0.9], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.08, kumo: 4, conf: 110, zawa: 0.29, roar: 0.68 },  // 関脇
+  { back: [2, 0.5], front: [1, 0.3], roof: 0, tare: 2, lamp: 1, kensho: 0, light: 1, kumo: 0, conf: 50, zawa: 0.16, roar: 0.4 },      // 三段目：提灯が灯る
+  { back: [2, 0.75], front: [1, 0.6], roof: 0, tare: 4, lamp: 1, kensho: 0, light: 1, kumo: 0, conf: 60, zawa: 0.19, roar: 0.45 },     // 幕下
+  { back: [3, 0.8], front: [2, 0.7], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05, kumo: 1, conf: 80, zawa: 0.23, roar: 0.55 },   // 十両：関取＝吊り屋根と紫の幕・四房（大きな山）
+  { back: [3, 0.88], front: [2, 0.8], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.05, kumo: 2, conf: 90, zawa: 0.25, roar: 0.6 },  // 前頭：幕内
+  { back: [4, 0.9], front: [2, 0.85], roof: 1, tare: 0, lamp: 2, kensho: 0, light: 1.08, kumo: 2, conf: 100, zawa: 0.27, roar: 0.64 },  // 小結
+  { back: [4, 0.95], front: [2, 0.9], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.08, kumo: 3, conf: 110, zawa: 0.29, roar: 0.68 },  // 関脇
   { back: [4, 1], front: [2, 1], roof: 1, tare: 0, lamp: 3, kensho: 0, light: 1.1, kumo: 4, conf: 130, zawa: 0.31, roar: 0.72 },        // 大関
   { back: [4, 1], front: [2, 1], roof: 2, tare: 0, lamp: 3, kensho: 12, light: 1.15, kumo: 5, conf: 160, zawa: 0.34, roar: 0.8 },      // 横綱：満員・金・懸賞旗（大きな山）
 ];
