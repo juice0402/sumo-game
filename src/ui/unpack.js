@@ -17,7 +17,8 @@ export async function unpackLib(id) {
   return gunzip(gz);
 }
 
-function fromBase64(s) {
+// base64 → バイト。新しいブラウザは Uint8Array.fromBase64（速い）・ほかは atob（絵と効果音もこれを使う）
+export function fromBase64(s) {
   if (typeof Uint8Array.fromBase64 === 'function') return Uint8Array.fromBase64(s);
   const bin = atob(s), n = bin.length, u = new Uint8Array(n);
   for (let i = 0; i < n; i++) u[i] = bin.charCodeAt(i);

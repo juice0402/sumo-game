@@ -9,6 +9,8 @@ import { createStage } from './stage3d.js';
 import { createFx } from './fx.js';
 import { playSfx, loopSfx } from './sound.js';
 import { VENUE, VL } from '../data/venue.js';
+import { PHYS } from '../data/config.js';
+import { makeFoe } from '../game/foe.js';
 import { createAura } from './aura.js';
 import { drawShapeThumb } from './pick.js';
 
@@ -444,5 +446,33 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     if (st.sleep) { st.sleep = false; st.last = performance.now(); raf = requestAnimationFrame(frame); }
   });
 
-  return { start, stop };
+  // 3D の用意を先に（11/27 読みこみの最適化）：タイトルや番付表を見ているあいだに、3D の板・シェーダー・テクスチャ
+  // （本場所は会場も＝lv）を作って GPU へ送っておく。はじめての取組の出だしがカクッとしない。取組の中ではしない。
+  // 土俵の大きさは土俵の種類で変わらないので、ふつうの物理の数で作ってよい（start も1回目の数で作ったものを使いつづける）
+  function warm(lv = -1) {
+    if (st || !window.THREE) return;
+    if (!stage) { stage = createStage(gl, Object.assign({}, PHYS)); curLook = 'kami'; if (!stage) return; }
+    if (lv >= 0) stage.setVenue(lv);
+    stage.warm();
+    warmPhys();
+  }
+  // 物理も1回だけ少し動かしておく（wasm は はじめて動かす所をその場で作るので、はじめての取組の出だしが重い）。
+  // 別の土俵（world）で動かして捨てるだけ＝本当の取組の結果にはさわらない。12歩ずつ・取組がはじまったらやめる
+  let physWarm = false;
+  function warmPhys() {
+    if (physWarm) return;
+    physWarm = true;
+    let b = null, n = 0;
+    try { const f = makeFoe(Math.random, 1500); b = createBout({ a: f.pts, b: f.pts, seed: 7 }); } catch (e) { return; }
+    const chunk = () => {
+      try {
+        if (!st) for (let k = 0; k < 12 && !b.result.kind; k++) { b.stepOnce(); n++; }
+        if (!st && n < 360 && !b.result.kind) { setTimeout(chunk, 20); return; }
+      } catch (e) { /* 何もしない */ }
+      b.free();
+    };
+    setTimeout(chunk, 20);
+  }
+
+  return { start, stop, warm };
 }

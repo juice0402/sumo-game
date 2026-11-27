@@ -1,4 +1,5 @@
 // 効果音（Web Audio）。ビルドが window.SUMO_SFX = { "<名前>": "data:audio/mpeg;base64,…" } を入れる。
+import { fromBase64 } from './unpack.js';
 const MIN_GAP = 0.04; // 同じ音は40ms以内なら鳴らさない
 let ctx = null;
 let master = null;
@@ -8,11 +9,7 @@ const bufs = {};
 const lastAt = {};
 
 function dataToBuffer(url) {
-  const i = url.indexOf(',');
-  const bin = atob(url.slice(i + 1));
-  const u8 = new Uint8Array(bin.length);
-  for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
-  return u8.buffer;
+  return fromBase64(url.slice(url.indexOf(',') + 1)).buffer;
 }
 
 function decode(buf) {
