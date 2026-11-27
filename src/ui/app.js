@@ -99,7 +99,6 @@ function loadLibs() {
         if (el) { window.SUMO_SFX = JSON.parse(el.textContent); el.remove(); sfxReady(); }
       } catch (e) { /* 音なしで続ける */ }
       loadPaperTextures();   // 紙質のテクスチャ（Codex の絵・タイトルの間に読む。読む前はコードのもよう）
-      loadVenueArt();        // 本場所の会場の絵（Codex・読む前はコードの切り絵）
     })
     .then(() => run('lib-rapier'))
     .then(() => pause().then(() => unpackLib('lib-wasm')))
@@ -122,6 +121,7 @@ function boot() {
   const nMax = Math.max(...lbls.map((el) => Array.from(el.textContent).length));
   for (const el of lbls) el.style.setProperty('--n', String(nMax));
   let editSlot = 0, bzTitle = '番付', stamping = false;
+  const venueLv = () => (state.venueView != null ? state.venueView : rankIdx(state.rate));   // 本場所の会場の番付（道具で見る番付をかえられる）
   // 切る：どの枠を切るか・切ったあとどこへ行くか
   let cutSlot = 0, afterCut = null;
   function cutFor(i, then, opt) {
@@ -209,7 +209,7 @@ function boot() {
       papers: [me.paper, foe.paper], auras: [me.aura, foe.aura],
       look: m.mode === 'honbasho' ? state.dohyo : null,   // 本場所は、えらんだ土俵スキン（見た目だけ）
       // 本場所の会場の飾り（番付が上がるほど賑やかに・11/27 しょーくん）。道具の「本場所の会場」で見る番付をかえられる
-      venue: m.mode === 'honbasho' ? (state.venueView != null ? state.venueView : rankIdx(state.rate)) : -1,
+      venue: m.mode === 'honbasho' ? venueLv() : -1,
       // 決着の演出（11/27）：番付が上の相手に勝てば座布団が舞う（upset＝番付の差）。道具の「いつも見る」では勝ち負けによらず
       cheer: { upset: rankIdx(foe.rate) - rankIdx(state.rate), test: !!state.cheerTest },
       onResult(r, kima) {
@@ -342,7 +342,9 @@ function boot() {
       choose(btn, back, state.short);
     },
   });
-  onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); };
+  // 本場所の会場の絵（Codex・紙吹雪も）は、番付表を開いたときに読む（本場所に行かない人は読まない・11/27 の軽量化）
+  // 会場も先に作って GPU へ送っておく（その番付の会場・はじめの本場所の一番がカクッとしない）
+  onShow['s-banzuke'] = () => { banzuke.show(state, bzTitle); paintDohyo(); Promise.all([loadVenueArt(), loadLibs()]).then(() => bout.warm(venueLv()), () => {}); };
   document.getElementById('bz-go').addEventListener('click', () => {
     if (!hasRikishi()) { go('s-roster'); return; }
     openSelect('honbasho', true);
@@ -393,7 +395,8 @@ function boot() {
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
   show('s-title');
-  loadLibs();
+  // 物理と3Dを読んだら、少し待ってから3Dを先に用意する（はじめての取組がカクッとしない・11/27）
+  loadLibs().then(() => setTimeout(() => bout.warm(), 300), () => {});
 }
 
 boot();

@@ -271,12 +271,31 @@ export function createStage(cv, P) {
     v3.set(x, y, z).project(camera);
     return [((v3.x + 1) / 2) * cssW, ((1 - v3.y) / 2) * cssH, v3.z < 1];
   }
+  // 毎こま たくさん写すとき用：答えを out（[x, y]）に書く（配列を作らない）
+  function projectTo(out, x, y) {
+    v3.set(x, y, 0).project(camera);
+    out[0] = ((v3.x + 1) / 2) * cssW; out[1] = ((1 - v3.y) / 2) * cssH;
+    return out;
+  }
 
   function render() { renderer.render(scene, camera); }
+  // 先に用意（11/27 読みこみの最適化・bout の warm から）：見えないまま1こま描いて、シェーダーを作り、テクスチャを GPU へ送っておく。
+  // はじめての取組の出だし（墨が横切るところ）がカクッとしない。見えない物（あとで降りる飾り・座布団）のテクスチャも送る
+  function warm() {
+    try {
+      resize();
+      scene.traverse((o) => {
+        for (const m of Array.isArray(o.material) ? o.material : o.material ? [o.material] : []) if (m.map) renderer.initTexture(m.map);
+      });
+      renderer.compile(scene, camera);
+      shadowDirty();
+      renderer.render(scene, camera);
+    } catch (e) { /* 用意できなくても、取組のときに作る */ }
+  }
 
   setDohyo(DOHYO_DEFAULT);
   return {
-    setDohyo, setVenue, venueTime, venueTick, venueCheer, venueCues, setFighters, setFrame, resize, view, project, render,
+    setDohyo, setVenue, venueTime, venueTick, venueCheer, venueCues, projectTo, warm, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
     look: () => dohyo.userData.look,
   };
