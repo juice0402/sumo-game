@@ -1,5 +1,6 @@
 // 福箱の画面（11/26 しょーくん）：小判で買って開ける・出る物と確率の一覧。
 // 開け方は「金の漆の箱がゆれる（太鼓）→ 紫の組紐がしゅるっとほどける → ふたが浮いて抜ける → 中身」（11/26・箱は ui/fukubox.js）。スロットやパチンコには似せない（game-art-rule.md）
+// 中身は札で見せる（11/27・ui/fukureveal.js）：札が舞い上がってくるっと表へ → 名前を筆で → 段の判子をドン。段が上がるほど飾りを足す
 // 引いた物は、動きの前に保存する（とちゅうで閉じてもなくならない）。中身は見た目だけ。
 import { T } from '../data/text.js';
 import { KOBAN, KINDS } from '../data/fukubako.js';
@@ -13,6 +14,7 @@ import { setupCanvas } from './ink.js';
 import { fitText } from './roster.js';
 import { playSfx } from './sound.js';
 import { createFukuBox } from './fukubox.js';
+import { createReveal, REVEAL_TIME } from './fukureveal.js';
 
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
 const pct = (x) => `${x.toFixed(2)}%`;
@@ -43,6 +45,7 @@ export function initFuku(cb) {
   const box = $('fk-box'), reveal = $('fk-reveal'), openBtn = $('fk-open');
   const cv = $('fk-cv'), auraCv = $('fk-aura'), fxCv = $('fk-fx');
   const fbox = createFukuBox(box);
+  const hero = $('fk-hero'), rv = createReveal({ hero, card: $('fk-card'), back: $('fk-back'), front: $('fk-front') });
   let busy = false, prev = null, fx = null, timers = [];
   const later = (ms, f) => timers.push(setTimeout(f, ms));
   function stopAll() {
@@ -50,6 +53,8 @@ export function initFuku(cb) {
     if (prev) { prev.stop(); prev = null; }
     if (fx) { fx.stop(); fx = null; }
     fbox.stop();
+    rv.stop();
+    reveal.classList.remove('in');
     busy = false;
   }
   function shape(st) { const s = st.slots[st.active]; return s ? s.shape : OTEHON.pts; }
@@ -68,9 +73,7 @@ export function initFuku(cb) {
     const tier = tierOf(it.id);
     reveal.dataset.tier = it.tier;
     reveal.dataset.kind = it.kind;
-    const h = $('fk-tier');
-    h.textContent = tier.name;
-    h.style.color = tier.color;
+    $('fk-tier').textContent = tier.name;   // 判子の色は札の段で（style.css の --stamp）
     $('fk-kind').textContent = it.kind === 'word' ? `${kindName('word')}・${it.part === 'kami' ? '上の句' : '下の句'}` : kindName(it.kind);
     $('fk-new').textContent = T.fukuNew;
     fitText($('fk-name'), it.name);
@@ -88,6 +91,7 @@ export function initFuku(cb) {
     reveal.hidden = true;
     box.hidden = false;
     const short = (cb.getShort && cb.getShort()) || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    rv.load();   // 札の紙・紙吹雪・金雲の絵を、箱が開くあいだに用意
     const { P, done } = fbox.play(short);
     if (!short) [0, 300, 600].forEach((ms, i) => later(ms, () => playSfx('taiko', { vol: 0.45 + i * 0.12, rate: 1 + i * 0.04 })));   // ゆれる・太鼓3つ
     later(P.p0, () => playSfx('kami', { vol: 0.7, rate: 1.15 }));   // 紐がしゅるっ
@@ -96,15 +100,14 @@ export function initFuku(cb) {
       if (!busy) return;
       reveal.hidden = false;   // 箱はうすれながら、煙と金箔がうしろに少し残る（ui/fukubox.js）
       reveal.classList.remove('in');
+      paintReveal(it, st);     // 動きの前に描く（札が小さい・裏返しのあいだに描くと、見本の絵があらくなる）
       void reveal.offsetWidth;
       reveal.classList.add('in');
-      paintReveal(it, st);
-      // 段ごとの音（並・上は「トン」、特上は太鼓の締め、極は拍子木と金の箔）
-      if (it.tier === 'kiwami') {
-        playSfx('hyoshigi', { vol: 0.9 });
-        fx = auraPreview(fxCv, 'a_kin', () => ({ x: fxCv.clientWidth / 2, y: fxCv.clientHeight * 0.45, h: fxCv.clientHeight * 0.9 }));
-      } else if (it.tier === 'tokujo') playSfx('taiko-end', { vol: 0.8 });
-      else playSfx('ton', { vol: it.tier === 'jo' ? 0.85 : 0.6 });
+      rv.play(it.tier, short);   // 札・判子・段ごとの飾りと音
+      // 極は、判子のあと札のまわりに金の気
+      if (it.tier === 'kiwami') later((short ? REVEAL_TIME.short : REVEAL_TIME.full).stamp, () => {
+        fx = auraPreview(fxCv, 'a_kin', () => { const b = rv.cardBox(); return { x: b.x + b.w / 2, y: b.y + b.h * 0.55, h: b.h * 1.05 }; });
+      });
       busy = false;
     });
   }
