@@ -4,6 +4,9 @@ import { COL, rand, setupCanvas } from './ink.js';
 import { LOOK } from '../data/look.js';
 import { artImage } from './art.js';
 
+// トンの線は、前のコードの3本線にもどした（11/28 夜 しょーくん「前の両サイドにあるだけの線、結構良かった」）。
+// 筆の払い（Codex の fx-ton1〜6）にもどすときは true（絵は media/art に残してある）
+const TON_FUDE = false;
 // トンの筆の線（11/28 夜 しょーくん「主張が激しすぎてちょっとチカチカ」→ うすく・小さく・形は一番のあいだかえない）
 const VIS = 0.3;          // 土俵のふちより内にかぶせる割合（線の長さに対して）
 const TON_ALPHA = 0.5;    // いちばん強いトンのときのこさ
@@ -92,11 +95,11 @@ export function createFx(cv) {
 
   // トンの合図：土俵の両わきの短い線（カメラは土俵についているので、ゆれのかわりに見せる）
   // トンの線：Codex の筆の払い（fx-ton1〜6・白の絵＝明るさがすけ具合）に色をつけて、土俵の両わきに出す（左は反転）。
-  // 絵がない・読む前は、下のコードの3本線
+  // 絵がない・読む前・TON_FUDE が false のときは、下のコードの3本線
   function tonMarks(ctx, stage, P, k, color) {
-    loadTon();
+    if (TON_FUDE) loadTon();
     if (k <= 0.05) return;
-    if (tonImgs.length) {
+    if (TON_FUDE && tonImgs.length) {
       if (tonPick < 0) tonPick = Math.floor(Math.random() * tonImgs.length);   // 形は一番ごとに1つ（トンのたびにかえるとチカチカする）
       const s = lay.dpr;
       for (const [x, dir, j] of [[-P.ringHalf, -1, (tonPick + 3) % tonImgs.length], [P.ringHalf, 1, tonPick]]) {
@@ -119,8 +122,12 @@ export function createFx(cv) {
     for (const [x, dir] of [[-P.ringHalf, -1], [P.ringHalf, 1]]) {
       for (const yy of [0.15, 0.4, 0.65]) {
         const q = stage.project(x, -P.ringDepth * yy, P.ringHalf);
-        const L = (10 + 10 * k) * s;
-        ctx.moveTo(q[0] * s + dir * 6 * s, q[1] * s); ctx.lineTo(q[0] * s + dir * (6 * s + L), q[1] * s);
+        const L = (10 + 10 * k) * s, m = 4 * s;
+        let x0 = q[0] * s + dir * 6 * s, x1 = x0 + dir * L;
+        // 縦長の画面では土俵が横いっぱいで、外に出すと画面の外へ切れる → 線ごと画面のはしの内がわへ寄せる
+        if (dir < 0 && x1 < m) { x0 += m - x1; x1 = m; }
+        if (dir > 0 && x1 > lay.W - m) { x0 -= x1 - (lay.W - m); x1 = lay.W - m; }
+        ctx.moveTo(x0, q[1] * s); ctx.lineTo(x1, q[1] * s);
       }
     }
     ctx.stroke();
