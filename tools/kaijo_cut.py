@@ -2,6 +2,7 @@
 # 部品の四角と合わせる所を src/data/kaijoart.js に書く。
 #   python3 -I tools/kaijo_cut.py crowd <PNG> <名前> <key> [--scale 0.5]   … 観客のシート（1人ずつの四角を探す・シートは1枚のまま）
 #   python3 -I tools/kaijo_cut.py yane <PNG> [--scale 0.5]                 … 吊り屋根（幕の下のふちと幕の幅を探す）
+#   python3 -I tools/kaijo_cut.py kensho <PNG> <名前> <key> [--scale 0.5]  … 懸賞旗を持つ呼出し（1人ずつの四角＋旗の字を書く四角と字の色）
 import sys, os, re, json
 import numpy as np
 from PIL import Image
@@ -79,9 +80,43 @@ def yane(png, scale):
     write_entry('yane', {'id': 'kaijo-yane', 'w': W, 'h': H, 'band': round(yt / im.height, 4), 'curtain': round(yb / im.height, 4), 'span': round((x1 - x0) / im.width, 4)})
     print('幕の下のふち', round(yb / im.height, 3), '幕の幅', round((x1 - x0) / im.width, 3))
 
+def kensho(png, name, key, scale):
+    # 懸賞旗を持つ呼出し（1列）：1人ずつの四角と、旗のまん中の平らな所（店の名前を書く四角）・字の色
+    im = key_green(Image.open(png)); rgb = np.asarray(im.convert('RGB')).astype(int)
+    a = np.asarray(im)[..., 3] > 128
+    lab, n = ndimage.label(ndimage.binary_dilation(a, iterations=int(OPT_DIL)))
+    boxes = []
+    for sl in ndimage.find_objects(lab):
+        h, w = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
+        if h * w < (a.shape[0] * a.shape[1]) / 100: continue
+        boxes.append((sl[1].start, sl[0].start, w, h))
+    boxes.sort(key=lambda b: b[0])
+    banners, inks = [], []
+    for x, y, w, h in boxes:
+        # 旗の色：人の四角の上から25%・竿をさけて左右の 30〜45% の所の色のまんなか
+        ys = slice(y + int(h * 0.18), y + int(h * 0.32))
+        samp = np.concatenate([rgb[ys, x + int(w * 0.3):x + int(w * 0.42)].reshape(-1, 3), rgb[ys, x + int(w * 0.58):x + int(w * 0.7)].reshape(-1, 3)])
+        c = np.median(samp, axis=0)
+        near = (np.abs(rgb - c).sum(axis=2) < 70) & a
+        near[:, :x] = False; near[:, x + w:] = False; near[:y] = False; near[y + int(h * 0.65):] = False
+        lb, _ = ndimage.label(near)
+        cy, cx = y + int(h * 0.25), x + int(w * 0.36)
+        k = lb[cy, cx] or np.bincount(lb[ys, x:x + w].ravel())[1:].argmax() + 1
+        yy, xx = np.nonzero(lb == k)
+        bx0, bx1, by0, by1 = np.percentile(xx, 3), np.percentile(xx, 97), np.percentile(yy, 2), np.percentile(yy, 98)
+        banners.append([round(v * scale) for v in (bx0, by0, bx1 - bx0, by1 - by0)])
+        lum = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+        inks.append('#201E1B' if lum > 150 else '#EEE9DE')
+    W, H = round(im.width * scale), round(im.height * scale)
+    save(im.resize((W, H), Image.LANCZOS), name)
+    rects = [[round(x * scale), round(y * scale), round(w * scale), round(h * scale)] for x, y, w, h in boxes]
+    write_entry(key, {'id': name, 'w': W, 'h': H, 'rects': rects, 'banner': banners, 'ink': inks})
+    print(len(rects), '人', rects, banners, inks)
+
 if __name__ == '__main__':
     scale = opt('--scale', 0.5)
     OPT_DIL = opt('--dilate', 6)   # 部品をまとめる広さ（となりの人とくっつくときは小さく）
     kind = sys.argv[1]
     if kind == 'crowd': crowd(sys.argv[2], sys.argv[3], sys.argv[4], scale)
     elif kind == 'yane': yane(sys.argv[2], scale)
+    elif kind == 'kensho': kensho(sys.argv[2], sys.argv[3], sys.argv[4], scale)
