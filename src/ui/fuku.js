@@ -20,36 +20,66 @@ import { createReveal, REVEAL_TIME } from './fukureveal.js';
 const KIND_ORDER = ['word', 'title', 'paper', 'aura', 'dohyo'];
 const pct = (x) => `${x.toFixed(2)}%`;
 
-// 土俵の小さな見本（上の面・墨の輪・仕切り線と、横の面）
+// 土俵の小さな見本：取組と同じ四角い紙の箱を、正面の少し上から（11/28 しょーくん「丸じゃなくて本番と同じような四角ベース」）
+// 上の面＝奥が少しせまい台形（真上の1枚絵を横の細切りで台形にのばす）・横の面＝手前の長方形（帯の貼り方は ui/stage3d.js の sideCanvas と同じ）
+const SW_VIEW = { deep: 0.4, far: 0.84, shade: 0.1 };   // 上の面の見かけの奥行き（手前の幅に対する割合）・奥のふちの幅の割合・横の面の影のこさ
 export function drawDohyoSwatch(cv, key) {
   const d = DOHYO[key] || DOHYO.kami;
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const cx = W / 2, rx = W * 0.46, ry = rx * 0.34, top = H * 0.42, side = H * 0.22;
-  const topImg = texImage(d.top.img), sideImg = texImage(d.side.img);   // 土俵スキンの絵（Codex）があれば絵で
+  const sideR = (PHYS.ringDepth / (2 * PHYS.ringHalf)) * 0.93;   // 横の面の高さ（取組の箱と同じ割合）
+  const bw = Math.min(W * 0.92, (H * 0.92) / (SW_VIEW.deep + sideR));   // 手前のふちの幅
+  const th = bw * SW_VIEW.deep, sh = bw * sideR, cx = W / 2, y0 = (H - th - sh) / 2, yf = y0 + th;
+  // 上の面の (u, v)（-1〜1・v=-1 が奥）→ 画面
+  const half = (t) => (bw / 2) * (SW_VIEW.far + (1 - SW_VIEW.far) * t);
+  const at = (u, v) => { const t = (v + 1) / 2; return [cx + u * half(t), y0 + t * th]; };
+  const topPath = () => { ctx.beginPath(); ctx.moveTo(cx - half(0), y0); ctx.lineTo(cx + half(0), y0); ctx.lineTo(cx + half(1), yf); ctx.lineTo(cx - half(1), yf); ctx.closePath(); };
+  const topImg = texImage(d.top.img), sideImg = texImage(d.side.img);   // 土俵スキン・特殊土俵の絵（Codex）があれば絵で
   // 横の面
+  const sx = cx - bw / 2;
   ctx.fillStyle = d.side.paper;
-  ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, top + side); ctx.ellipse(cx, top + side, rx, ry, 0, Math.PI, 0, true); ctx.lineTo(cx + rx, top); ctx.closePath(); ctx.fill();
-  if (sideImg) {   // 横の面いっぱいに（上の面のふちまで・すきまを作らない）。くり返す帯（特殊土俵）は高さを合わせて並べる
-    ctx.save(); ctx.clip();
-    const hh = side + ry;
-    if (d.side.tile) { const tw = sideImg.width * (hh / sideImg.height); for (let x = cx - Math.ceil(rx / tw) * tw - tw / 2; x < cx + rx; x += tw) ctx.drawImage(sideImg, x, top, tw, hh); }
-    else ctx.drawImage(sideImg, cx - rx, top, 2 * rx, hh);
+  ctx.fillRect(sx, yf, bw, sh);
+  if (sideImg) {
+    ctx.save(); ctx.beginPath(); ctx.rect(sx, yf, bw, sh); ctx.clip();
+    if (d.side.tile) {   // くり返す帯：高さを合わせて、まん中から左右へ
+      const tw = sideImg.width * (sh / sideImg.height), n = Math.ceil(bw / tw / 2) * 2 + 1, x0 = cx - (n * tw) / 2;
+      for (let i = 0; i < n; i++) ctx.drawImage(sideImg, x0 + i * tw, yf, tw, sh);
+    } else {   // 帯：まん中を切り出して貼る
+      const s = Math.max(bw / sideImg.width, sh / sideImg.height), cw = bw / s, ch = sh / s;
+      ctx.drawImage(sideImg, (sideImg.width - cw) / 2, (sideImg.height - ch) / 2, cw, ch, sx, yf, bw, sh);
+    }
     ctx.restore();
   }
-  ctx.strokeStyle = d.side.line; ctx.lineWidth = Math.max(1, W * 0.012);
-  ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, top + side); ctx.ellipse(cx, top + side, rx, ry, 0, Math.PI, 0, true); ctx.lineTo(cx + rx, top); ctx.stroke();
+  ctx.fillStyle = `rgba(32,30,27,${SW_VIEW.shade})`;   // 横の面は上の面より少し暗く（箱に見えるように）
+  ctx.fillRect(sx, yf, bw, sh);
   // 上の面
-  ctx.fillStyle = d.top.pat ? patternFill(ctx, d.top.pat, d.top.paper, d.top.ink || '#201E1B', W * 1.2) : d.top.paper;
-  ctx.beginPath(); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
-  if (topImg) { ctx.save(); ctx.clip(); ctx.drawImage(topImg, cx - rx, top - ry, 2 * rx, 2 * ry); ctx.restore(); }   // 真上の1枚絵を、ななめから見た楕円につぶす
-  ctx.beginPath(); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.save(); topPath(); ctx.clip();
+  if (topImg) {   // 真上の1枚絵を、横の細切りで台形に（上の行＝奥）
+    const N = 40;
+    for (let i = 0; i < N; i++) {
+      const t0 = i / N, hw = half((i + 1) / N);
+      ctx.drawImage(topImg, 0, (topImg.height * i) / N, topImg.width, topImg.height / N, cx - hw, y0 + t0 * th, 2 * hw, th / N + 0.8);
+    }
+  } else {
+    ctx.fillStyle = d.top.pat ? patternFill(ctx, d.top.pat, d.top.paper, d.top.ink || '#201E1B', bw * 1.2) : d.top.paper;
+    ctx.fillRect(0, y0, W, th);
+  }
+  ctx.restore();
   // 輪は取組の土俵と同じ所：輪の外がわ＝俵の線（PHYS.tawara）・太さも同じ割合（ui/stage3d.js の topCanvas）
-  const lw = Math.max(2, rx * (d.top.ringW || 0.055) * 1.2), rr = PHYS.tawara / PHYS.ringHalf - lw / 2 / rx;
-  ctx.strokeStyle = d.top.ring || '#201E1B'; ctx.lineWidth = lw;
-  ctx.beginPath(); ctx.ellipse(cx, top, rx * rr, ry * rr, 0, 0, Math.PI * 2); ctx.stroke();
-  ctx.strokeStyle = d.top.shikiriInk || '#201E1B'; ctx.lineWidth = Math.max(1.5, W * 0.016);
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * rx * 0.16, top - ry * 0.22); ctx.lineTo(cx + s * rx * 0.16, top + ry * 0.22); ctx.stroke(); }
+  const ringW = d.top.ringW || 0.055, rr = PHYS.tawara / PHYS.ringHalf - ringW * 0.6;
+  ctx.strokeStyle = d.top.ring || '#201E1B'; ctx.lineWidth = Math.max(1.5, (bw / 2) * ringW * 1.2); ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for (let i = 0; i <= 64; i++) { const a = (i / 64) * Math.PI * 2, [x, y] = at(Math.cos(a) * rr, Math.sin(a) * rr); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.stroke();
+  if (d.top.shikiri) {
+    ctx.strokeStyle = d.top.shikiriInk || '#201E1B'; ctx.lineWidth = Math.max(1.2, bw * 0.014);
+    const u = d.top.shikiri / PHYS.ringHalf, v = (d.top.shikiriLen || 0.34) / 2 / PHYS.ringHalf;
+    for (const s of [-1, 1]) { const a = at(s * u, -v), b = at(s * u, v); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+  }
+  // 箱のふち
+  ctx.strokeStyle = d.side.line || '#201E1B'; ctx.lineWidth = Math.max(1, bw * 0.012); ctx.lineJoin = 'miter';
+  topPath(); ctx.stroke();
+  ctx.strokeRect(sx, yf, bw, sh);
 }
 
 // cb：{ getState(), onSave(), getShort() }
