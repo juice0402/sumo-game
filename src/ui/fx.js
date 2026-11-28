@@ -4,10 +4,27 @@ import { COL, rand, setupCanvas } from './ink.js';
 import { LOOK } from '../data/look.js';
 import { artImage } from './art.js';
 
-// トンの筆の線（11/28 夜 しょーくん「主張が激しすぎてちょっとチカチカ」→ うすく・小さく・形は一番のあいだかえない）
-const VIS = 0.3;          // 土俵のふちより内にかぶせる割合（線の長さに対して）
+// トンの筆の線（Codex の fx-ton1〜6）。false にすると前のコードの3本線
+const TON_FUDE = true;
+// 11/28 夜 しょーくん「主張が激しすぎてちょっとチカチカ」→ うすく・小さく・形は一番のあいだかえない
+// 11/28 夜 しょーくん「新しいエフェクトのままでもう少し外側で、上下の間隔を広げる」→ 絵の3本の払いを1本ずつに分けて上下へ広げる・外へ
+const VIS = 0.12;         // 土俵のふちより内にかぶせる割合（線の長さに対して）
+const TON_GAP = 0.55;     // 3本の払いの上下の広げ方（線の高さに対して・上と下の払いをこれだけ外へ＝箱の上と下のくらい所まで）
+const TON_ON = 0.6;       // 画面に入れる割合（縦長の画面では土俵が横いっぱいで、外に出すと画面の外へ切れる）
 const TON_ALPHA = 0.5;    // いちばん強いトンのときのこさ
 const TON_SIZE = [0.55, 0.2];   // 大きさ：土俵の横の面の高さ ×（[0] ＋ [1] × トンの強さ）
+const tonCuts = {};       // 絵ごとの3本の払いの切れ目（上から [0, a, b, 高さ]）
+function cutsOf(i) {   // いちばんすいている行で3つに分ける（絵ごとに1回）
+  if (tonCuts[i]) return tonCuts[i];
+  const im = tonImgs[i], c = document.createElement('canvas');
+  c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d');
+  g.drawImage(im, 0, 0);
+  const px = g.getImageData(0, 0, c.width, c.height).data, row = new Float64Array(c.height);
+  for (let y = 0; y < c.height; y++) { let s = 0; for (let x = 0; x < c.width; x++) s += px[(y * c.width + x) * 4 + 3]; row[y] = s; }
+  const low = (a, b) => { let m = a; for (let y = a; y < b; y++) if (row[y] < row[m]) m = y; return m; };
+  return (tonCuts[i] = [0, low(Math.round(c.height * 0.25), Math.round(c.height * 0.5)), low(Math.round(c.height * 0.5), Math.round(c.height * 0.8)), c.height]);
+}
 const TON_IDS = ['fx-ton1', 'fx-ton2', 'fx-ton3', 'fx-ton4', 'fx-ton5', 'fx-ton6'];
 let tonImgs = [], tonLoading = false, tonTried = -1e9;
 const tonTint = {};
@@ -92,11 +109,11 @@ export function createFx(cv) {
 
   // トンの合図：土俵の両わきの短い線（カメラは土俵についているので、ゆれのかわりに見せる）
   // トンの線：Codex の筆の払い（fx-ton1〜6・白の絵＝明るさがすけ具合）に色をつけて、土俵の両わきに出す（左は反転）。
-  // 絵がない・読む前は、下のコードの3本線
+  // 絵がない・読む前・TON_FUDE が false のときは、下のコードの3本線
   function tonMarks(ctx, stage, P, k, color) {
-    loadTon();
+    if (TON_FUDE) loadTon();
     if (k <= 0.05) return;
-    if (tonImgs.length) {
+    if (TON_FUDE && tonImgs.length) {
       if (tonPick < 0) tonPick = Math.floor(Math.random() * tonImgs.length);   // 形は一番ごとに1つ（トンのたびにかえるとチカチカする）
       const s = lay.dpr;
       for (const [x, dir, j] of [[-P.ringHalf, -1, (tonPick + 3) % tonImgs.length], [P.ringHalf, 1, tonPick]]) {
@@ -104,9 +121,16 @@ export function createFx(cv) {
         const im = tinted(j, color), h = Math.abs(b[1] - a[1]) * s * (TON_SIZE[0] + TON_SIZE[1] * k), w = (h * im.width) / im.height;
         ctx.save();
         ctx.globalAlpha = TON_ALPHA * k * k;   // 弱いトンはほとんど出さない
-        ctx.translate(a[0] * s - dir * w * VIS, ((a[1] + b[1]) / 2) * s);   // 筆の入りを土俵のふちにかぶせる（縦長の画面では土俵が横いっぱいなので、外だけだと見えない）
+        let tx = a[0] * s - dir * w * VIS;   // 筆の入りを土俵のふちに少しだけかぶせる
+        const m = 4 * s;   // ただし払いの TON_ON は画面の中に
+        if (dir < 0) tx = Math.max(tx, m + w * TON_ON); else tx = Math.min(tx, lay.W - m - w * TON_ON);
+        ctx.translate(tx, ((a[1] + b[1]) / 2) * s);
         ctx.scale(dir, 1);
-        ctx.drawImage(im, 0, -h / 2, w, h);
+        const cut = cutsOf(j), k2 = h / im.height;   // 3本の払いを1本ずつ：上は上へ・下は下へ（まん中はそのまま）
+        for (let n = 0; n < 3; n++) {
+          const y0 = cut[n], y1 = cut[n + 1];
+          ctx.drawImage(im, 0, y0, im.width, y1 - y0, 0, -h / 2 + y0 * k2 + (n - 1) * h * TON_GAP, w, (y1 - y0) * k2);
+        }
         ctx.restore();
       }
       return;
@@ -119,8 +143,12 @@ export function createFx(cv) {
     for (const [x, dir] of [[-P.ringHalf, -1], [P.ringHalf, 1]]) {
       for (const yy of [0.15, 0.4, 0.65]) {
         const q = stage.project(x, -P.ringDepth * yy, P.ringHalf);
-        const L = (10 + 10 * k) * s;
-        ctx.moveTo(q[0] * s + dir * 6 * s, q[1] * s); ctx.lineTo(q[0] * s + dir * (6 * s + L), q[1] * s);
+        const L = (10 + 10 * k) * s, m = 4 * s;
+        let x0 = q[0] * s + dir * 6 * s, x1 = x0 + dir * L;
+        // 縦長の画面では土俵が横いっぱいで、外に出すと画面の外へ切れる → 線ごと画面のはしの内がわへ寄せる
+        if (dir < 0 && x1 < m) { x0 += m - x1; x1 = m; }
+        if (dir > 0 && x1 > lay.W - m) { x0 -= x1 - (lay.W - m); x1 = lay.W - m; }
+        ctx.moveTo(x0, q[1] * s); ctx.lineTo(x1, q[1] * s);
       }
     }
     ctx.stroke();
