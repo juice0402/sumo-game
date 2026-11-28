@@ -143,7 +143,19 @@ function curtainCanvas(gold) {
   g.strokeStyle = COL.sumi; g.lineWidth = 3; path(); g.stroke();
   return c;
 }
-// 懸賞旗を持つ呼出（横綱）
+// 懸賞旗を持つ呼出（Codex の絵）：1人を切り出して2倍で描き、旗のまん中に店の名前を縦に書く（旗の四角と字の色は data/kaijoart.js）
+function kenshoArt(c, A, j, name) {
+  const [x, y, w, h] = A.rects[j], [bx, by, bw, bh] = A.banner[j], g = c.getContext('2d'), s = c.width / w;
+  g.clearRect(0, 0, c.width, c.height);
+  g.drawImage(A.img, x, y, w, h, 0, 0, c.width, c.height);
+  const ch = Array.from(name), pad = bh * 0.1, room = (bh - pad * 2) * s, fs = Math.min(bw * s * 0.62, (room / Math.max(1, ch.length)) * 0.92);
+  g.fillStyle = A.ink[j]; g.font = `${fs}px ${BRUSH}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const cx = (bx - x + bw / 2) * s, y0 = (by - y + pad) * s;
+  ch.forEach((t, i) => g.fillText(t, cx, y0 + (room / ch.length) * (i + 0.5)));
+  return c;
+}
+
+// 懸賞旗を持つ呼出（横綱・絵がないとき）
 function kenshoCanvas(c, name, bg, ink) {
   const W = 128, H = 512, g = c.getContext('2d');
   c.width = W; c.height = H;
@@ -454,16 +466,20 @@ export function buildVenue(THREE, lv) {
 
   // ---- 懸賞旗（横綱）：呼出が持って、旋回のあいだ土俵のまわりの四角をゆっくり回る。真横へ降りる前にすっと消える ----
   if (V.kensho) {
-    const parade = new THREE.Group(), banners = [], names = T.kensho || [];
+    const parade = new THREE.Group(), banners = [], names = T.kensho || [], KA = art('kensho');
     for (let i = 0; i < V.kensho; i++) {
-      const [bg, ink] = VL.kenshoCol[i % VL.kenshoCol.length], name = names[i % names.length] || '', c = cv(128, 512);
-      kenshoCanvas(c, name, bg, ink);
+      const [bg, ink] = VL.kenshoCol[i % VL.kenshoCol.length], name = names[i % names.length] || '';
+      // Codex の絵（呼出しと無地の旗・11/28）があれば絵に店の名前を重ねる。なければコードの切り絵
+      const j = KA ? i % KA.rects.length : 0, r = KA && KA.rects[j];
+      const c = KA ? cv(r[2] * 2, r[3] * 2) : cv(128, 512);
+      const draw = () => (KA ? kenshoArt(c, KA, j, name) : kenshoCanvas(c, name, bg, ink));
+      draw();
       const map = tex(c), mat = k(new THREE.SpriteMaterial({ map, transparent: true, alphaTest: 0.02 }));
       if (document.fonts && !document.fonts.check(`40px ${BRUSH}`)) {   // 筆の字が読みこめてから書きなおす
-        document.fonts.load(`40px ${BRUSH}`, name).then(() => { kenshoCanvas(c, name, bg, ink); map.needsUpdate = true; }).catch(() => {});
+        document.fonts.load(`40px ${BRUSH}`, name).then(() => { draw(); map.needsUpdate = true; }).catch(() => {});
       }
       const sp = new THREE.Sprite(mat);
-      sp.center.set(0.5, 0); sp.scale.set(VL.kenshoW, VL.kenshoH, 1);
+      sp.center.set(0.5, 0); sp.scale.set(KA ? (VL.kenshoH * r[2]) / r[3] : VL.kenshoW, VL.kenshoH, 1);
       parade.add(sp); banners.push(sp);
     }
     group.add(parade);
