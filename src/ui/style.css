@@ -460,13 +460,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .fkprev .aura-cv{position:absolute;inset:-25%;width:150%;height:150%;pointer-events:none;z-index:1}
 .fkreveal.in .fkcardw{animation:fkrise var(--fk-rise,480ms) cubic-bezier(.15,.8,.3,1) both}
 .fkreveal.in .fkcard{animation:fkflip var(--fk-flip,440ms) var(--fk-rise,480ms) cubic-bezier(.45,0,.25,1.25) both}
-.fkreveal.in .fkface>b{animation:inkdown .55s var(--fk-write,860ms) both}
+.fkreveal.in .fkface>b{animation:inkdown .45s var(--fk-write,860ms) both}
 .fkreveal.in .fkprev{animation:rise .4s var(--fk-write,860ms) both}
-.fkreveal.in .fkmeta{animation:rise .35s var(--fk-meta,1420ms) both}
-.fkreveal.in .hanko{animation:fkstamp .26s var(--fk-stamp,1220ms) cubic-bezier(.5,0,.8,.4) both}
-.fkreveal.in .fkface{animation:fkbump .3s calc(var(--fk-stamp,1220ms) + .22s) both}
-.fkhero.shake1{--amp:3px;animation:fkshake .34s calc(var(--fk-stamp,1220ms) + .22s) both}
-.fkhero.shake2{--amp:6px;animation:fkshake .42s calc(var(--fk-stamp,1220ms) + .22s) both}
+.fkreveal.in .fkmeta{animation:rise .35s var(--fk-meta,1580ms) both}
+.fkreveal.in .hanko{animation:fkstamp .26s var(--fk-stamp,1380ms) cubic-bezier(.5,0,.8,.4) both}
+.fkreveal.in .fkface{animation:fkbump .3s calc(var(--fk-stamp,1380ms) + .22s) both}
+.fkhero.shake1{--amp:3px;animation:fkshake .34s calc(var(--fk-stamp,1380ms) + .22s) both}
+.fkhero.shake2{--amp:6px;animation:fkshake .42s calc(var(--fk-stamp,1380ms) + .22s) both}
 @keyframes fkrise{from{translate:0 34cqh;scale:.28;opacity:0}35%{opacity:1}to{translate:0 0;scale:1;opacity:1}}
 @keyframes fkflip{from{transform:rotateY(180deg)}to{transform:rotateY(0)}}
 @keyframes fkstamp{0%{opacity:0;transform:scale(3.2) rotate(-16deg)}60%{opacity:1}100%{opacity:1;transform:rotate(-6deg)}}

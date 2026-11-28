@@ -11,8 +11,9 @@ import { playSfx } from './sound.js';
 
 // 時間（ms・札が出てから）。CSS の動きもこの数字（#fk-hero の --fk-*）
 export const REVEAL_TIME = {
-  full: { rise: 480, flip: 440, write: 860, stamp: 1220, meta: 1420, end: 8200 },
-  short: { rise: 1, flip: 1, write: 40, stamp: 220, meta: 260, end: 5200 },
+  // 判子は筆の音（fude・二画で約0.44秒）が書ききってから（11/28 しょーくん「しっかり流れきってからハンコ」）。墨の字も同じ長さ（style.css の inkdown .45s）
+  full: { rise: 480, flip: 440, write: 860, stamp: 1380, meta: 1580, end: 8360 },
+  short: { rise: 1, flip: 1, write: 40, stamp: 540, meta: 580, end: 5500 },
 };
 // 段ごとの飾り（tex：札の紙・conf：紙吹雪の数・colors：色・kumo：金雲・byobu：金屏風・leaf：金箔・glint：きらめき・shake：ゆれ）
 const TIER = {
