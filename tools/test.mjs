@@ -193,5 +193,31 @@ console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Objec
   g.rate = 1950;
   ok(afterBout(g, { mode: 'honbasho', winner: 'b', kima: 'oshidashi', hour: 2 }).join() === 'ti_yofukashi,ti_sekitori' && g.streak === 0, '夜中・十両の称号がおかしい');
 }
+// 設定（11/28・issue #27）：音の大きさの保存（前の mute:true は「消す」）・字の点検・index.html に道具とネットの字がない
+{
+  const mem = {};
+  globalThis.localStorage = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => { delete mem[k]; } };
+  const { loadState, saveState, wipeSave } = await import('../src/game/save.js');
+  const { VOL, VOL_DEFAULT } = await import('../src/data/settings.js');
+  const volOf = (d) => { mem['sumo-proto-v1'] = JSON.stringify(d); return loadState().vol; };
+  ok(volOf({}) === VOL_DEFAULT && volOf({ mute: true }) === 0 && volOf({ mute: false }) === VOL_DEFAULT && volOf({ vol: 1, mute: true }) === 1 && volOf({ vol: 9 }) === VOL_DEFAULT, '音の大きさの読みこみがおかしい');
+  ok(VOL.length === T.vol.length && VOL[0] === 0, '音の大きさの段の数と字がそろっていない');
+  const st = loadState(); st.vol = 0; saveState(st);
+  const saved = JSON.parse(mem['sumo-proto-v1']);
+  ok(saved.vol === 0 && saved.mute === true, '音を消したとき mute も書く（前の版でも消したまま）');
+  mem['sumo-proto-v1-bak'] = '{}';
+  wipeSave();
+  ok(!('sumo-proto-v1' in mem) && !('sumo-proto-v1-bak' in mem), 'データを消すで保存が残った');
+  delete globalThis.localStorage;
+  const { missingGlyphs } = await import('./fontcheck.mjs');
+  const miss = missingGlyphs();
+  for (const n in miss) ok(false, `字 ${n} に足りない字「${miss[n]}」（python3 -I tools/fonts.py）`);
+  const { readFileSync: rf, existsSync: ex } = await import('node:fs');
+  const html = rf(new URL('../index.html', import.meta.url), 'utf8');
+  ok(!/id="(b-tools|s-tools)"/.test(html), 'index.html に道具がある');
+  ok(!/fonts\.googleapis|fonts\.gstatic/.test(html), 'index.html がネットの字を読む');
+  const fontRefs = [...html.matchAll(/url\("?(assets\/[^")]+\.woff2)"?\)/g)].map((m) => m[1]);
+  ok(fontRefs.length === 3 && fontRefs.every((f) => ex(new URL('../' + f, import.meta.url))), 'index.html の字（assets/ の woff2）がない');
+}
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);

@@ -10,7 +10,7 @@ export function initSettei(c) {
   const applyVol = () => setVolume(VOL[state.vol]);
   applyVol();
 
-  // 切りかえ（えらんだ物に朱の帯・.seg）
+  // 切りかえ（えらんだ物に縦の朱の帯・.vseg）
   function seg(el, words, get, set) {
     const bs = [...el.querySelectorAll('button')];
     bs.forEach((b, i) => { b.textContent = words[i]; });
@@ -32,11 +32,14 @@ export function initSettei(c) {
   const paintShort = seg($('st-short'), T.shortOpt, () => (state.short ? 1 : 0), (v) => { state.short = v === 1; });
 
   // データを消す：押すたびに「ほんとうに消す？」→「もう一度で消す」→ 消す。WIPE_WAIT 秒たつか画面を出なおすと最初にもどる
-  const wipeBtn = $('st-wipe');
+  const wipeBtn = $('st-wipe'), wipeName = wipeBtn.querySelector('b');
+  // 権利表記とデータを消すの字の大きさは、いちばん長い字に合わせてそろえる（押して字が変わっても大きさは同じ）
+  const nMax = Math.max(...T.wipe.map((w) => Array.from(w).length), Array.from($('st-rights').querySelector('b').textContent).length);
+  for (const b of [wipeName, $('st-rights').querySelector('b')]) b.style.setProperty('--n', String(nMax));
   let step = 0, timer = 0;
   const paintWipe = () => {
-    wipeBtn.textContent = T.wipe[step];
-    wipeBtn.setAttribute('aria-pressed', String(step > 0));
+    wipeName.textContent = T.wipe[step];
+    wipeBtn.classList.toggle('on', step > 0);   // たしかめ中は列ごと朱
   };
   const resetWipe = () => { clearTimeout(timer); step = 0; paintWipe(); };
   wipeBtn.addEventListener('click', () => {

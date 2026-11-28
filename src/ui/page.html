@@ -100,11 +100,12 @@
   <!-- 設定（11/28・issue #27）：音の大きさ・演出を短く・権利表記・データを消す（ui/settei.js） -->
   <section id="s-settei" class="screen v" hidden>
     <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">設定</h1></header>
-    <div class="setlist frame2">
-      <div class="setrow"><b class="brush">音の大きさ</b><div class="seg" id="st-vol"><button type="button" data-v="0"></button><button type="button" data-v="1"></button><button type="button" data-v="2"></button></div></div>
-      <div class="setrow"><b class="brush">演出</b><div class="seg" id="st-short"><button type="button" data-v="0"></button><button type="button" data-v="1"></button></div></div>
-      <div class="setrow"><button id="st-rights" class="ghost" type="button">権利表記</button></div>
-      <div class="setrow"><button id="st-wipe" class="ghost" type="button"></button></div>
+    <!-- 番付表の列（右から）：音の大きさ・演出は切りかえ（えらんだ物に朱の帯）、権利表記・データを消すは列ごと押す -->
+    <div class="setcols frame2 cols tall">
+      <div class="setcol"><small>音の大きさ</small><div class="vseg brush" id="st-vol"><button type="button" data-v="0"></button><button type="button" data-v="1"></button><button type="button" data-v="2"></button></div></div>
+      <div class="setcol"><small>演出</small><div class="vseg brush" id="st-short"><button type="button" data-v="0"></button><button type="button" data-v="1"></button></div></div>
+      <button class="modecard" id="st-rights" type="button"><b class="brush">権利表記</b><span>字・音・物理のライセンス</span></button>
+      <button class="modecard" id="st-wipe" type="button"><b class="brush"></b><span>力士・番付・小判をはじめから</span></button>
     </div>
     <p class="note" id="st-note">消したデータはもとにもどせない</p>
   </section>
