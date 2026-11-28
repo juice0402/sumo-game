@@ -105,7 +105,9 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     kindEl.style.left = c[0] + 'px';
     kindEl.style.top = c[1] + 'px';
     kindEl.style.maxWidth = Math.max(120, (r[0] - l[0]) * 0.86) + 'px';
-    kindEl.style.color = stage.look().side.text || '';
+    const look = stage.look(), onImg = !!look.side.img;   // 絵の横の面（スキン・特殊土俵）は、字のうしろに和紙の帯（11/28 しょーくん「氷の土俵とか特殊土俵の場合、リザルトの文字が見ずらい」）
+    kindEl.classList.toggle('band', onImg); gainEl.classList.toggle('band', onImg);
+    kindEl.style.color = onImg ? '' : look.side.text || '';
     // 番付・戦績のひとことは、決まりの文のすぐ下に（同じ土俵の横の面・同じ色。11/26 しょーくん「土俵の線とかぶって見づらい」）
     gainEl.style.left = c[0] + 'px';
     gainEl.style.top = c[1] + 'px';
