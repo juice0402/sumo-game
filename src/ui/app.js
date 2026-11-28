@@ -25,6 +25,8 @@ import { afterBout } from '../game/titles.js';
 import { logEntry, addLog } from '../game/log.js';
 import { initChomen } from './chomen.js';
 import { DOHYO } from '../data/dohyo.js';
+import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
+import { AURAS, AURA_DEFAULT } from '../data/auras.js';
 import { initFuku } from './fuku.js';
 import { loadPaperTextures } from './papertex.js';
 import { loadVenueArt } from './venue.js';
@@ -270,15 +272,16 @@ function boot() {
       Promise.all([loadLibs(), e.mode === 'honbasho' ? loadVenueArt() : null]).then(() => replay(e), () => {});
     },
   });
+  // 見た目の id（土俵スキン・紙質・気）は、今の一覧にない物ならいつもの物で（見た目だけ・勝敗は変わらない）
   function replay(e) {
-      show('s-bout');
-      bout.start(e.a.pts, { pts: e.b.pts, name: e.b.name }, e.seed, {
-        mode: e.mode, stage: e.stage, look: e.look, venue: e.venue, drive: e.drive, replay: true, homeLabel: T.toChomen,
-        a: { name: e.a.name, sub: e.a.sub, rank: e.a.rank }, b: { name: e.b.name, sub: e.b.sub, rank: e.b.rank },
-        papers: e.pa, auras: e.au, cheer: { upset: e.up, test: false },
-        onResult: () => ({ text: T.replayLine(T.logWhen(e.t)) }),
-        onHome() { show('s-chomen'); },
-      });
+    show('s-bout');
+    bout.start(e.a.pts, { pts: e.b.pts, name: e.b.name }, e.seed, {
+      mode: e.mode, stage: e.stage, look: DOHYO[e.look] ? e.look : null, venue: e.venue, drive: e.drive, replay: true, homeLabel: T.toChomen,
+      a: { name: e.a.name, sub: e.a.sub, rank: e.a.rank }, b: { name: e.b.name, sub: e.b.sub, rank: e.b.rank },
+      papers: e.pa.map((id) => (PAPERS[id] ? id : PAPER_DEFAULT)), auras: e.au.map((id) => (AURAS[id] ? id : AURA_DEFAULT)), cheer: { upset: e.up, test: false },
+      onResult: () => ({ text: T.replayLine(T.logWhen(e.t)) }),
+      onHome() { show('s-chomen'); },
+    });
   }
   onShow['s-chomen'] = () => chomen.show();
 

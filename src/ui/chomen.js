@@ -22,7 +22,7 @@ import { choose } from './choose.js';
 const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const titleName = (id) => (TITLES.find((t) => t.id === id) || {}).t || '';
 
-// cb：{ getState(), getOwned()＝持っている物の Set（道具の「ぜんぶ持っている」もふくむ）, onReplay(取組), getShort() }
+// cb：{ getState(), getOwned()＝持っている物の Set（道具の「ぜんぶ持っている」もふくむ）, onReplay(取組) }
 export function initChomen(cb) {
   const list = document.getElementById('ch-list'), note = document.getElementById('ch-note');
   const tabs = document.getElementById('ch-tabs'), kinds = document.getElementById('ch-kinds');
