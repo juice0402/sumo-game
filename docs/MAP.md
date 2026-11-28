@@ -18,7 +18,7 @@
 | data/config.js | まだ決まっていない数字ぜんぶ（紙・点検・物理・相性表）。変えたら CONFIG_VERSION を上げる |
 | data/cpu-shapes.js | CPU の形5つ（釣鐘・タコ・くさび・フック・振り子）＋お手本の人の形 OTEHON（CPU には入れない）。紙の座標 300×420・y 下向き・右が正面 |
 | data/text.js | 画面の文字（翻訳はここに足す）・決まり手の名前・クレジット・設定の字（vol・shortOpt・wipe）と権利表記 rights |
-| data/settings.js | 設定の数字：音の大きさ VOL（消す0・小さい0.5・ふつう1）・データを消すの待ち WIPE_WAIT |
+| data/settings.js | 設定の数字：音の大きさ VOL（消す0・小さい0.5・ふつう1）・データを消すの待ち WIPE_WAIT・帳面の取組記録の数 LOG_MAX（30） |
 | data/dohyo.js | 土俵の見た目（1つの土俵＝1項目：紙の箱・氷の箱・激震の箱＋福箱の土俵スキン7つ＝本場所で使う。項目を足せば別の土俵）。スキンは top.img・side.img に Codex の絵（ui/papertex.js の loadPaperTextures がタイトルの間に読む → stage3d の上の面・横の面と fuku.js の小さな見本が使う） |
 | data/stages.js | 土俵の種類＝物理の上書き（標準・氷・激震）＋本場所の土俵＋土俵巡業（2時間ごと・2つ・24時間先まで）。スキンは dohyo.js、物理は ここ |
 | data/shikona.js | 四股名の語（上の句・つなぎ・下の句・「id:字」）。はじめから持っている語 SHIKONA_START（かけだしの上の句5・山 川 海 里 富士・つなぎ全部）・相手に使わないなかま SHIKONA_FOE_SKIP。実在の四股名になる字は入れない（test の NG で確かめる） |
@@ -42,15 +42,16 @@
 | sim/table.js | 相性表の集計 |
 | sim/bench.js | 指紋用の決まった3番 |
 | sim/rng.js | シードつき乱数・FNV-1a |
-| game/save.js | 保存（キー `sumo-proto-v1` のまま中身を足す：音の大きさ vol（0〜2・前の mute:true は 0・vol 0 のとき mute:true も書く）・力士3枠 slots・active・rate・hon・jun・words＝手に入れた語（前からいる力士の語は持っていることにする）・koban・kobanDay・items（福箱の紙質・気・土俵）・dohyo（本場所の土俵）・力士ごとの paper・aura・titles＝手に入れた称号（前からいる力士の称号は持っていることにする）・streak・keikoWon・unlockAll〔道具の「ぜんぶ持っている」・はじめは入〕。試作①②の shape は1枠目へ）。道具の「はじめての流れを見る」用に、いまの保存を `sumo-proto-v1-bak` へ1つだけ取っておく（stashSave・unstashSave）。設定の「データを消す」は wipeSave（両方を消す） |
+| game/save.js | 保存（キー `sumo-proto-v1` のまま中身を足す：音の大きさ vol（0〜2・前の mute:true は 0・vol 0 のとき mute:true も書く）・力士3枠 slots・active・rate・hon・jun・words＝手に入れた語（前からいる力士の語は持っていることにする）・koban・kobanDay・items（福箱の紙質・気・土俵）・dohyo（本場所の土俵）・力士ごとの paper・aura・titles＝手に入れた称号（前からいる力士の称号は持っていることにする）・streak・keikoWon・log〔帳面の取組記録・game/log.js・#28〕・unlockAll〔道具の「ぜんぶ持っている」・はじめは入〕。試作①②の shape は1枠目へ）。道具の「はじめての流れを見る」用に、いまの保存を `sumo-proto-v1-bak` へ1つだけ取っておく（stashSave・unstashSave）。設定の「データを消す」は wipeSave（両方を消す） |
+| game/log.js | 帳面の取組記録（#28）：logEntry（リプレイに要る物ぜんぶ＝両方の形・紙質・気・四股名・称号・番付・土俵の id・シード・動かし方・CONFIG_VERSION・土俵の物理の印 sp・結果と決まり手・日時）・addLog（新しい順・LOG_MAX まで）・cleanLog（読みこみ）・canReplay（版と土俵の物理が今と同じ）・replayBoutOpts（createBout にわたす物＝bout.js と tools/test.mjs で同じ） |
 | game/names.js | 四股名と称号（id → 字・ランダム・正しいか）。randomShikona(rng, has)：has＝持っている語の Set → その中から（自分）／なし → 相手用。ownedWords(state.words) |
 | game/rating.js | 番付（rankOf・nextRank）・Elo（eloDelta）・仮の相手のレート |
 | game/jungyo.js | 土俵巡業の予定（時刻 → 枠 → 2つの土俵・世界で同じ）・取組前の抽選 |
 | game/foe.js | 巡業・本場所の仮の相手（CPU の形＋ランダムな四股名・称号・近いレート） |
-| game/titles.js | 実績の称号（11/26）：afterBout(state, { mode, winner, kima, foeId, hour }) → 新しく手に入れた称号の id（連勝 streak・稽古で勝った CPU keikoWon も数える）・ownedTitles |
+| game/titles.js | 実績の称号（11/26）：afterBout(state, { mode, winner, kima, foeId, hour }) → 新しく手に入れた称号の id（連勝 streak・稽古で勝った CPU keikoWon も数える）・ownedTitles・achProgress（帳面の実績の、いまの進み） |
 | game/fukubako.js | 福箱のしくみ：FUKU_ITEMS（出る物ぜんぶ）・fukuOdds（いまの確率・そろった段は割りなおす）・drawFuku（持っていない物だけ）・addItem・ownedPapers/Auras/Dohyo（2つめの引数で持ち物の Set を渡せる）・kobanFor（取組の小判）・shownItems（道具の「ぜんぶ持っている」＝state.unlockAll のとき、えらぶ画面だけぜんぶ持っていることに。福箱と保存は本当の持ち物） |
 | ui/app.js | はじまり（物理の用意・画面のつなぎ・もどる）：タイトル → 相撲部屋 →「勝負」→ 巡業／本場所／稽古 → 力士選出 → 取組。はじめての流れ（startIntro）：空の部屋 → お手本つきで切る → 初土俵（釣鐘・戦績に数えない）→ 四股名をさずかる（s-meimei）→ 部屋 |
-| ui/heya.js | タイトル・相撲部屋（小判・メニュー：勝負・力士をつくる・福箱・設定〔「帳面」は福箱と設定のあいだに足す〕。番付は 勝負 → 本場所 の中）・勝負（巡業／本場所／稽古）。土俵巡業の予定は 勝負 → 巡業 で見る。部屋の自作力士がときどきぴょこっと跳ねる（hopLater・たまに2回）。まわりに気（auraPreview） |
+| ui/heya.js | タイトル・相撲部屋（小判・メニュー：勝負・力士をつくる・福箱・帳面・設定。番付は 勝負 → 本場所 の中）・勝負（巡業／本場所／稽古）。土俵巡業の予定は 勝負 → 巡業 で見る。部屋の自作力士がときどきぴょこっと跳ねる（hopLater・たまに2回）。まわりに気（auraPreview） |
 | ui/choose.js | えらんだ瞬間の動き（部屋と勝負のメニュー）：朱の筆の帯をベタッと＋太鼓「ドドン」（taiko を2回）→ ほかの列は下へ抜けて消える → 次の画面。もとにもどすのは app.js の enter（reset）。演出を短く・動きを減らす設定では短く |
 | ui/roster.js | 部屋の力士（3枠のカード renderSlots）・力士の編集（ページは「名前」＝上の句・つなぎ・下の句／「称号」＝称号と「称号の手に入れ方」／「見た目」。くるくるで選ぶ・まわすと名前がそのまま変わる・保存は止まって0.3秒後・おまかせはスロットのようにまわる・切り直す・引退は2回押す）。見た目＝紙質と気のくるくる（持っている物だけ）。編集の名前は字の大きさを変えない（paintEdName・--n は ED_NAME_COL＝いちばん長い「上の句＋つなぎ」と「下の句」の長いほう）。1列で入らないときだけ2列に（はかるのは ResizeObserver で見えたとき・折る所は edNameBreak＝2列の長さが近いほう）・名前は上ぞろえ |
 | （縦の字の大きさ） | 番付表の縦の字は、入れ物（見出し h1・主役 .hero・列 .cols>*・土俵巡業の札 に container-type:size）の高さ 100cqh と字の数 --n から大きさを決める＝どの画面の高さでも1列に収まる。字を入れるときは roster.js の fitText・setN・headText（見出し）で --n を。ならんだ物（力士の札・福箱の帯・取組の上の名前・カットインの東西・くるくるの列）は、いちばん長いものに合わせて同じ大きさ（roster.js の sameSize など・11/26「統一感」） |
@@ -58,12 +59,13 @@
 | ui/fuku.js | 福箱の画面（箱は ui/fukubox.js → 中身の札は ui/fukureveal.js）と「出る物と確率」・土俵の小さな見本 drawDohyoSwatch（取組と同じ四角い箱を正面の少し上から・巡業の開催中と土俵えらびも使う） |
 | ui/fukureveal.js | 福箱の中身の見せ方（11/27・版58）：札（和紙の短冊・裏は漆に金の「福」）が舞い上がってくるっと表へ → 名前を筆で → 段の判子をドン。段ごとの飾りは TIER（並＝生成りの紙吹雪すこし／上＝藍の罫と紙吹雪／特上＝朱の罫と帯・紙吹雪・金雲・ゆれ・拍手／極＝金箔の札・金屏風・金雲・金箔・きらめき・ゆれ・歓声と拍手）。時間は REVEAL_TIME（CSS の --fk-*）。うしろの canvas #fk-back（屏風・金雲・紙吹雪の半分）と前の #fk-front（紙吹雪の半分・極の金雲1つ・金箔・きらめき）。絵は気の紙吹雪・箱の金箔ときらめき・会場の金雲・紙質の和紙と金箔を使いまわす |
 | ui/fukubox.js | 福箱の箱（11/26・Codex の絵）：金の漆の箱に紫の組紐（まっすぐな紐の絵を箱の面に沿った線に並べ、箱の形で切る）。play：ゆれる → 結び目がゆるむ → 紐が結び目へ引かれて落ちる → ふたが抜ける → 光の筋・煙・金箔・きらめき（PERIOD の end で中身・fxEnd で止まる）。段では変えない |
+| ui/chomen.js | 帳面（s-chomen・#28）：切りかえ（取組記録・実績・図鑑＝力士の編集と同じ .rl-tabs）・中は番付表の列を右から横にすべらせる（.chlist＝grid の列・direction:rtl）。取組記録＝押すと app.js の replay（保存から同じ取組を作りなおす・bout の opt.replay＝「帳面へ」だけ・記録にさわらない）・見られない取組は「見られない」。実績＝？？？＋条件＋いまの進み。図鑑＝種類ごと（紙質・気・土俵・称号・四股名の語）・持っていない物は？？？＋手に入れ方（福箱は段だけ）・見本は見えている列だけ描く（IntersectionObserver・気は見えている間だけ動かす）。そろえたごほうびはない |
 | ui/titlelist.js | 称号の手に入れ方（編集の「称号の手に入れ方」から・シート s-titles）：持っている＝名前、持っていない＝？？？。取組の実績は条件、福箱は段だけ |
 | ui/art.js | 絵（script の art-<名前>）を使うときに1枚ずつ blob URL の画像に・decode でほどいてから渡す（artImage・artImages） |
 | ui/match.js | 土俵巡業の予定・番付（本場所）・土俵えらび（initDohyoPick：番付の「土俵：○○」から・挿し絵つき・本場所の土俵スキン）・力士選出（相手は取組まで「？」・上に部屋の番付・レート・勝敗） |
 | ui/cut.js | 切る画面（show(形, { demo }) で、はじめての人に人の形 OTEHON を型抜きの点線で出す。描いている間も消さない・はじまりは朱の丸と「ここから」・向きの矢じるし） |
 | ui/pick.js | 稽古：相手をえらぶ画面（CPU 5体・全員と取る ●○） |
-| ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える・東西の名前は vsFit で斜めの切れ目にかからない大きさに）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title）。結果の決まり手は画面のどまんなか・勝敗の判子はそのすぐ左（.verdict は3列の grid）。結果のボタンはいちばん下に「部屋へ｜次の取組（稽古はもう一番）」を同じ幅で横に（.r-pair・初土俵は部屋へを visibility で隠して場所は残す）・稽古だけその上に相手をかえる・切り直す（#r-sub） |
+| ui/bout.js | 取組の画面（記録を再生）：墨 → 旋回 → 真横 → 勝負 → 取組 → 決まり手。タップで旋回を飛ばす。start(…, opt) の opt で土俵・名前・結果のひとこと（番付の増減）・動かし方 drive・リプレイ replay（「帳面へ」homeLabel・onHome だけ）。onResult(結果, 決まり手, { seed, drive })＝3つめは帳面の取組記録に入れる物。巡業は旋回のあいだに土俵の名前を右に縦書きで（#stagename・snAt〜snOutAt）。本場所は旋回のはじめに対戦のカットイン（#vs・vsAt〜vsEnd・長さは look.js の vsSec／演出を短くでは vsShortSec ぶん「勝負」をおくらせる・タップで消える・東西の名前は vsFit で斜めの切れ目にかからない大きさに）。onResult が { text, titles } を返したら、称号を結果の右に縦書きで（#r-title）。結果の決まり手は画面のどまんなか・勝敗の判子はそのすぐ左（.verdict は3列の grid）。結果のボタンはいちばん下に「部屋へ｜次の取組（稽古はもう一番）」を同じ幅で横に（.r-pair・初土俵は部屋へを visibility で隠して場所は残す）・稽古だけその上に相手をかえる・切り直す（#r-sub） |
 | ui/stage3d.js | 2.5D（Three.js）：紙の箱の土俵（setDohyo で切りかえ・前の床と絵は外す）・紙の力士（厚み・影）・カメラ（旋回と真横）・project（描く座標→画面） |
 | ui/venue.js | 本場所の会場の書き割り buildVenue(THREE, 番付の順)：真横のカメラから見る奥と手前だけ。旋回のあいだは土俵だけ（暗い）→ 観客が下から湧く（段ごとに1つの形・湧くあいだだけ形を書きかえる）→ 屋根と幕・垂れ幕・提灯が上からストン → 明かりがパッ（time(秒) が明かりを返し、stage3d の lights が日の光とスポットを変える）・横綱は懸賞旗が旋回のあいだ回る。layout が真横の画面の上のはしに屋根と提灯を合わせる。絵は loadVenueArt（タイトルの間に読む）。空気感（11/27）：tick(秒)＝毎こま（観客のゆれ・金雲が流れる・光の中のちり・紙吹雪・座布団／動いている演出があれば true）・cheer('clash'｜'end', {win, conf, zabuton})＝沸く・reset・cues＝幕のストン・明かりのパッの音の秒（bout が鳴らす） |
 | ui/fx.js | 上にのせる2Dの演出：はじまりの墨の筆・墨のしぶき・集中線・トンの合図・体がついた所 |
@@ -96,6 +98,7 @@
 - index.html・assets/（ビルドが作る・中身の印つきの名前）・docs/balance.md・node_modules/・package-lock.json
 
 ## 軽さの記録（code-rules C・CPU ×4 の headless Chrome・3回の中ほど）
+- 11/29 帳面（issue #28）：index.html 0.518 → 0.532MB・assets/ 6.57 → 6.59MB（字の足し）。タイトルまで・取組の longtask は前と同じくらい（ばらつきの中）。帳面を開く longtask 1回 約80ms・四股名の語（132列）1回 約90ms・ほかの切りかえは 0。保存は30番で約26KB
 - 11/28 設定・字の同梱（issue #27）：index.html 0.52MB のまま・assets/ 5.35 → 6.57MB（字 1.21MB・ライセンス 21KB）。タイトルまで 約1.6 → 約1.1秒・物理と3Dまで 約1.8 → 約1.2秒（Google Fonts を待たない）。取組の longtask は同じくらい（headless は SwiftShader でばらつく）
 - 11/28 出口を index.html＋assets/ に（D）：index.html 5.63MB → 0.52MB・assets/ 110こ 5.35MB（絵 92・効果音 17・wasm 1）。2回目からは assets/ がキャッシュから読まれる
 - 11/26 福箱の絵（Codex 17枚）を足して index.html 1.84 → 2.51MB → 同じ日の軽量化で 2.28MB：絵を品質74〜76・すけ具合70で入れなおし、結び目・房・紐は描く大きさに合わせて小さく（490 → 316KB）・テクスチャは 448px 品質70。絵は1枚ずつの script（大きな JSON を読まない・画像にしたら消す）・decode してから描く・福箱は待ちの箱を先に、開ける演出の絵はあとから読む・福箱の canvas は細かさ2倍まで。開ける動き（CPU ×4）：1こま 約28 → 約20ms・固まり 2〜9回（最大110ms）→ 2回（最大70ms）・JS のメモリ 22 → 21MB
