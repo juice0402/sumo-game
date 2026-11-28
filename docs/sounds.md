@@ -1,4 +1,4 @@
-# 効果音の出どころ（assets/sfx/）
+# 効果音の出どころ（media/sfx/）
 
 11/26 しょーくんの聞きくらべ（https://claude.ai/artifact/DYtnbvLj7foT52StiKthN1 ）で、えらんだときは和太鼓のドン（don・A）、札が出るのは紙のシュッ（shu・A）に。どちらも Python（numpy・scipy）で作った音で、作り直しは `python3 -I tools/sfx_synth.py`（同じ順番で作るので同じ音になる）。四股名をさずかる音（sumi＋ton）はそのまま（しょーくん「とても好き」）。
 

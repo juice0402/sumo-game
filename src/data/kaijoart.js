@@ -1,4 +1,4 @@
-// 本場所の会場の絵（11/27・Codex＝A・art-irai の requests/sumo/kaijo-*.md）。絵は assets/art/kaijo-*.webp（tools/kaijo_cut.py で切る）。
+// 本場所の会場の絵（11/27・Codex＝A・art-irai の requests/sumo/kaijo-*.md）。絵は media/art/kaijo-*.webp（tools/kaijo_cut.py で切る）。
 // 1枚の絵の中の部品の四角 [x, y, w, h]（ピクセル）。ここにない絵は、ui/venue.js がコードの切り絵で描く（同じ動き）
 export const KAIJO_ART = {
   kankyaku: {id: 'kaijo-kankyaku', w: 724, h: 543, rects: [[9, 14, 153, 168], [200, 9, 138, 172], [367, 4, 158, 178], [562, 19, 148, 162], [3, 188, 160, 172], [195, 190, 154, 170], [384, 190, 144, 170], [556, 190, 154, 170], [10, 370, 158, 172], [197, 368, 147, 173], [375, 368, 155, 174], [558, 365, 152, 176]]},

@@ -24,7 +24,7 @@ export const DOHYO = {
     bg: '#201E1B',           // うしろ
     tonMark: '#EEE9DE',      // トンの合図の線
   },
-  // 特殊土俵（巡業・物理が変わる）：11/28〜 top.img＝上の面の1枚絵・side.img＝横にくり返す帯（side.tile）＝Codex。月・重石なども同じ形で（絵 assets/art/dohyo-<キー>-top・-side）
+  // 特殊土俵（巡業・物理が変わる）：11/28〜 top.img＝上の面の1枚絵・side.img＝横にくり返す帯（side.tile）＝Codex。月・重石なども同じ形で（絵 media/art/dohyo-<キー>-top・-side）
   // 氷の土俵（data/stages.js の kori）：つめたい白の和紙・青みの厚紙
   kori: {
     name: '氷の箱',
@@ -42,7 +42,7 @@ export const DOHYO = {
 };
 
 // ---- 土俵スキン（11/26：福箱から出る・本場所で使える・見た目だけ）。top.pat は ui/papertex.js のもよう ----
-// 11/28〜 top.img＝上の面の1枚絵・side.img＝横の面の帯（Codex・assets/art/dohyo-*.webp・tools/dohyo_cut.py）。読む前と絵がないときは paper・pat の紙で描く
+// 11/28〜 top.img＝上の面の1枚絵・side.img＝横の面の帯（Codex・media/art/dohyo-*.webp・tools/dohyo_cut.py）。読む前と絵がないときは paper・pat の紙で描く
 Object.assign(DOHYO, {
   ai: {
     name: '藍の土俵',

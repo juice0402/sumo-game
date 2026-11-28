@@ -1,10 +1,11 @@
 # 地図（sumo-game）
 
-遊ぶ人が開くのは index.html（自動で作る・読まない・手で直さない）。もとは src/。
+出口は index.html＋assets/（code-rules.md の D・11/28〜）：遊ぶ人が開くのは index.html、その横の assets/ に絵・効果音・物理の wasm（名前に中身の印・どちらも自動で作る・読まない・手で直さない）。もとは src/（コード）と media/art・media/sfx（絵と音）。
 
 ## ビルドと点検
 - はじめに `npm ci`（物理 @dimforge/rapier2d-deterministic-compat 0.21.0 と 3D の three 0.160.1。three は UMD の build/three.min.js をそのまま入れて window.THREE）
-- `node tools/build.mjs [--artifact 出力.html]` → index.html（約3.1MB。ゲームのコードと CSS は esbuild で小さくする〔ないときはそのまま〕。物理の JS と wasm・three は gzip して base64 で入れ、ui/unpack.js がほどく＝ふつうは DecompressionStream、ない古いブラウザは中の gunzip。wasm は JS から window.__SUMO_WASM で渡す）。効果音 assets/sfx/*.mp3 は base64 で window.SUMO_SFX に入る。絵 assets/art/*.webp は base64 で絵ごとの script（`art-<名前>`）に入り、ui/art.js が使うときに1枚ずつ画像にする（画像にしたら script は消す）。`--artifact` は試しのページ用（head なし）
+- `node tools/build.mjs [--artifact 出力.html]` → index.html（約0.5MB＝コードと CSS〔esbuild で小さく〕・物理の JS と three.js〔gzip＋base64〕）と assets/（絵・効果音・wasm を `<名前>.<sha256の頭8字>.<拡張子>` で置く・いま使うものだけ残す・index.html の window.SUMO_ASSETS に名前 → パス）。--artifact は試しのページの中身と、Artifact の files に渡す一覧（<出力>.files.json）も書く
+- 確かめ：assets/ を fetch で読むので file:// では開けない。`python3 -m http.server 8123`（リポジトリで）→ http://127.0.0.1:8123/index.html。試しのページは Artifact の publish に files（files.json の中身・wasm は contentType application/wasm）と root（リポジトリ）をつける
 - `node tools/test.mjs` → だめな所だけ出して最後に「OK（指紋 ……）」
 - `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--write]` → 相性表（`--write` で docs/balance.md）
 - `node tools/bout-sheet.mjs <左id> <右id> [シード] [出力.svg] [--set key=value]` → 1番をこま割りの絵に（物理の調整用。`rsvg-convert` で png に）
@@ -26,7 +27,7 @@
 | data/auras.js | 気（オーラ）の種類と色。AURA_DEFAULT＝なし |
 | data/look.js | 演出の数字（旋回・カメラ・紙の厚み・スロー）。物理にさわらないので CONFIG_VERSION は上げない |
 | data/venue.js | 本場所の会場（見た目だけ）：番付ごとの数 VENUE（奥の観客 back・手前の観客 front・屋根 roof・垂れ幕 tare・提灯 lamp・懸賞旗 kensho・明かり light・金雲 kumo・紙吹雪 conf・ざわめき zawa・歓声 roar）と、置き場所・時間・色 VL（湧く・降りる・パッの秒は VL.t・ゆれ sway・ちり chiri〔chiri.from の番付から〕・金雲 kumo・紙吹雪 conf・座布団 zabuton・観客の席のくじ seatJitter・seatMid〔一番ごとに埋まる席・ずれ・絵をくじびき〕） |
-| data/kaijoart.js | 会場の Codex の絵（assets/art/kaijo-*）の部品の四角と合わせる所（tools/kaijo_cut.py が書く）。ない絵はコードの切り絵 |
+| data/kaijoart.js | 会場の Codex の絵（media/art/kaijo-*）の部品の四角と合わせる所（tools/kaijo_cut.py が書く）。ない絵はコードの切り絵 |
 | data/kimarite.js | 決まり手（取組の記録から決める・見た目だけ）。数字は KIMARITE |
 | geom/poly.js | 多角形の基本（面積・自己交差・帯で切る・反転） |
 | geom/stroke.js | 指の線 → 整数の輪郭（等間隔→なめらか→間引く→整数） |
@@ -80,14 +81,15 @@
 - 画面のカメラは土俵にくっつける（描くときの y＝物理の y − 土俵の上の面の y。土俵のトンで画面をゆらさない＝画面酔い対策）。画面のゆれ・フラッシュは入れない
 - 突進は2種類：hop（トンのたびに前へぴょこっと・ふだん）／push（足の踏ん張りに比例して押しつづける）
 
-## assets/
+## media/（もとの絵と音。ビルドが assets/ に名前の印つきで置く）
 - sfx/*.mp3：効果音10こ（koe-irai の sfx/ の7つ＋カットインの kin〔Oculus・CC BY＝クレジットに1行〕＋コードで作った don〔えらんだとき・決定のボタン＝choose.js の DON_VOL〕と shu〔画面の札が入る＝app.js の enter〕・作り直しは `python3 -I tools/sfx_synth.py`＋コードで作った fude〔名前を筆で書く・`python3 -I tools/fude_synth.py`〕・切る画面の線は pen（koe-irai）・出どころは docs/sounds.md）。本場所の会場の音6つ（zawa・doyo・kansei・pa はコード、hakushu・suton は koe-irai）は `python3 -I tools/kaijo_sfx.py --koe <koe-irai>`
 - art/*.webp：Codex の絵（福箱の箱・紐・開ける演出・紙質のテクスチャ）。一覧と出どころは docs/art.md。切り方 `python3 -I tools/art_cut.py <PNG> <型> <名前…>`（型：row3・himo・fx・tex）
 
 ## 自動で作るファイル（読まない）
-- index.html・docs/balance.md・node_modules/・package-lock.json
+- index.html・assets/（ビルドが作る・中身の印つきの名前）・docs/balance.md・node_modules/・package-lock.json
 
 ## 軽さの記録（code-rules C・CPU ×4 の headless Chrome・3回の中ほど）
+- 11/28 出口を index.html＋assets/ に（D）：index.html 5.63MB → 0.52MB・assets/ 110こ 5.35MB（絵 92・効果音 17・wasm 1）。2回目からは assets/ がキャッシュから読まれる
 - 11/26 福箱の絵（Codex 17枚）を足して index.html 1.84 → 2.51MB → 同じ日の軽量化で 2.28MB：絵を品質74〜76・すけ具合70で入れなおし、結び目・房・紐は描く大きさに合わせて小さく（490 → 316KB）・テクスチャは 448px 品質70。絵は1枚ずつの script（大きな JSON を読まない・画像にしたら消す）・decode してから描く・福箱は待ちの箱を先に、開ける演出の絵はあとから読む・福箱の canvas は細かさ2倍まで。開ける動き（CPU ×4）：1こま 約28 → 約20ms・固まり 2〜9回（最大110ms）→ 2回（最大70ms）・JS のメモリ 22 → 21MB
 - 11/26 紙質のテクスチャを13種ぜんぶに（10種・約0.15MB）→ index.html 2.45MB・気の粒の絵16（約83KB）→ 2.56MB
 - 中身の内わけ（2.28MB のとき）：物理の wasm 1.23MB・絵 0.42MB・ゲームのコード 0.26MB・three 0.22MB・効果音 0.07MB・物理の JS 0.05MB・CSS 0.04MB（wasm を別ファイルにするかは工房に入れる前に司令塔と相談）

@@ -1,7 +1,7 @@
 # 絵の一覧（sumo）
 
 決まりはネット副業プロジェクトの claude/game-art-rule.md（sumo は福箱まわり〔11/26〕と本場所の会場の部品〔11/27〕を Codex で描き下ろす例外。幕・提灯・垂れ幕の字は絵に焼きこまずコードで重ねる）。
-絵は assets/art/<名前>.webp（ビルドが index.html に入れ、ui/art.js が使うときに1枚ずつ画像にする）。
+絵は media/art/<名前>.webp（ビルドが index.html に入れ、ui/art.js が使うときに1枚ずつ画像にする）。
 もとの PNG は art-irai の art/ の枝に残っている（`git fetch origin art/sumo-<名前>` → `out/sumo/<名前>.png`）。切り方は tools/art_cut.py（11/26 の軽量化：箱・紐は `--q 76 --aq 70`、結び目は @0.8・房は @0.65・紐は @0.8、演出は `--q 74 --aq 70`、テクスチャは 448px `--q 70`。描く大きさは data/fukuart.js の size で決まるので、ファイルを小さくしても見た目の大きさは変わらない）。
 
 | 名前 | 何 | 区分 | 道具・作った日 | もと（art-irai） |

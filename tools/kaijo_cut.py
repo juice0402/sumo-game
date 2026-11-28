@@ -1,4 +1,4 @@
-# 本場所の会場の絵（Codex・art-irai の out/sumo/kaijo-*.png）を、緑を抜いて assets/art/kaijo-*.webp にし、
+# 本場所の会場の絵（Codex・art-irai の out/sumo/kaijo-*.png）を、緑を抜いて media/art/kaijo-*.webp にし、
 # 部品の四角と合わせる所を src/data/kaijoart.js に書く。
 #   python3 -I tools/kaijo_cut.py crowd <PNG> <名前> <key> [--scale 0.5]   … 観客のシート（1人ずつの四角を探す・シートは1枚のまま）
 #   python3 -I tools/kaijo_cut.py yane <PNG> [--scale 0.5]                 … 吊り屋根（幕の下のふちと幕の幅を探す）
@@ -29,8 +29,8 @@ def opt(name, default):
     return default
 
 def save(im, name, q=80, aq=70):
-    im.save(f'assets/art/{name}.webp', 'WEBP', quality=q, alpha_quality=aq, method=6)
-    print(f'assets/art/{name}.webp', im.size, os.path.getsize(f'assets/art/{name}.webp') // 1024, 'KB')
+    im.save(f'media/art/{name}.webp', 'WEBP', quality=q, alpha_quality=aq, method=6)
+    print(f'media/art/{name}.webp', im.size, os.path.getsize(f'media/art/{name}.webp') // 1024, 'KB')
 
 def write_entry(key, entry):
     s = open(ART_JS, encoding='utf-8').read()

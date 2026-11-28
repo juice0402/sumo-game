@@ -1,5 +1,5 @@
 // 福箱の絵（11/26・Codex＝A・art-irai の requests/sumo/fukubako-hako.md・fukubako-himo.md）の寸法。
-// 絵は assets/art/fuku-*.webp（tools/art_cut.py で切った）。数字は絵の上のピクセル（閉じた箱 fuku-box 593×643 が元）。
+// 絵は media/art/fuku-*.webp（tools/art_cut.py で切った）。数字は絵の上のピクセル（閉じた箱 fuku-box 593×643 が元）。
 // 紐は「まっすぐな紐」fuku-cord を、箱の面に沿った線の上に並べて描く（はしは箱の形で切るので、ふちまでぴったり届く）。
 export const FUKU_ART = {
   // 待っている箱に使う絵（先に読む）と、開ける演出の絵（あとから読む・requests/sumo/fukubako-fx.md・黒の地をすけさせた）

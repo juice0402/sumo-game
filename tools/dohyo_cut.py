@@ -1,4 +1,4 @@
-# 土俵スキンの絵（art-irai の art/sumo-dohyo-skin-* の PNG）を assets/art/*.webp にする（11/28）
+# 土俵スキンの絵（art-irai の art/sumo-dohyo-skin-* の PNG）を media/art/*.webp にする（11/28）
 #   上の面の1枚絵：python3 -I tools/dohyo_cut.py top <PNG> <名前> [--size 768] [--q 80]
 #     → 正方形に切って（はみ出たぶんは両はしを同じだけ切る）size にする
 #   横の面の帯：python3 -I tools/dohyo_cut.py strips <PNG> <名前1> <名前2> … [--w 1024] [--q 80] [--tile 1]
@@ -20,7 +20,7 @@ def greenish(a):
     return (g > 150) & (g - np.maximum(r, b) > 60)
 
 def save(im, name, q):
-    im.convert('RGB').save(f'assets/art/{name}.webp', 'WEBP', quality=q, method=6)
+    im.convert('RGB').save(f'media/art/{name}.webp', 'WEBP', quality=q, method=6)
     print(name, im.size)
 
 def top(path, name, size, q):
@@ -65,7 +65,7 @@ def band(path, name, W, q):
     out = np.dstack([np.full_like(al, 255)] * 3 + [al]).astype(np.uint8)
     b = Image.fromarray(out, 'RGBA'); b = b.resize((W, round(b.height * W / b.width)), Image.LANCZOS)
     b = wrap_seam(b)
-    b.save(f'assets/art/{name}.webp', 'WEBP', quality=q, alpha_quality=80, method=6); print(name, b.size)
+    b.save(f'media/art/{name}.webp', 'WEBP', quality=q, alpha_quality=80, method=6); print(name, b.size)
 
 def join_ends(band, ov=0.3):
     # 左半分は左はしから、右半分は右はしから、それぞれ続きのまま取り、まん中で重ねてつなぐ

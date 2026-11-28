@@ -1,5 +1,5 @@
 // 力士の紙質（11/26 しょーくん：福箱から出る・見た目だけ）。重さ・すべり・当たりは一切変わらない（物理は形だけを見る）。
-// 描くのは ui/papertex.js。tex があれば Codex のテクスチャ（A・assets/art/<tex>.webp・つなぎ目なし）をくり返して塗る（11/26・13種ぜんぶ）。
+// 描くのは ui/papertex.js。tex があれば Codex のテクスチャ（A・media/art/<tex>.webp・つなぎ目なし）をくり返して塗る（11/26・13種ぜんぶ）。
 //   ないときと、読みこむ前は、コードで描くもよう（C）。texSpan：テクスチャ1枚が紙の幅のどれだけか
 //   base：紙の色・fiber：和紙のすじの濃さ（1＝ふつう）・pat：もよう・ink：もようの色
 //   もよう：wara 藁のつぶ／asanoha 麻の葉／seigaiha 青海波／ichimatsu 市松／shinbun 新聞／suminagashi 墨流し／kira 雲母／kinpaku 金箔
