@@ -19,6 +19,7 @@ export function initHeya(cb) {
   pickOn('m-shobu', cb.onShobu);
   pickOn('m-rikishi', cb.onRoster);
   pickOn('m-fuku', cb.onFuku);   // 福箱（11/26）
+  pickOn('m-settei', cb.onSettei);   // 設定（11/28）。「帳面」（#28）はこの上に足す
   pickOn('mc-jungyo', cb.onJungyoMatch);
   pickOn('mc-honbasho', cb.onHonbasho);
   pickOn('mc-keiko', cb.onKeiko);

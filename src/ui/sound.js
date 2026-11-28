@@ -4,6 +4,7 @@ const MIN_GAP = 0.04; // 同じ音は40ms以内なら鳴らさない
 let ctx = null;
 let master = null;
 let muted = false;
+let gain = 1;   // 全体の大きさ（設定の音の大きさ・data/settings.js の VOL）
 let loading = false;
 const bufs = {};
 const lastAt = {};
@@ -27,7 +28,7 @@ export function unlockAudio() {
       if (!AC) return;
       ctx = new AC();
       master = ctx.createGain();
-      master.gain.value = muted ? 0 : 1;
+      master.gain.value = gain;
       master.connect(ctx.destination);
       // ほかのアプリへ行ったら音を止める（会場のざわめきが鳴りつづけないように・11/27）
       document.addEventListener('visibilitychange', () => {
@@ -123,9 +124,11 @@ export function loopSfx(name, opts) {
   return h;
 }
 
-export function setMuted(on) {
-  muted = !!on;
-  try { if (master) master.gain.value = muted ? 0 : 1; } catch (e) { /* 何もしない */ }
+// 全体の大きさ（0＝消す・鳴らさない）
+export function setVolume(v) {
+  gain = v > 0 ? Math.min(1, v) : 0;
+  muted = gain === 0;
+  try { if (master) master.gain.value = gain; } catch (e) { /* 何もしない */ }
 }
 
 export function isMuted() { return muted; }
