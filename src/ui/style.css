@@ -497,3 +497,24 @@ button{font:inherit;color:inherit;cursor:pointer}
 .screen.v .foot .note+.actions{margin-top:12px}
 .screen.v>.drive{padding-bottom:0}
 .screen.v>.drive .seg{margin-bottom:0}
+
+/* 設定（11/28・issue #27）：二重の罫の中に横の行（土俵巡業の予定と同じ形）。名前と切りかえは筆・えらんだ物は朱の帯（.seg）。
+   「権利表記」「データを消す」は字の下の筆の線（.ghost）・たしかめ中は朱の線 */
+#s-settei>.setlist{grid-column:1;grid-row:2;align-self:start}
+.setrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:10px;row-gap:2px;min-height:62px;padding:6px 2px;border-bottom:1px solid var(--line)}   /* せまい画面では切りかえを名前の下の行へ（右ぞろえ） */
+.setrow:last-child{border-bottom:0}
+.setrow>b{font-size:19px;letter-spacing:.06em;white-space:nowrap}
+.setrow .seg{margin:0 0 0 auto;gap:2px}
+.setrow .seg button,.setrow>.ghost{font-size:19px;letter-spacing:.06em;white-space:nowrap;color:var(--washi)}
+.setrow .seg button{padding:6px 12px;min-height:44px;color:var(--dim)}
+.setrow .seg button[aria-pressed=true]{color:var(--washi)}
+.setrow>.ghost{padding:8px 2px 14px}
+#st-wipe[aria-pressed=true]{color:#e9a097}
+#s-settei>.note{grid-row:3}
+/* 権利表記と全文（シート）。名前は筆・使う所とライセンスは小さなゴシック */
+.rtlist{border-top:5px double var(--washi2);margin-top:12px}
+.sheet .rtlist p{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.rtlist p b{font-size:19px;color:var(--washi);letter-spacing:.02em}
+.rtlist p span{color:var(--washi2);text-align:right}
+.sheet p.rtcred{margin:14px 0 10px;font-size:12px;line-height:1.7;color:var(--dim);white-space:pre-line;overflow-wrap:anywhere}
+.lic{margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font:500 11px/1.6 "Zen Kaku Gothic New",sans-serif;color:var(--washi2)}

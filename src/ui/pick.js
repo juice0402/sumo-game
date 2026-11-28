@@ -92,7 +92,7 @@ export function initPick({ getShape, getDrive, setDrive, onFight, onBack }) {
   allBtn.addEventListener('click', runAll);
   document.getElementById('b-back').addEventListener('click', () => { stop(); onBack(); });
 
-  const segs = [document.getElementById('drive-seg'), document.getElementById('drive-seg2')];
+  const segs = [document.getElementById('drive-seg'), document.getElementById('drive-seg2')].filter(Boolean);   // seg2 は道具の中（試しのページだけ）
   function syncSeg() {
     for (const seg of segs) for (const b of seg.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.d === getDrive()));
   }
