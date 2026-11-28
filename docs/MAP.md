@@ -7,7 +7,7 @@
 - `node tools/build.mjs [--artifact 出力.html]` → index.html（約0.5MB＝コードと CSS〔esbuild で小さく〕・物理の JS と three.js〔gzip＋base64〕）と assets/（絵・効果音・wasm を `<名前>.<sha256の頭8字>.<拡張子>` で置く・いま使うものだけ残す・index.html の window.SUMO_ASSETS に名前 → パス）。--artifact は試しのページの中身と、Artifact の files に渡す一覧（<出力>.files.json）も書く
 - 確かめ：assets/ を fetch で読むので file:// では開けない。`python3 -m http.server 8123`（リポジトリで）→ http://127.0.0.1:8123/index.html。試しのページは Artifact の publish に files（files.json の中身・wasm は contentType application/wasm）と root（リポジトリ）をつける
 - `node tools/test.mjs` → だめな所だけ出して最後に「OK（指紋 ……）」
-- `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--write]` → 相性表（`--write` で docs/balance.md）
+- `node tools/sim-table.mjs [--seeds 6] [--drive hop|push] [--random 5] [--set key=value] [--stage id] [--stages] [--write]` → 相性表（`--write` で docs/balance.md。`--stages` で土俵ごと＝3シード×左右の表と、標準より強くなる形・弱くなる形を足す）
 - `node tools/bout-sheet.mjs <左id> <右id> [シード] [出力.svg] [--set key=value]` → 1番をこま割りの絵に（物理の調整用。`rsvg-convert` で png に）
 
 ## src/
@@ -16,8 +16,8 @@
 | data/config.js | まだ決まっていない数字ぜんぶ（紙・点検・物理・相性表）。変えたら CONFIG_VERSION を上げる |
 | data/cpu-shapes.js | CPU の形5つ（釣鐘・タコ・くさび・フック・振り子）＋お手本の人の形 OTEHON（CPU には入れない）。紙の座標 300×420・y 下向き・右が正面 |
 | data/text.js | 画面の文字（翻訳はここに足す）・決まり手の名前・クレジット |
-| data/dohyo.js | 土俵の見た目（1つの土俵＝1項目：紙の箱・氷の箱・激震の箱＋福箱の土俵スキン7つ＝本場所で使う。項目を足せば別の土俵）。スキンは top.img・side.img に Codex の絵（ui/papertex.js の loadPaperTextures がタイトルの間に読む → stage3d の上の面・横の面と fuku.js の小さな見本が使う） |
-| data/stages.js | 土俵の種類＝物理の上書き（標準・氷・激震）＋本場所の土俵＋土俵巡業（2時間ごと・2つ・24時間先まで）。スキンは dohyo.js、物理は ここ |
+| data/dohyo.js | 土俵の見た目（1つの土俵＝1項目：紙の箱・氷の箱・激震の箱＋福箱の土俵スキン7つ＝本場所で使う。項目を足せば別の土俵）。スキンは top.img・side.img に Codex の絵（ui/papertex.js の loadPaperTextures がタイトルの間に読む → stage3d の上の面・横の面と fuku.js の小さな見本が使う）。巡業の土俵の絵はタイトルでは読まず、勝負の画面・巡業の見本・力士選出（bout.warm の2つめ）で loadDohyoTextures |
+| data/stages.js | 土俵の種類＝物理の上書き（標準＋巡業の特殊土俵11：氷・激震・月・重石・ばね・ぬかるみ・小刻み・大うねり・押し・疾風・狭小。11/28 夜 #19）＋本場所の土俵＋土俵巡業（2時間ごと・2つ・24時間先まで）。スキンは dohyo.js、物理は ここ。狭小は ringHalf・tawara・startX も変える＝箱・輪・カメラ（stage3d の setDohyo(look, phys)・look.js の viewFollow）と見本（fuku.js の drawDohyoSwatch の3つめ）もその数で。phys だけなら CONFIG_VERSION は上げない |
 | data/shikona.js | 四股名の語（上の句・つなぎ・下の句・「id:字」）。はじめから持っている語 SHIKONA_START（かけだしの上の句5・山 川 海 里 富士・つなぎ全部）・相手に使わないなかま SHIKONA_FOE_SKIP。実在の四股名になる字は入れない（test の NG で確かめる） |
 | data/titles.js | 称号（「id:字」・27こ）と手に入れ方：はじめから TITLE_START・実績 TITLE_ACH（12こ・説明と数字 TITLE_NUM・番付 TITLE_RANK）・のこり14こは福箱（data/fukubako.js の FUKU_TIERS.title） |
 | data/banzuke.js | 番付の帯とレート（仮：1500 で序ノ口・100 ごと・2400 で横綱・Elo K=32） |

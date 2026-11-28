@@ -4,7 +4,7 @@ import { COL, rand, fiberPattern, polyPath, inkStroke } from './ink.js';
 import { paperFill, patternFill, texImage } from './papertex.js';
 import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
 import { LOOK } from '../data/look.js';
-import { PAPER } from '../data/config.js';
+import { PAPER, PHYS } from '../data/config.js';
 import { buildVenue, venueArtCount } from './venue.js';
 import { VL } from '../data/venue.js';
 
@@ -110,7 +110,8 @@ function paperCanvas(ol, dark, P, box, paper) {
   return c;
 }
 
-export function createStage(cv, P) {
+export function createStage(cv, P0) {
+  let P = P0;   // 土俵の大きさ（物理の数）。setDohyo(id, phys) で土俵ごとに変わる（狭小土俵・11/28 夜 #19）
   const THREE = window.THREE;
   if (!THREE) return null;
   let renderer;
@@ -153,8 +154,9 @@ export function createStage(cv, P) {
   const dohyoRes = [];
   const keepD = (o) => { dohyoRes.push(o); return o; };
 
-  // 土俵（項目を読むだけ。見た目の項目を足せば別の土俵になる）
-  function setDohyo(id) {
+  // 土俵（項目を読むだけ。見た目の項目を足せば別の土俵になる）。phys＝その取組の物理の数（箱・輪・床・カメラ・会場の大きさもこれで作る）
+  function setDohyo(id, phys) {
+    if (phys) P = phys;
     if (dohyo) { scene.remove(dohyo, dohyo.userData.floor); }   // 床も外す（残すと箱の横の面をかくす）
     for (const o of dohyoRes.splice(0)) o.dispose();             // 前の土俵の絵と形をすてる（土俵を切りかえても重くならない）
     const d = DOHYO[id] || DOHYO[DOHYO_DEFAULT];
@@ -265,7 +267,9 @@ export function createStage(cv, P) {
     }
     camera.aspect = cssW / cssH;
     const tv = Math.tan((LOOK.fov * D2R) / 2), th = tv * camera.aspect;
-    base = Math.max(LOOK.viewHalfW / th, LOOK.viewHalfH / tv);
+    // 横に入れる幅は土俵の幅についていく（狭小土俵は寄る・LOOK.viewFollow）。高さは力士の大きさなので同じ
+    const hw = LOOK.viewHalfW + (P.ringHalf - PHYS.ringHalf) * LOOK.viewFollow;
+    base = Math.max(hw / th, LOOK.viewHalfH / tv);
     camera.updateProjectionMatrix();
     if (scene.fog) { scene.fog.near = base * 0.9; scene.fog.far = base * 2.2; }
     layoutVenue();
@@ -310,6 +314,7 @@ export function createStage(cv, P) {
   return {
     setDohyo, setVenue, venueTime, venueTick, venueCheer, venueCues, projectTo, warm, setFighters, setFrame, resize, view, project, render,
     get ry() { return ry; },
+    get phys() { return P; },
     look: () => dohyo.userData.look,
   };
 }

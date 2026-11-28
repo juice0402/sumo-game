@@ -39,6 +39,63 @@ export const DOHYO = {
     side: { img: 'dohyo-gekishin-side', tile: true, paper: '#bba887', line: '#201E1B', inset: 0.05, layer: '#7c6a4b', text: '#201E1B' },
     edge: '#201E1B', floor: '#2e2620', bg: '#221b17', tonMark: '#EEE9DE',
   },
+  // 11/28 夜 #19：巡業の特殊土俵9つ（data/stages.js の tsuki〜kyosho）。絵は Codex（media/art/dohyo-<キー>-top・-side）。
+  // 色（paper など）は絵を読む前・絵がないときの代わりで、絵となじむくすんだ色。暗い絵の上は輪と仕切り線を和紙の色に
+  tsuki: {
+    name: '月の箱',
+    top: { img: 'dohyo-tsuki-top', paper: '#D3D8DE', fiber: 0.3, ring: '#201E1B', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { img: 'dohyo-tsuki-side', tile: true, paper: '#9a9a9c', line: '#201E1B', inset: 0.05, layer: '#6e6e72', text: '#201E1B' },
+    edge: '#201E1B', floor: '#20232a', bg: '#181b22', tonMark: '#E4E8EE',
+  },
+  omoishi: {
+    name: '重石の箱',
+    top: { img: 'dohyo-omoishi-top', paper: '#56585a', fiber: 0.2, ring: '#EEE9DE', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, shikiriInk: '#EEE9DE' },
+    side: { img: 'dohyo-omoishi-side', tile: true, paper: '#5b5e63', line: '#201E1B', inset: 0.05, layer: '#3e4044', text: '#EEE9DE' },
+    edge: '#201E1B', floor: '#242526', bg: '#1b1c1d', tonMark: '#EEE9DE',
+  },
+  bane: {
+    name: 'ばねの箱',
+    top: { img: 'dohyo-bane-top', paper: '#EAD7AE', fiber: 0.5, ring: '#AB392F', ringW: 0.055, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { img: 'dohyo-bane-side', tile: true, paper: '#8e2a22', line: '#201E1B', inset: 0.05, layer: '#5e1914', text: '#EEE9DE' },
+    edge: '#201E1B', floor: '#2b2220', bg: '#221a18', tonMark: '#EEE9DE',
+  },
+  nukarumi: {
+    name: 'ぬかるみの箱',
+    top: { img: 'dohyo-nukarumi-top', paper: '#6a5040', fiber: 0.3, ring: '#EEE9DE', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, shikiriInk: '#EEE9DE' },
+    side: { img: 'dohyo-nukarumi-side', tile: true, paper: '#6b4630', line: '#201E1B', inset: 0.05, layer: '#47301f', text: '#EEE9DE' },
+    edge: '#201E1B', floor: '#2a221c', bg: '#201914', tonMark: '#EEE9DE',
+  },
+  kokizami: {
+    name: '小刻みの箱',
+    top: { img: 'dohyo-kokizami-top', paper: '#DDAE68', fiber: 0.5, ring: '#201E1B', ringW: 0.055, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { img: 'dohyo-kokizami-side', tile: true, paper: '#a17a45', line: '#201E1B', inset: 0.05, layer: '#715329', text: '#201E1B' },
+    edge: '#201E1B', floor: '#2c2519', bg: '#231d13', tonMark: '#EEE9DE',
+  },
+  oouneri: {
+    name: '大うねりの箱',
+    top: { img: 'dohyo-oouneri-top', paper: '#5b819f', fiber: 0.3, ring: '#EEE9DE', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, shikiriInk: '#EEE9DE' },
+    side: { img: 'dohyo-oouneri-side', tile: true, paper: '#41637f', line: '#201E1B', inset: 0.05, layer: '#2c4459', text: '#EEE9DE' },
+    edge: '#201E1B', floor: '#1d2329', bg: '#161b20', tonMark: '#EEE9DE',
+  },
+  oshi: {
+    name: '押しの箱',
+    top: { img: 'dohyo-oshi-top', paper: '#84482a', fiber: 0.3, ring: '#EEE9DE', ringW: 0.06, shikiri: 0.2, shikiriLen: 0.34, shikiriInk: '#EEE9DE' },
+    side: { img: 'dohyo-oshi-side', tile: true, paper: '#664330', line: '#201E1B', inset: 0.05, layer: '#442b1d', text: '#EEE9DE' },
+    edge: '#201E1B', floor: '#2a201b', bg: '#211814', tonMark: '#EEE9DE',
+  },
+  hayate: {
+    name: '疾風の箱',
+    top: { img: 'dohyo-hayate-top', paper: '#E1EAD3', fiber: 0.45, ring: '#201E1B', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { img: 'dohyo-hayate-side', tile: true, paper: '#c4ceae', line: '#201E1B', inset: 0.05, layer: '#919b7b', text: '#201E1B' },
+    edge: '#201E1B', floor: '#22261f', bg: '#1b1e18', tonMark: '#EEE9DE',
+  },
+  // 狭小：箱・輪・カメラの大きさは物理（stages.js の ringHalf・tawara）から作る＝ここは色だけ
+  kyosho: {
+    name: '狭小の箱',
+    top: { img: 'dohyo-kyosho-top', paper: '#EFCF9E', fiber: 0.4, ring: '#201E1B', ringW: 0.06, shikiri: 0.15, shikiriLen: 0.28 },
+    side: { img: 'dohyo-kyosho-side', tile: true, paper: '#d9b47c', line: '#201E1B', inset: 0.05, layer: '#a8834f', text: '#201E1B' },
+    edge: '#201E1B', floor: '#2b251d', bg: '#211c16', tonMark: '#EEE9DE',
+  },
 };
 
 // ---- 土俵スキン（11/26：福箱から出る・本場所で使える・見た目だけ）。top.pat は ui/papertex.js のもよう ----

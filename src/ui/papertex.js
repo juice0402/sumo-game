@@ -3,13 +3,25 @@
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
 import { artImage } from './art.js';
 import { DOHYO } from '../data/dohyo.js';
+import { STAGES, HONBASHO_STAGE } from '../data/stages.js';
 
 // テクスチャ（名前 → 画像）。はじめに loadPaperTextures で読む（タイトルの間に読み終わる）
 const TEX = {};
+// 巡業の特殊土俵の絵（12の土俵）はタイトルでは読まず、巡業の土俵を見せるときに loadDohyoTextures で読む（11/28 夜 #19・起動を軽く）
+const JUNGYO_LOOKS = new Set(Object.keys(STAGES).filter((id) => id !== HONBASHO_STAGE).map((id) => STAGES[id].look));
+const loading = {};
+function loadTex(id) {
+  if (!loading[id]) loading[id] = artImage(id).then((im) => { TEX[id] = im; }).catch(() => {});
+  return loading[id];
+}
 export function loadPaperTextures() {
   // 紙質のテクスチャ＋土俵スキンの絵（上の面の1枚絵・横の面の帯＝data/dohyo.js の top.img・side.img）
-  const ids = [...new Set([...Object.values(PAPERS).map((p) => p.tex), ...Object.values(DOHYO).flatMap((d) => [d.top.img, d.side.img])].filter(Boolean))];
-  return Promise.all(ids.map((id) => artImage(id).then((im) => { TEX[id] = im; }).catch(() => {})));
+  const ids = [...new Set([...Object.values(PAPERS).map((p) => p.tex), ...Object.entries(DOHYO).filter(([k]) => !JUNGYO_LOOKS.has(k)).flatMap(([, d]) => [d.top.img, d.side.img])].filter(Boolean))];
+  return Promise.all(ids.map(loadTex));
+}
+// 土俵の絵を読む（looks＝data/dohyo.js の key の並び）。読み終わったら resolve（読めない絵はコードの紙のまま）
+export function loadDohyoTextures(looks) {
+  return Promise.all(looks.flatMap((k) => (DOHYO[k] ? [DOHYO[k].top.img, DOHYO[k].side.img] : [])).filter(Boolean).map(loadTex));
 }
 // 読みこんだ絵（まだなら null＝コードの紙で描く）
 export function texImage(id) { return (id && TEX[id]) || null; }

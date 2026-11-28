@@ -11,6 +11,8 @@ import { createFx } from './fx.js';
 import { playSfx, loopSfx } from './sound.js';
 import { VENUE, VL } from '../data/venue.js';
 import { PHYS } from '../data/config.js';
+import { DOHYO } from '../data/dohyo.js';
+import { texImage, loadDohyoTextures } from './papertex.js';
 import { makeFoe } from '../game/foe.js';
 import { createAura } from './aura.js';
 import { drawShapeThumb } from './pick.js';
@@ -118,13 +120,16 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   //        onResult(結果, 決まり手)→ひとこと か { text, titles（新しく手に入れた称号の字） },
   //        look（土俵スキン・本場所）, papers・auras（[a, b] の紙質と気・見た目だけ）,
   //        venue（本場所の会場の飾り＝番付の順 0〜9・なしは -1） }
+  // 作ってある土俵の箱の印：見た目の id と大きさ（物理の数）
+  const lookKey = (look, P) => `${look}:${P.ringHalf}:${P.ringDepth}:${P.tawara}:${DOHYO[look] && texImage(DOHYO[look].top.img) ? 1 : 0}`;   // 絵が届いたら作りなおす
+
   function start(me, foe, seed, opt = {}) {
     stop();
     resEl.hidden = true;
     gainEl.hidden = true;
     const S = STAGES[opt.stage] || STAGES.hyojun;
     const bout = createBout({ a: me, b: foe.pts, seed, phys: Object.assign({ drive: getDrive() }, S.phys), record: true });
-    if (!stage) { stage = createStage(gl, bout.phys); curLook = 'kami'; }
+    if (!stage) { stage = createStage(gl, bout.phys); curLook = null; }
     if (!stage) {
       bout.free();
       const el = document.getElementById('err');
@@ -133,7 +138,14 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       return;
     }
     const look = opt.look || S.look;   // 本場所は、えらんだ土俵スキン（見た目だけ・物理は S.phys のまま）
-    if (curLook !== look) { stage.setDohyo(look); curLook = look; }
+    const key = lookKey(look, bout.phys);   // 土俵の大きさ（狭小土俵）が変わったときも作りなおす
+    if (curLook !== key) { stage.setDohyo(look, bout.phys); curLook = key; }
+    if (!key.endsWith(':1') && DOHYO[look] && DOHYO[look].top.img) {   // 巡業の土俵の絵がまだ届いていない（すぐ取組に来たとき）：届いたら箱だけ貼りかえる
+      loadDohyoTextures([look]).then(() => {
+        const k2 = lookKey(look, bout.phys);
+        if (st && st.bout === bout && curLook !== k2) { stage.setDohyo(look, bout.phys); curLook = k2; }
+      });
+    }
     stage.setVenue(typeof opt.venue === 'number' ? opt.venue : -1);   // 本場所の会場の飾り（番付で増える・見た目だけ）
     const a = opt.a || { name: T.you }, b = opt.b || { name: foe.name };
     setName(document.getElementById('n-a'), a);
@@ -470,10 +482,18 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
 
   // 3D の用意を先に（11/27 読みこみの最適化）：タイトルや番付表を見ているあいだに、3D の板・シェーダー・テクスチャ
   // （本場所は会場も＝lv）を作って GPU へ送っておく。はじめての取組の出だしがカクッとしない。取組の中ではしない。
-  // 土俵の大きさは土俵の種類で変わらないので、ふつうの物理の数で作ってよい（start も1回目の数で作ったものを使いつづける）
-  function warm(lv = -1) {
+  // stageId（巡業の力士選出のとき・抽選ずみの土俵）を渡すと、その土俵の絵と大きさ（狭小土俵）で先に作っておく（11/28 夜 #19）
+  function warm(lv = -1, stageId = null) {
     if (st || !window.THREE) return;
-    if (!stage) { stage = createStage(gl, Object.assign({}, PHYS)); curLook = 'kami'; if (!stage) return; }
+    if (!stage) { stage = createStage(gl, Object.assign({}, PHYS)); curLook = lookKey('kami', PHYS); if (!stage) return; }
+    if (stageId && STAGES[stageId]) {   // 絵を読んでから作る（まだなら読み終わってからもう一度）
+      const S = STAGES[stageId];
+      loadDohyoTextures([S.look]).then(() => {
+        if (st || !stage) return;
+        const P = Object.assign({}, PHYS, S.phys), key = lookKey(S.look, P);
+        if (curLook !== key) { stage.setDohyo(S.look, P); curLook = key; stage.warm(); }
+      });
+    }
     if (lv >= 0) stage.setVenue(lv);
     stage.warm();
     warmPhys();
