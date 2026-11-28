@@ -38,6 +38,8 @@ export function initJungyo() {
       const cur = document.getElementById('jg-now');
       cur.textContent = '';
       for (const id of list[0].stages) cur.appendChild(stageCard(id, true));
+      // 2つの土俵の名前と説明は同じ大きさに（長い名前の土俵がふえた・11/28 夜 #19「統一感」）
+      sameSize(cur.querySelectorAll('.stagecard b')); sameSize(cur.querySelectorAll('.stagecard span'));
       const box = document.getElementById('jg-list');
       box.textContent = '';
       for (const s of list.slice(1)) {
