@@ -15,7 +15,7 @@
 | data/config.js | まだ決まっていない数字ぜんぶ（紙・点検・物理・相性表）。変えたら CONFIG_VERSION を上げる |
 | data/cpu-shapes.js | CPU の形5つ（釣鐘・タコ・くさび・フック・振り子）＋お手本の人の形 OTEHON（CPU には入れない）。紙の座標 300×420・y 下向き・右が正面 |
 | data/text.js | 画面の文字（翻訳はここに足す）・決まり手の名前・クレジット |
-| data/dohyo.js | 土俵の見た目（1つの土俵＝1項目：紙の箱・氷の箱・激震の箱＋福箱の土俵スキン7つ＝本場所で使う。項目を足せば別の土俵） |
+| data/dohyo.js | 土俵の見た目（1つの土俵＝1項目：紙の箱・氷の箱・激震の箱＋福箱の土俵スキン7つ＝本場所で使う。項目を足せば別の土俵）。スキンは top.img・side.img に Codex の絵（ui/papertex.js の loadPaperTextures がタイトルの間に読む → stage3d の上の面・横の面と fuku.js の小さな見本が使う） |
 | data/stages.js | 土俵の種類＝物理の上書き（標準・氷・激震）＋本場所の土俵＋土俵巡業（2時間ごと・2つ・24時間先まで）。スキンは dohyo.js、物理は ここ |
 | data/shikona.js | 四股名の語（上の句・つなぎ・下の句・「id:字」）。はじめから持っている語 SHIKONA_START（かけだしの上の句5・山 川 海 里 富士・つなぎ全部）・相手に使わないなかま SHIKONA_FOE_SKIP。実在の四股名になる字は入れない（test の NG で確かめる） |
 | data/titles.js | 称号（「id:字」・27こ）と手に入れ方：はじめから TITLE_START・実績 TITLE_ACH（12こ・説明と数字 TITLE_NUM・番付 TITLE_RANK）・のこり14こは福箱（data/fukubako.js の FUKU_TIERS.title） |

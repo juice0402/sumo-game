@@ -2,13 +2,17 @@
 // 紙質に tex があれば Codex のテクスチャ（A）を、なければ・読みこむ前はコードで描くもよう（C）。物理にはさわらない（見た目だけ）。
 import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
 import { artImage } from './art.js';
+import { DOHYO } from '../data/dohyo.js';
 
 // テクスチャ（名前 → 画像）。はじめに loadPaperTextures で読む（タイトルの間に読み終わる）
 const TEX = {};
 export function loadPaperTextures() {
-  const ids = [...new Set(Object.values(PAPERS).map((p) => p.tex).filter(Boolean))];
+  // 紙質のテクスチャ＋土俵スキンの絵（上の面の1枚絵・横の面の帯＝data/dohyo.js の top.img・side.img）
+  const ids = [...new Set([...Object.values(PAPERS).map((p) => p.tex), ...Object.values(DOHYO).flatMap((d) => [d.top.img, d.side.img])].filter(Boolean))];
   return Promise.all(ids.map((id) => artImage(id).then((im) => { TEX[id] = im; }).catch(() => {})));
 }
+// 読みこんだ絵（まだなら null＝コードの紙で描く）
+export function texImage(id) { return (id && TEX[id]) || null; }
 
 // 見た目用の乱数（ink.js と同じ形。ink.js がこのファイルを読むので、ここでは自分で持つ）
 function rand(seed) {
