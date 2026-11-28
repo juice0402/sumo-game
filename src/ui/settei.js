@@ -89,6 +89,6 @@ export function initSettei(c) {
 
   return {
     show() { paintVol(); paintShort(); resetWipe(); },
-    close() { rights.hidden = true; lic.hidden = true; resetWipe(); },
+    close() { rights.hidden = true; lic.hidden = true; resetWipe(); applyVol(); },   // データを消したあとも呼ぶ（音の大きさをいまの state に）
   };
 }
