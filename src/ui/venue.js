@@ -250,13 +250,31 @@ export function buildVenue(THREE, lv) {
     const n = figs.length, pos = new Float32Array(n * 12), uv = new Float32Array(n * 8), col = new Float32Array(n * 12), idx = [];
     const t = k(new THREE.CanvasTexture(atlas.img)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     figs.forEach((f, i) => {
-      const [rx, ry, rw, rh] = atlas.rects[f.pick % atlas.rects.length];
-      f.u0 = rx / atlas.w; f.u1 = (rx + rw) / atlas.w; f.v0 = 1 - (ry + rh) / atlas.h; f.v1 = 1 - ry / atlas.h;
-      if (f.flip) [f.u0, f.u1] = [f.u1, f.u0];
-      f.w = (f.h * rw) / rh;
       for (let j = 0; j < 4; j++) col.set([f.shade, f.shade, f.shade], i * 12 + j * 3);
       idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
     });
+    // 11/28 しょーくん「観客の出現場所をある程度ランダムに」：一番ごとに、埋まる席・横のずれ・絵・湧く順をくじびき（席の数と段は番付のまま）
+    const shuffle = () => {
+      const rr = rand((Math.random() * 1e9) | 0), J = VL.seatJitter;
+      for (const f of figs) {
+        const w = f.row;
+        f.on = rr() < w.fill;
+        f.x = f.bx + (rr() - 0.5) * w.step * J;
+        f.z = f.bz + (rr() - 0.5) * 0.06;
+        f.pick = Math.floor(rr() * 99); f.flip = rr() < 0.5;
+        f.t0 = w.t0 + w.i * 0.1 + rr() * Math.max(0.05, w.t1 - w.t0 - VL.t.rise - w.i * 0.1);
+        const [rx, ry, rw, rh] = atlas.rects[f.pick % atlas.rects.length];
+        f.u0 = rx / atlas.w; f.u1 = (rx + rw) / atlas.w; f.v0 = 1 - (ry + rh) / atlas.h; f.v1 = 1 - ry / atlas.h;
+        if (f.flip) [f.u0, f.u1] = [f.u1, f.u0];
+        f.w = (f.h * rw) / rh;
+      }
+      // スマホの幅でも、だれもいない段にならないよう、まん中のあたりに1人は座らせる（埋まる割合が 0 でない段だけ）
+      for (const row of rows) {
+        const mid = figs.filter((f) => f.row === row && Math.abs(f.bx) < VL.seatMid);
+        if (row.fill > 0 && mid.length && !mid.some((f) => f.on)) mid[Math.floor(rr() * mid.length)].on = true;
+      }
+    };
+    shuffle();
     const geo = k(new THREE.BufferGeometry());
     const pa = new THREE.BufferAttribute(pos, 3), ua = new THREE.BufferAttribute(uv, 2);
     pa.setUsage(THREE.DynamicDrawUsage); ua.setUsage(THREE.DynamicDrawUsage);
@@ -287,8 +305,8 @@ export function buildVenue(THREE, lv) {
       let rising = false;
       for (let i = 0; i < n; i++) {
         const f = figs[i];
-        const a = clamp01((tt - f.t0) / VL.t.rise), p = 1 - (1 - a) ** 3, hop = a >= 1 ? 0 : Math.sin(Math.PI * a) * 0.04;
-        if (a < 1) rising = true;
+        const a = f.on ? clamp01((tt - f.t0) / VL.t.rise) : 0, p = 1 - (1 - a) ** 3, hop = a >= 1 ? 0 : Math.sin(Math.PI * a) * 0.04;
+        if (f.on && a < 1) rising = true;
         if (p > 0) motion(f); else lift = lean = 0;
         const x0 = f.x - f.w / 2, x1 = f.x + f.w / 2, y0 = f.y + hop, y1 = f.y + f.h * p + hop + lift * p, z = f.z, xl = lean * p, o = i * 12;
         pos[o] = x0; pos[o + 1] = y0; pos[o + 2] = z; pos[o + 3] = x1; pos[o + 4] = y0; pos[o + 5] = z;
@@ -303,7 +321,7 @@ export function buildVenue(THREE, lv) {
     };
     timers.push((tt) => {
       cur = Math.min(tt, 99);
-      if (cur < last) uvDone = false;   // 次の一番（旋回のはじめから湧きなおす）
+      if (cur < last) { uvDone = false; shuffle(); }   // 次の一番（旋回のはじめから湧きなおす・席はくじびきしなおす）
       if (cur === last) return;
       if (last >= 99 && cur >= 99) return;
       place(cur);
@@ -315,12 +333,11 @@ export function buildVenue(THREE, lv) {
     const rows = [];
     for (let i = 0; i < count; i++) {
       const figs = [];
+      // 席はぜんぶ作っておき、だれが座るかは crowd の shuffle が一番ごとに決める
       for (let x = -span + (i % 2 ? step / 2 : 0); x <= span; x += step) {
-        if (r() >= fill) continue;
-        figs.push({ x: x + (r() - 0.5) * step * 0.25, y: ys[i], z: zs[i] + (r() - 0.5) * 0.06, h: h * (0.94 + r() * 0.12), pick: Math.floor(r() * 99), flip: r() < 0.5,
-          shade: shades[i] * (0.92 + r() * 0.08), t0: t0 + i * 0.1 + r() * Math.max(0.05, t1 - t0 - VL.t.rise - i * 0.1) });
+        figs.push({ bx: x, y: ys[i], bz: zs[i], h: h * (0.94 + r() * 0.12), shade: shades[i] * (0.92 + r() * 0.08) });
       }
-      rows.push({ figs });
+      rows.push({ figs, fill, step, t0, t1, i });
     }
     return rows;
   };
@@ -498,8 +515,8 @@ export function buildVenue(THREE, lv) {
   }
 
   // ---- 光の中のちり：明かりがパッとついたあと、土俵の上の光の中を、紙の小さなかけらがゆっくり落ちる ----
-  {
-    const C = VL.chiri, n = Math.round(C.n * (0.5 + (0.5 * lv) / 9)), pos = new Float32Array(n * 3), dots = [];
+  if (lv >= VL.chiri.from) {
+    const C = VL.chiri, n = Math.round(C.n * (0.5 + (0.5 * (lv - C.from)) / Math.max(1, 9 - C.from))), pos = new Float32Array(n * 3), dots = [];
     for (let i = 0; i < n; i++) {
       const y = C.y[0] + r() * (C.y[1] - C.y[0]), half = 0.45 + (C.y[1] + 0.3 - y) * 0.38;
       dots.push({ x: (r() * 2 - 1) * half, y, z: -0.7 + r() * 1.9, ph: r() * TAU, sp: 0.3 + r() * 0.5, fall: C.fall * (0.6 + r() * 0.8) });
