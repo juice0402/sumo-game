@@ -2,10 +2,34 @@
 // 位置は「描く座標」（土俵の上の面が y=0・z=0 の面）で持ち、毎こま stage.project で画面に写す。
 import { COL, rand, setupCanvas } from './ink.js';
 import { LOOK } from '../data/look.js';
+import { artImage } from './art.js';
+
+const VIS = 0.42;   // トンの筆の線の、土俵のふちより内にかぶせる割合（線の長さに対して）
+const TON_IDS = ['fx-ton1', 'fx-ton2', 'fx-ton3', 'fx-ton4', 'fx-ton5', 'fx-ton6'];
+let tonImgs = [], tonLoading = false, tonTried = -1e9;
+const tonTint = {};
+function loadTon() {   // はじめて使うときに読む（読めなかったら次にまたためす）
+  const now = performance.now();
+  if (tonImgs.length || tonLoading || now - tonTried < 3000) return;
+  tonLoading = true; tonTried = now;
+  Promise.all(TON_IDS.map((id) => artImage(id).catch(() => null))).then((a) => { tonImgs = a.filter(Boolean); tonLoading = false; }).catch(() => { tonLoading = false; });
+}
+function tinted(i, color) {   // 白の筆の絵に色をつけたもの（色ごとに1回だけ作る）
+  const key = i + color;
+  if (tonTint[key]) return tonTint[key];
+  const im = tonImgs[i], c = document.createElement('canvas');
+  c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d');
+  g.drawImage(im, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = color; g.fillRect(0, 0, c.width, c.height);
+  return (tonTint[key] = c);
+}
 
 export function createFx(cv) {
   let lay = null;
   let drops = [], bursts = [];
+  let tonPick = 0, tonPrev = 0;
 
   function resize() { lay = setupCanvas(cv, LOOK.maxDpr); }   // 3D と同じ細かさまで（それより細かくても見えず、毎こま重い）
 
@@ -64,8 +88,28 @@ export function createFx(cv) {
   }
 
   // トンの合図：土俵の両わきの短い線（カメラは土俵についているので、ゆれのかわりに見せる）
+  // トンの線：Codex の筆の払い（fx-ton1〜6・白の絵＝明るさがすけ具合）に色をつけて、土俵の両わきに出す（左は反転）。
+  // 絵がない・読む前は、下のコードの3本線
   function tonMarks(ctx, stage, P, k, color) {
+    loadTon();
+    const up = k > 0.05 && tonPrev <= 0.05;
+    tonPrev = k;
     if (k <= 0.05) return;
+    if (tonImgs.length) {
+      if (up) tonPick = (tonPick + 1) % tonImgs.length;   // トンのたびに形をかえる
+      const s = lay.dpr;
+      for (const [x, dir, j] of [[-P.ringHalf, -1, (tonPick + 3) % tonImgs.length], [P.ringHalf, 1, tonPick]]) {
+        const a = stage.project(x, -P.ringDepth * 0.08, P.ringHalf), b = stage.project(x, -P.ringDepth * 0.8, P.ringHalf);
+        const im = tinted(j, color), h = Math.abs(b[1] - a[1]) * s * (0.8 + 0.35 * k), w = (h * im.width) / im.height;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, 0.95 * k);
+        ctx.translate(a[0] * s - dir * w * VIS, ((a[1] + b[1]) / 2) * s);   // 筆の入りを土俵のふちにかぶせる（縦長の画面では土俵が横いっぱいなので、外だけだと見えない）
+        ctx.scale(dir, 1);
+        ctx.drawImage(im, 0, -h / 2, w, h);
+        ctx.restore();
+      }
+      return;
+    }
     const s = lay.dpr;
     ctx.strokeStyle = color;
     ctx.globalAlpha = 0.5 * k;

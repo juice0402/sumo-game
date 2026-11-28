@@ -58,7 +58,10 @@ function sideCanvas(d, P) {
   const g = c.getContext('2d');
   const k = w / (2 * P.ringHalf);
   const img = texImage(d.side.img);
-  if (img) {   // 土俵スキンの横の面の帯（Codex・11/28）。帯の縦横が合わないときは、まん中を切り出して貼る
+  if (img && d.side.tile) {   // 特殊土俵の横の面の帯（Codex・横にくり返してつながる）：高さを合わせて、まん中から左右へ並べる（土俵の幅が変わってもゆがまない）
+    const tw = img.width * (h / img.height), n = Math.ceil(w / tw / 2) * 2 + 1, x0 = w / 2 - (n * tw) / 2;
+    for (let i = 0; i < n; i++) g.drawImage(img, x0 + i * tw, 0, tw, h);
+  } else if (img) {   // 土俵スキンの横の面の帯（Codex・11/28）。帯の縦横が合わないときは、まん中を切り出して貼る
     const s = Math.max(w / img.width, h / img.height), sw = w / s, sh = h / s;
     g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
   } else {

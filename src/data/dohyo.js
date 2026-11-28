@@ -24,18 +24,19 @@ export const DOHYO = {
     bg: '#201E1B',           // うしろ
     tonMark: '#EEE9DE',      // トンの合図の線
   },
+  // 特殊土俵（巡業・物理が変わる）：11/28〜 top.img＝上の面の1枚絵・side.img＝横にくり返す帯（side.tile）＝Codex。月・重石なども同じ形で（絵 assets/art/dohyo-<キー>-top・-side）
   // 氷の土俵（data/stages.js の kori）：つめたい白の和紙・青みの厚紙
   kori: {
     name: '氷の箱',
-    top: { paper: '#E4EBEB', fiber: 0.3, ring: '#201E1B', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34 },
-    side: { paper: '#b4c2c4', line: '#201E1B', inset: 0.05, layer: '#7a8d91', text: '#201E1B' },
+    top: { img: 'dohyo-kori-top', paper: '#E4EBEB', fiber: 0.3, ring: '#201E1B', ringW: 0.05, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { img: 'dohyo-kori-side', tile: true, paper: '#b4c2c4', line: '#201E1B', inset: 0.05, layer: '#7a8d91', text: '#201E1B' },
     edge: '#201E1B', floor: '#242a2d', bg: '#1b2023', tonMark: '#E4EBEB',
   },
   // 激震の土俵（data/stages.js の gekishin）：朱の輪・焼けた色の厚紙
   gekishin: {
     name: '激震の箱',
-    top: { paper: '#E9E0CD', fiber: 0.65, ring: '#AB392F', ringW: 0.07, shikiri: 0.2, shikiriLen: 0.34 },
-    side: { paper: '#bba887', line: '#201E1B', inset: 0.05, layer: '#7c6a4b', text: '#201E1B' },
+    top: { img: 'dohyo-gekishin-top', paper: '#E9E0CD', fiber: 0.65, ring: '#AB392F', ringW: 0.07, shikiri: 0.2, shikiriLen: 0.34 },
+    side: { img: 'dohyo-gekishin-side', tile: true, paper: '#bba887', line: '#201E1B', inset: 0.05, layer: '#7c6a4b', text: '#201E1B' },
     edge: '#201E1B', floor: '#2e2620', bg: '#221b17', tonMark: '#EEE9DE',
   },
 };
