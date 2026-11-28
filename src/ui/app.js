@@ -183,7 +183,12 @@ function boot() {
     match = { mode, stage };
     if (fresh) go('s-select'); else show('s-select');
   }
-  onShow['s-select'] = () => select.show({
+  onShow['s-select'] = () => {
+    // 巡業は抽選ずみの土俵の箱（絵と大きさ）を、えらんでいるあいだに先に作っておく（11/28 夜 #19）
+    if (match.mode === 'jungyo') loadLibs().then(() => bout.warm(-1, match.stage), () => {});
+    showSelect();
+  };
+  const showSelect = () => select.show({
     mode: match.mode, stage: match.stage, drawn: match.mode === 'jungyo', slots: state.slots, active: state.active,
     // 勝敗とレートは部屋（ユーザー）のもの：本場所は番付・レート・本場所の勝敗、巡業は巡業の勝敗（11/26 しょーくん）
     rec: match.mode === 'honbasho' ? `${T.rateLine(rankOf(state.rate).name, state.rate)}　${T.rec(state.hon)}` : T.rec(state.jun),

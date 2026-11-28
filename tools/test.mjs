@@ -12,6 +12,8 @@ import { BENCH } from '../src/sim/bench.js';
 import { SHIKONA, SHIKONA_START, SHIKONA_FOE_SKIP } from '../src/data/shikona.js';
 import { TITLES } from '../src/data/titles.js';
 import { STAGES, JUNGYO, HONBASHO_STAGE } from '../src/data/stages.js';
+import { PHYS } from '../src/data/config.js';
+import { existsSync } from 'node:fs';
 import { DOHYO } from '../src/data/dohyo.js';
 import { BANZUKE } from '../src/data/banzuke.js';
 import { randomShikona, validShikona, shikonaText, ownedWords, isWord } from '../src/game/names.js';
@@ -111,6 +113,14 @@ for (const k of SHIKONA.kami) for (const t of SHIKONA.tsunagi) for (const s2 of 
 for (const id in STAGES) ok(!!DOHYO[STAGES[id].look], `土俵の見た目がない: ${id}`);
 ok(Object.keys(STAGES[HONBASHO_STAGE].phys).length === 0, '本場所の土俵に物理の上書きがある');
 for (const id of JUNGYO.pool) ok(!!STAGES[id], `巡業の土俵がない: ${id}`);
+ok(new Set(JUNGYO.pool).size === JUNGYO.pool.length, '巡業の土俵がかぶっている');
+// 土俵の大きさ（狭小土俵など）：開始位置 < 俵 < 土俵のはし・絵の名前があれば media/art にある（11/28 夜 #19）
+for (const id in STAGES) {
+  const P = Object.assign({}, PHYS, STAGES[id].phys);
+  ok(P.startX > 0 && P.startX < P.tawara && P.tawara < P.ringHalf, `土俵の大きさがおかしい: ${id}`);
+  const d = DOHYO[STAGES[id].look];
+  for (const im of [d.top.img, d.side.img]) if (im) ok(existsSync(new URL(`../media/art/${im}.webp`, import.meta.url)), `土俵の絵がない: ${im}`);
+}
 const sch = schedule(Date.UTC(2026, 10, 25, 7));
 ok(sch.length === JUNGYO.ahead && sch.every((x) => x.stages.length === 2 && x.stages[0] !== x.stages[1]), '巡業の予定が2つずつでない');
 ok(JSON.stringify(stagesOf(123456)) === JSON.stringify(stagesOf(123456)), '巡業の予定が同じ時刻でちがう');
