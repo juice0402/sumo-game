@@ -4,6 +4,7 @@ import { COL, rand, setupCanvas } from './ink.js';
 import { LOOK } from '../data/look.js';
 import { artImage } from './art.js';
 
+const VIS = 0.42;   // トンの筆の線の、土俵のふちより内にかぶせる割合（線の長さに対して）
 const TON_IDS = ['fx-ton1', 'fx-ton2', 'fx-ton3', 'fx-ton4', 'fx-ton5', 'fx-ton6'];
 let tonImgs = [], tonLoading = false, tonTried = -1e9;
 const tonTint = {};
@@ -102,7 +103,7 @@ export function createFx(cv) {
         const im = tinted(j, color), h = Math.abs(b[1] - a[1]) * s * (0.8 + 0.35 * k), w = (h * im.width) / im.height;
         ctx.save();
         ctx.globalAlpha = Math.min(1, 0.95 * k);
-        ctx.translate(a[0] * s + dir * 4 * s, ((a[1] + b[1]) / 2) * s);
+        ctx.translate(a[0] * s - dir * w * VIS, ((a[1] + b[1]) / 2) * s);   // 筆の入りを土俵のふちにかぶせる（縦長の画面では土俵が横いっぱいなので、外だけだと見えない）
         ctx.scale(dir, 1);
         ctx.drawImage(im, 0, -h / 2, w, h);
         ctx.restore();

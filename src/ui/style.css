@@ -323,7 +323,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .vs-lines{position:absolute;top:0;bottom:0;left:0;width:200%}
 .vs-lines svg{display:block;width:100%;height:100%}
 .vs-lines line{stroke:var(--washi);vector-effect:non-scaling-stroke}
-.vs-lines.art{background-repeat:repeat-x;background-size:50% 100%;opacity:var(--vs-speed,.32)}   /* Codex の筆のスピード線（2まいで1周＝-50% 動いてつながる） */
+.vs-lines.art{background-repeat:repeat;background-size:50% auto;opacity:var(--vs-speed,.24)}   /* Codex の筆のスピード線（2まいで1周＝-50% 動いてつながる） */
 .vs-a .vs-lines{animation:vsRunR .42s linear infinite}
 .vs-b .vs-lines{animation:vsRunL .42s linear infinite}
 @keyframes vsRunR{from{transform:translateX(-50%)}to{transform:none}}

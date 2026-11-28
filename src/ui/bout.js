@@ -51,8 +51,10 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     }
     el.innerHTML = `<svg viewBox="0 0 200 100" preserveAspectRatio="none">${lines}</svg>`;
   }
-  // Codex の筆のスピード線（fx-speed・横にくり返してつながる白の帯・11/28）があれば、和紙の色をつけて SVG の線とかえる
-  artImage('fx-speed').then((im) => {
+  // Codex の筆のスピード線（fx-speed・横にくり返してつながる白の帯・11/28）があれば、和紙の色をつけて SVG の線とかえる。
+  // カットインを出すときに読む（はじめに読むと、絵がまだページにないことがある）
+  let speedArt = false;
+  const loadSpeedArt = () => { if (speedArt) return; speedArt = true; artImage('fx-speed').then((im) => {
     const c = document.createElement('canvas'), g = c.getContext('2d');
     c.width = im.width; c.height = im.height;
     g.drawImage(im, 0, 0);
@@ -64,7 +66,9 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
       const url = URL.createObjectURL(b);
       for (const el of vsEl.querySelectorAll('.vs-lines')) { el.innerHTML = ''; el.style.backgroundImage = `url(${url})`; el.classList.add('art'); }
     });
-  }).catch(() => {});
+  }).catch(() => { speedArt = false; }); };
+  if (document.readyState === 'complete') setTimeout(loadSpeedArt, 0);   // ページを読み終わってから先に用意（はじめてのカットインに間に合うように）
+  else window.addEventListener('load', () => setTimeout(loadSpeedArt, 0), { once: true });
   const fx = createFx(cv);
   let stage = null, st = null, raf = 0, curLook = null;
   const btn = (id) => document.getElementById(id);
@@ -216,6 +220,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     s.vsIn = true;
     vsEl.classList.remove('out');
     // 絵は動きを止めた形の大きさで描く（傾けたまま測ると、まわりの四角が大きくなって絵がのびる）→ 動きをはじめる
+    loadSpeedArt();
     vsEl.classList.add('in', 'measure');
     if (vsEl._draw) vsEl._draw();
     vsFit();

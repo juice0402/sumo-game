@@ -46,6 +46,8 @@ def strips(path, names, W, q):
         bw, bh = band.size; H = W // 4
         if TILE:   # くり返す帯：縦横はそのまま
             band = band.resize((round(bw * H / bh), H), Image.LANCZOS)
+            cw = round(W / 0.94)   # 長すぎる帯は W ぶんだけ使う（つなぎ目は wrap_seam で消す＝軽くする）
+            if band.width > cw: x0 = (band.width - cw) // 2; band = band.crop((x0, 0, x0 + cw, H))
             save(wrap_seam(band), name, q); continue
         if bw / bh > 4.5: band = join_ends(band)   # 細長すぎる帯は、左右のはし（かざり）をそのまま残し、まん中をつめて 4:1 に
         save(band.resize((W, H), Image.LANCZOS), name, q)
