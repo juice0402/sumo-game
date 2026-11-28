@@ -277,7 +277,7 @@ export function initCut({ onDecide }) {
     cv.setPointerCapture(e.pointerId);
     raw = [toPaper(e)]; pred = []; outline = null; check = null; fallT = -1;
     drawing = true; near = false;
-    playSfx('fude', { vol: 0.45 });
+    playSfx('pen', { vol: 0.45 });   // 切る線はペンの音（筆の音 fude は名前を書くとき）
     okBtn.disabled = true;
     checks.hidden = true;
     setHint(T.cutDrawing);
