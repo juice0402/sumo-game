@@ -22,6 +22,8 @@ import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
 import { choose, DON_VOL } from './choose.js';
 import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo, shownItems } from '../game/fukubako.js';
 import { afterBout } from '../game/titles.js';
+import { logEntry, addLog } from '../game/log.js';
+import { initChomen } from './chomen.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
 import { loadPaperTextures } from './papertex.js';
@@ -44,6 +46,14 @@ const who = (s) => ({ name: shikonaText(s.shikona), sub: titleText(s.title) });
 // 取組のあと：実績の称号（11/26 しょーくん「C」）。新しく手に入れた称号の字を返す
 function titlesAfter(mode, r, kima, foeId) {
   return afterBout(state, { mode, winner: r.winner, kima, foeId, hour: new Date().getHours() }).map(titleText);
+}
+
+// 帳面の取組記録（#28）：終わった取組を、リプレイに要る物といっしょに残す。opt は bout.start にわたした物・info は { seed, drive }
+function logBout(mode, me, foe, opt, r, kima, info) {
+  addLog(state, logEntry({
+    mode, stage: opt.stage, look: opt.look, venue: opt.venue, upset: opt.cheer && opt.cheer.upset, drive: info && info.drive, seed: info && info.seed,
+    me: me.shape, foe: foe.pts, a: opt.a, b: opt.b, papers: opt.papers, auras: opt.auras, winner: r.winner, kind: r.kind, kima,
+  }));
 }
 
 // 画面の行き来（もどるボタンは1つ前へ）
@@ -154,7 +164,7 @@ function boot() {
       bout.start(me.shape, foe, state.seed++, {
         mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura],
         // 稽古は戦績・小判なし。称号（研究熱心など）だけ
-        onResult(r, kima) { const t = titlesAfter('keiko', r, kima, foe.id); save(); return { text: '', titles: t }; },
+        onResult(r, kima, info) { const t = titlesAfter('keiko', r, kima, foe.id); logBout('keiko', me, foe, this, r, kima, info); save(); return { text: '', titles: t }; },
       });
     },
     onBack: back,
@@ -212,7 +222,8 @@ function boot() {
       venue: m.mode === 'honbasho' ? venueLv() : -1,
       // 決着の演出（11/27）：番付が上の相手に勝てば座布団が舞う（upset＝番付の差）。道具の「いつも見る」では勝ち負けによらず
       cheer: { upset: rankIdx(foe.rate) - rankIdx(state.rate), test: !!state.cheerTest },
-      onResult(r, kima) {
+      onResult(r, kima, info) {
+        logBout(m.mode, me, foe, this, r, kima, info);
         addRec(me.rec, r.winner);
         // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
         const kb = kobanFor(state, r.winner, todayKey());
@@ -246,8 +257,30 @@ function boot() {
     onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
     onKeiko() { pick.resetMarks(); go('s-pick'); },
     onFuku() { go('s-fuku'); },
+    onChomen() { go('s-chomen'); },
     onSettei() { go('s-settei'); },
   });
+
+  // 帳面（#28）：取組記録（押すとリプレイ）・実績・図鑑。リプレイは保存した物から同じ取組を作りなおして見せるだけ（記録にさわらない）
+  const chomen = initChomen({
+    getState: () => state,
+    getOwned: () => shownItems(state),
+    onReplay(e) {
+      // 物理（と本場所は会場の絵）を読んでから
+      Promise.all([loadLibs(), e.mode === 'honbasho' ? loadVenueArt() : null]).then(() => replay(e), () => {});
+    },
+  });
+  function replay(e) {
+      show('s-bout');
+      bout.start(e.a.pts, { pts: e.b.pts, name: e.b.name }, e.seed, {
+        mode: e.mode, stage: e.stage, look: e.look, venue: e.venue, drive: e.drive, replay: true, homeLabel: T.toChomen,
+        a: { name: e.a.name, sub: e.a.sub, rank: e.a.rank }, b: { name: e.b.name, sub: e.b.sub, rank: e.b.rank },
+        papers: e.pa, auras: e.au, cheer: { upset: e.up, test: false },
+        onResult: () => ({ text: T.replayLine(T.logWhen(e.t)) }),
+        onHome() { show('s-chomen'); },
+      });
+  }
+  onShow['s-chomen'] = () => chomen.show();
 
   // 設定（11/28・issue #27）：音の大きさ・演出を短く・権利表記・データを消す
   const settei = initSettei({

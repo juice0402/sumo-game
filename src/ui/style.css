@@ -513,3 +513,43 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rtlist p span{color:var(--washi2);text-align:right}
 .sheet p.rtcred{margin:14px 0 10px;font-size:12px;line-height:1.7;color:var(--dim);white-space:pre-line;overflow-wrap:anywhere}
 .lic{margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font:500 11px/1.6 "Zen Kaku Gothic New",sans-serif;color:var(--washi2)}
+
+/* 帳面（#28・ui/chomen.js）：上に切りかえ（力士の編集と同じ字の下の筆の線）、二重の罫の中は番付表の列を右から（横にすべらせる）。
+   列の中は、右に金の小さい字｜まん中に名前（筆）｜左に説明（ゴシック）。ならんだ名前は同じ大きさ（sameSize） */
+#s-chomen{grid-template-rows:auto auto minmax(0,1fr) auto}
+#s-chomen>.hero{container-type:normal;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding-top:8px}
+#ch-tabs{gap:18px}
+.chkinds{gap:4px}
+.chkinds button{font-size:13px;letter-spacing:.12em;padding:4px 6px 10px;min-height:36px}
+.chlist.cols{display:grid;grid-auto-flow:column;grid-auto-columns:var(--cw,64px);grid-template-rows:repeat(var(--rows,1),minmax(0,1fr));direction:rtl;height:auto;min-height:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none}
+.chlist::-webkit-scrollbar{display:none}
+.chlist.r2{--rows:2}
+.chlist>*{direction:ltr;flex-direction:column;align-items:flex-start;gap:4px;padding:28px 0 12px}
+.chlist>*:last-child{border-left:1px solid var(--line)}
+.chlist.r2>*:nth-child(odd){border-bottom:1px solid var(--line)}
+.chlist.r2>*{padding:16px 0 8px}
+.chlist small{font-size:12px;line-height:1.3;letter-spacing:.08em;color:var(--kin);white-space:nowrap}
+.chlist span:not(.mid):not(.sw){font-size:13px;line-height:1.3;letter-spacing:.06em;color:var(--washi2);white-space:nowrap}
+.chlist em{font-style:normal;font-size:11px;line-height:1.3;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chlist .mid{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:0;height:100%}
+.chlist b{--max:26px;--room:calc(100cqh - 46px)}
+.chlist .hanko{flex:none;font-size:15px;padding:4px 2px;border-width:2px;transform:rotate(-6deg)}
+.chlist .hanko.win{background:var(--shu);border-color:var(--shu);color:var(--washi)}
+.chlist .hanko.lose{color:var(--washi2)}
+.chlist .hanko.draw{color:var(--kin)}
+.chlog{--cw:84px}
+.chlog .old{color:var(--dim)}
+.chlog .old b,.chlog .old .hanko{opacity:.55}
+.chempty{grid-column:1/-1;width:auto;align-items:center!important;justify-content:center}
+.chach{--cw:62px}
+.chlist .not b{color:var(--dim);letter-spacing:.2em;--n:3!important}
+.chzk{--cw:58px}
+.chzk .mid b{--room:calc(100cqh - 96px)}
+.zk-title .mid b,.zk-word .mid b{--room:calc(100cqh - 40px)}
+.zk-word{--cw:46px}
+.zk-title{--cw:68px}
+.chlist .sw{position:relative;flex:none;margin-top:auto;width:44px;height:52px;writing-mode:horizontal-tb}
+.chlist .sw canvas{position:absolute;inset:0;width:100%;height:100%}
+.zk-dohyo .sw{width:50px;height:36px}
+.chlist>.chosen::before{inset:0}
+.screen.enter .chlist>:nth-child(n+8){animation:none}

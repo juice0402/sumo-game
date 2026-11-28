@@ -102,6 +102,20 @@ export const T = {
   ],
   licenseLoading: '読みこんでいます…',
   licenseNg: '読みこめませんでした',
+  // 帳面（#28・ui/chomen.js）。切りかえの字は page.html
+  chNote: { log: '押すと、もう一度見られる', ach: '称号は見た目だけ・強さは変わらない', zukan: '見た目は福箱から出る・強さは変わらない' },
+  logNone: 'まだ取組がない',
+  logOld: '前の版の取組は見られない',   // 保存したときと物理の版がちがう（再生のボタンは出さない）
+  logVs: (name) => `対 ${name}`,
+  logWhen: (t) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; },
+  toChomen: '帳面へ',   // リプレイの結果のボタン
+  replayLine: (when) => `帳面の取組　${when}`,   // リプレイの結果のひとこと（小判・番付は動かない）
+  achGot: '手に入れた',
+  achNow: (n, of) => `いま ${n}／${of}`,
+  achRank: (name) => `いま ${name}`,
+  zkStart: 'はじめから',
+  zkFuku: '福箱から出る',
+  zkBout: '取組で手に入る',
   fpSame: 'パソコンと同じ',
   fpDiff: 'パソコンとちがう',
   fpRef: (fp) => `パソコン：${fp}`,

@@ -38,3 +38,13 @@ export function afterBout(state, c) {
   }
   return got;
 }
+
+// 帳面の実績（#28）：まだの称号の、いまの進み。{ n, of }（数で進むもの）・{ rank }（番付で手に入るもの＝いまの番付の名前）・null（1回で決まるもの）
+export function achProgress(state, id) {
+  if (id === 'ti_fudo') return { n: Math.min(state.streak | 0, TITLE_NUM.streak), of: TITLE_NUM.streak };
+  if (id === 'ti_nikoniko') return { n: Math.min(state.hon.l + state.jun.l, TITLE_NUM.loses), of: TITLE_NUM.loses };
+  if (id === 'ti_kenkyu') return { n: CPU_SHAPES.filter((s) => state.keikoWon.includes(s.id)).length, of: CPU_SHAPES.length };
+  if (id === 'ti_ippitsu') return { n: state.slots.filter(Boolean).length, of: state.slots.length };
+  if (TITLE_RANK[id]) { let r = BANZUKE[0]; for (const b of BANZUKE) if (state.rate >= b.min) r = b; return { rank: r.name }; }
+  return null;
+}

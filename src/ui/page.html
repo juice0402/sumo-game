@@ -23,7 +23,7 @@
       <button id="m-shobu" class="seal" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 19L19 5M5 5l14 14"/></svg><span class="lbl">勝負</span></button>
       <button id="m-rikishi" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M7.8 16L16 4M16.2 16L8 4"/></svg><span class="lbl">力士をつくる</span></button>
       <button id="m-fuku" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16v11H4zM3 6h18v3H3zM12 6v14"/><path d="M12 6c-2-3-6-3-6 0M12 6c2-3 6-3 6 0"/></svg><span class="lbl">福箱</span></button>
-      <!-- 「帳面」はここ（福箱と設定のあいだ）に足す（#28） -->
+      <button id="m-chomen" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6zM6 3v18"/><path d="M10 8h5M10 12h5"/></svg><span class="lbl">帳面</span></button>
       <button id="m-settei" class="seal sub" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor"/><circle cx="15" cy="12" r="2.2" fill="currentColor"/><circle cx="7" cy="17" r="2.2" fill="currentColor"/></svg><span class="lbl">設定</span></button>
     </nav>
   </section>
@@ -95,6 +95,17 @@
     <div class="hero dyhero"><canvas id="dy-cv"></canvas><div class="who"><small>いまの土俵</small><b class="brush fit" id="dy-name"></b></div></div>
     <div class="dylist frame2 cols" id="dy-list"></div>
     <p class="note">本場所で使う土俵の見た目・強さは変わらない</p>
+  </section>
+
+  <!-- 帳面（#28・ui/chomen.js）：取組記録（押すとリプレイ）・実績・図鑑。切りかえは力士の編集と同じ字の下の筆の線。中は番付表の列（右から・横にすべらせる） -->
+  <section id="s-chomen" class="screen v" hidden>
+    <header class="bar"><button class="round back" type="button" aria-label="もどる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 class="brush">帳面</h1></header>
+    <div class="hero chhero">
+      <div class="rl-tabs" id="ch-tabs"><button type="button" data-t="log" aria-pressed="true">取組記録</button><button type="button" data-t="ach" aria-pressed="false">実績</button><button type="button" data-t="zukan" aria-pressed="false">図鑑</button></div>
+      <div class="rl-tabs chkinds" id="ch-kinds" hidden><button type="button" data-k="paper" aria-pressed="true">紙質</button><button type="button" data-k="aura" aria-pressed="false">気</button><button type="button" data-k="dohyo" aria-pressed="false">土俵</button><button type="button" data-k="title" aria-pressed="false">称号</button><button type="button" data-k="word" aria-pressed="false">四股名</button></div>
+    </div>
+    <div class="chlist frame2" id="ch-list"></div>
+    <p class="note" id="ch-note"></p>
   </section>
 
   <!-- 設定（11/28・issue #27）：音の大きさ・演出を短く・権利表記・データを消す（ui/settei.js） -->

@@ -4,3 +4,5 @@ export const VOL = [0, 0.5, 1];
 export const VOL_DEFAULT = 2;
 // データを消す：押してから次を押すまで待つ秒（すぎたら最初の字にもどる）
 export const WIPE_WAIT = 4;
+// 帳面の取組記録（#28）：のこす取組の数（古いものから消える・保存が重すぎるときは 20 に）
+export const LOG_MAX = 30;
