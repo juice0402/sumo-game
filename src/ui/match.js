@@ -10,16 +10,15 @@ import { renderSlots, headText, fitText, setN, sameSize } from './roster.js';
 
 function hhmm(ms) { const d = new Date(ms); return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; }
 
-// 土俵の小さな見本（上の面の和紙と輪・横の厚紙の色）＋名前
+// 土俵の小さな見本（土俵の絵）＋名前
 function stageCard(id, big) {
-  const S = STAGES[id], d = DOHYO[S.look];
+  const S = STAGES[id];
   const el = document.createElement('div');
   el.className = 'stagecard' + (big ? ' big' : '');
-  el.innerHTML = '<i class="sw"><i></i></i><b class="brush"></b><span></span>';
+  // 土俵の見本は、土俵えらび・福箱と同じ絵の見本（Codex の上の面と横の帯・11/28 しょーくん「開催中の土俵のアイコンが新しいテクスチャになってない」）
+  el.innerHTML = '<canvas class="sw"></canvas><b class="brush"></b><span></span>';
   const sw = el.querySelector('.sw');
-  sw.style.setProperty('--top', d.top.paper);
-  sw.style.setProperty('--ring', d.top.ring);
-  sw.style.setProperty('--side', d.side.paper);
+  requestAnimationFrame(() => drawDohyoSwatch(sw, S.look));   // 画面に入って大きさが決まってから描く
   fitText(el.querySelector('b'), S.name);
   el.querySelector('span').textContent = S.note;
   setN(el.querySelector('span'));

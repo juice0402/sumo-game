@@ -4,7 +4,10 @@ import { COL, rand, setupCanvas } from './ink.js';
 import { LOOK } from '../data/look.js';
 import { artImage } from './art.js';
 
-const VIS = 0.42;   // トンの筆の線の、土俵のふちより内にかぶせる割合（線の長さに対して）
+// トンの筆の線（11/28 夜 しょーくん「主張が激しすぎてちょっとチカチカ」→ うすく・小さく・形は一番のあいだかえない）
+const VIS = 0.3;          // 土俵のふちより内にかぶせる割合（線の長さに対して）
+const TON_ALPHA = 0.5;    // いちばん強いトンのときのこさ
+const TON_SIZE = [0.55, 0.2];   // 大きさ：土俵の横の面の高さ ×（[0] ＋ [1] × トンの強さ）
 const TON_IDS = ['fx-ton1', 'fx-ton2', 'fx-ton3', 'fx-ton4', 'fx-ton5', 'fx-ton6'];
 let tonImgs = [], tonLoading = false, tonTried = -1e9;
 const tonTint = {};
@@ -29,7 +32,7 @@ function tinted(i, color) {   // 白の筆の絵に色をつけたもの（色�
 export function createFx(cv) {
   let lay = null;
   let drops = [], bursts = [];
-  let tonPick = 0, tonPrev = 0;
+  let tonPick = -1;
 
   function resize() { lay = setupCanvas(cv, LOOK.maxDpr); }   // 3D と同じ細かさまで（それより細かくても見えず、毎こま重い）
 
@@ -55,7 +58,7 @@ export function createFx(cv) {
     bursts = bursts.filter((b) => b.t < LOOK.burstSec);
   }
 
-  function clear() { drops = []; bursts = []; }
+  function clear() { drops = []; bursts = []; tonPick = -1; }   // 一番ごとにトンの線の形をえらびなおす
   const busy = () => drops.length > 0 || bursts.length > 0;
 
   // はじまり：和紙の画面を、大きな墨の筆が左から右へ横切る（通ったあとに土俵が見える）。p は 0〜1
@@ -92,17 +95,15 @@ export function createFx(cv) {
   // 絵がない・読む前は、下のコードの3本線
   function tonMarks(ctx, stage, P, k, color) {
     loadTon();
-    const up = k > 0.05 && tonPrev <= 0.05;
-    tonPrev = k;
     if (k <= 0.05) return;
     if (tonImgs.length) {
-      if (up) tonPick = (tonPick + 1) % tonImgs.length;   // トンのたびに形をかえる
+      if (tonPick < 0) tonPick = Math.floor(Math.random() * tonImgs.length);   // 形は一番ごとに1つ（トンのたびにかえるとチカチカする）
       const s = lay.dpr;
       for (const [x, dir, j] of [[-P.ringHalf, -1, (tonPick + 3) % tonImgs.length], [P.ringHalf, 1, tonPick]]) {
         const a = stage.project(x, -P.ringDepth * 0.08, P.ringHalf), b = stage.project(x, -P.ringDepth * 0.8, P.ringHalf);
-        const im = tinted(j, color), h = Math.abs(b[1] - a[1]) * s * (0.8 + 0.35 * k), w = (h * im.width) / im.height;
+        const im = tinted(j, color), h = Math.abs(b[1] - a[1]) * s * (TON_SIZE[0] + TON_SIZE[1] * k), w = (h * im.width) / im.height;
         ctx.save();
-        ctx.globalAlpha = Math.min(1, 0.95 * k);
+        ctx.globalAlpha = TON_ALPHA * k * k;   // 弱いトンはほとんど出さない
         ctx.translate(a[0] * s - dir * w * VIS, ((a[1] + b[1]) / 2) * s);   // 筆の入りを土俵のふちにかぶせる（縦長の画面では土俵が横いっぱいなので、外だけだと見えない）
         ctx.scale(dir, 1);
         ctx.drawImage(im, 0, -h / 2, w, h);
