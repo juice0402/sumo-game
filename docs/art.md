@@ -15,6 +15,7 @@
 
 | ki-petal1〜3・ki-conf-shu・ki-conf-ai・ki-conf-kin・ki-conf-midori・ki-conf-kinari | 気の粒：桜の花びら3つ・和紙の紙吹雪5色（緑の地を抜いた・`grid --cols 4`） | A | Codex・2026-11-26 | requests/sumo/ki-1.md（枝 art/sumo-ki-1） |
 | ki-ember1・ki-ember2・ki-bolt1・ki-bolt2・ki-wind1・ki-wind2・ki-steam | 気の粒：火の粉2つ・筆の稲妻2つ・疾風の筆の筋2つ・湯気（金の粉 ki-gold は糸のように見えたので使わず、金の気は福箱のきらめきで）（黒の地を明るさですけさせた・`fx --cols 4`） | A | Codex・2026-11-26 | requests/sumo/ki-2.md（枝 art/sumo-ki-2） |
+| dohyo-<名前>-top・dohyo-<名前>-side（名前＝ai・wakakusa・sakura・yuyake・urushi・suminagashi・kinbyobu） | 福箱の土俵スキン7つ：上の面の1枚絵（真上から・輪と仕切り線はコードで重ねる・768px）と横の面の帯（4:1・1024×256。細長く来た帯は左右のはしをそのまま残してまん中でつないだ） | A | Codex・2026-11-28 | requests/sumo/dohyo-skin-1.md（藍・若草・桜・夕焼け・枝 art/sumo-dohyo-skin-1）・dohyo-skin-2.md（漆・墨流し・金屏風・枝 art/sumo-dohyo-skin-2）。切り方は `python3 -I tools/dohyo_cut.py top|strips …` |
 | kaijo-kankyaku | 本場所の会場：観客（前から）12人のシート（シートのまま・1人ずつの四角は src/data/kaijoart.js・`tools/kaijo_cut.py crowd`・半分の大きさ） | A | Codex・2026-11-27 | requests/sumo/kaijo-kankyaku.md（枝 art/sumo-kaijo-kankyaku） |
 | kaijo-yane | 本場所の会場：吊り屋根（正面）と紫の幕・四房（`tools/kaijo_cut.py yane`＝幕の上下のふちと幅を測る・半分の大きさ） | A | Codex・2026-11-27 | requests/sumo/kaijo-yane.md（枝 art/sumo-kaijo-yane） |
 | kaijo-ushiro | 本場所の会場：観客（うしろ姿）12人のシート（手前の列・`tools/kaijo_cut.py crowd … --dilate 2`＝となりとくっつかないように） | A | Codex・2026-11-27 | requests/sumo/kaijo-ushiro.md（枝 art/sumo-kaijo-ushiro） |

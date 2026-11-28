@@ -41,8 +41,19 @@ def strips(path, names, W, q):
         rows2 = ~(greenish(b[:, x0:x1]).mean(axis=1) > 0.3); ys = np.where(rows2)[0]
         band = im.crop((x0 + 2, y0 + ys[0] + 2, x1 - 2, y0 + ys[-1] - 1))   # ふちのにじみを2px切る
         bw, bh = band.size; H = W // 4
-        # 縦横が 4:1 でなくても切らずに縮める（かざりは帯の左右のはしにあるので、切ると消える）
+        if bw / bh > 4.5: band = join_ends(band)   # 細長すぎる帯は、左右のはし（かざり）をそのまま残し、まん中をつめて 4:1 に
         save(band.resize((W, H), Image.LANCZOS), name, q)
+
+def join_ends(band, ov=0.3):
+    # 左半分は左はしから、右半分は右はしから、それぞれ続きのまま取り、まん中で重ねてつなぐ
+    # （帯は左右がほぼ対称なので、まん中で色がそろう。はしとまん中の間にすじが出ない）
+    a = np.asarray(band).astype(np.float32); h, w = a.shape[:2]
+    half, o = 2 * h, int(h * ov)
+    L, R = a[:, :half + o], a[:, w - half - o:]
+    r = np.linspace(1, 0, 2 * o)[None, :, None]
+    mid = L[:, half - o:] * r + R[:, :2 * o] * (1 - r)
+    out = np.concatenate([L[:, :half - o], mid, R[:, 2 * o:]], axis=1)
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
 if __name__ == '__main__':
     size, W, q = opt('--size', 768), opt('--w', 1024), opt('--q', 80)
