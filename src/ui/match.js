@@ -2,7 +2,9 @@
 import { T } from '../data/text.js';
 import { STAGES } from '../data/stages.js';
 import { DOHYO } from '../data/dohyo.js';
+import { PHYS } from '../data/config.js';
 import { drawDohyoSwatch } from './fuku.js';
+import { loadDohyoTextures, texImage } from './papertex.js';
 import { BANZUKE } from '../data/banzuke.js';
 import { schedule, slotLeftMin } from '../game/jungyo.js';
 import { rankOf, nextRank } from '../game/rating.js';
@@ -18,7 +20,9 @@ function stageCard(id, big) {
   // 土俵の見本は、土俵えらび・福箱と同じ絵の見本（Codex の上の面と横の帯・11/28 しょーくん「開催中の土俵のアイコンが新しいテクスチャになってない」）
   el.innerHTML = '<canvas class="sw"></canvas><b class="brush"></b><span></span>';
   const sw = el.querySelector('.sw');
-  requestAnimationFrame(() => drawDohyoSwatch(sw, S.look));   // 画面に入って大きさが決まってから描く
+  const draw = () => drawDohyoSwatch(sw, S.look, Object.assign({}, PHYS, S.phys));   // 狭小土俵は箱の形も
+  requestAnimationFrame(draw);   // 画面に入って大きさが決まってから描く
+  if (DOHYO[S.look] && DOHYO[S.look].top.img && !texImage(DOHYO[S.look].top.img)) loadDohyoTextures([S.look]).then(() => requestAnimationFrame(draw));   // 巡業の土俵の絵は、読めたら描きなおす
   fitText(el.querySelector('b'), S.name);
   el.querySelector('span').textContent = S.note;
   setN(el.querySelector('span'));

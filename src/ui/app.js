@@ -9,7 +9,7 @@ import { shikonaText, titleText, randomShikona, ownedWords } from '../game/names
 import { CPU_SHAPES } from '../data/cpu-shapes.js';
 import { rankOf, rankIdx, eloDelta } from '../game/rating.js';
 import { BANZUKE } from '../data/banzuke.js';
-import { drawStage } from '../game/jungyo.js';
+import { drawStage, stagesOf, slotIndex } from '../game/jungyo.js';
 import { makeFoe } from '../game/foe.js';
 import { initCut } from './cut.js';
 import { unpackLib } from './unpack.js';
@@ -24,7 +24,7 @@ import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo, shownItems } f
 import { afterBout } from '../game/titles.js';
 import { DOHYO } from '../data/dohyo.js';
 import { initFuku } from './fuku.js';
-import { loadPaperTextures } from './papertex.js';
+import { loadPaperTextures, loadDohyoTextures } from './papertex.js';
 import { loadVenueArt } from './venue.js';
 import { initTitleList } from './titlelist.js';
 import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
@@ -289,7 +289,11 @@ function boot() {
   document.getElementById('mm-ok').addEventListener('click', home);
   // 決定のボタンも和太鼓のドン（11/26 しょーくん）。取組・福箱を開ける・切る・名前の引き直しは、それぞれの音があるので入れない
   for (const id of ['b-start', 'ed-recut', 'ed-done', 'jg-go', 'bz-go', 'mm-ok', 'fk-odds']) document.getElementById(id).addEventListener('click', () => playSfx('don', { vol: DON_VOL }));
-  onShow['s-mode'] = () => heya.mode(state);
+  onShow['s-mode'] = () => {
+    heya.mode(state);
+    // 巡業のいま開催中の土俵の絵を先に読んでおく（タイトルでは読まない・11/28 夜 #19）
+    loadDohyoTextures(stagesOf(slotIndex(Date.now())).map((id) => STAGES[id].look));
+  };
 
   // 部屋の力士（3枠）と編集
   onShow['s-roster'] = () => renderSlots(document.getElementById('roster-slots'), state.slots, {

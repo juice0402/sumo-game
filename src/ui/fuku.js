@@ -23,11 +23,11 @@ const pct = (x) => `${x.toFixed(2)}%`;
 // 土俵の小さな見本：取組と同じ四角い紙の箱を、正面の少し上から（11/28 しょーくん「丸じゃなくて本番と同じような四角ベース」）
 // 上の面＝奥が少しせまい台形（真上の1枚絵を横の細切りで台形にのばす）・横の面＝手前の長方形（帯の貼り方は ui/stage3d.js の sideCanvas と同じ）
 const SW_VIEW = { deep: 0.4, far: 0.84, shade: 0.1 };   // 上の面の見かけの奥行き（手前の幅に対する割合）・奥のふちの幅の割合・横の面の影のこさ
-export function drawDohyoSwatch(cv, key) {
+export function drawDohyoSwatch(cv, key, P = PHYS) {   // P＝土俵の大きさ（巡業の狭小土俵は data/stages.js の phys を重ねた数）
   const d = DOHYO[key] || DOHYO.kami;
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const sideR = (PHYS.ringDepth / (2 * PHYS.ringHalf)) * 0.93;   // 横の面の高さ（取組の箱と同じ割合）
+  const sideR = (P.ringDepth / (2 * P.ringHalf)) * 0.93;   // 横の面の高さ（取組の箱と同じ割合）
   const bw = Math.min(W * 0.92, (H * 0.92) / (SW_VIEW.deep + sideR));   // 手前のふちの幅
   const th = bw * SW_VIEW.deep, sh = bw * sideR, cx = W / 2, y0 = (H - th - sh) / 2, yf = y0 + th;
   // 上の面の (u, v)（-1〜1・v=-1 が奥）→ 画面
@@ -65,15 +65,15 @@ export function drawDohyoSwatch(cv, key) {
     ctx.fillRect(0, y0, W, th);
   }
   ctx.restore();
-  // 輪は取組の土俵と同じ所：輪の外がわ＝俵の線（PHYS.tawara）・太さも同じ割合（ui/stage3d.js の topCanvas）
-  const ringW = d.top.ringW || 0.055, rr = PHYS.tawara / PHYS.ringHalf - ringW * 0.6;
+  // 輪は取組の土俵と同じ所：輪の外がわ＝俵の線（P.tawara）・太さも同じ割合（ui/stage3d.js の topCanvas）
+  const ringW = d.top.ringW || 0.055, rr = P.tawara / P.ringHalf - ringW * 0.6;
   ctx.strokeStyle = d.top.ring || '#201E1B'; ctx.lineWidth = Math.max(1.5, (bw / 2) * ringW * 1.2); ctx.lineJoin = 'round';
   ctx.beginPath();
   for (let i = 0; i <= 64; i++) { const a = (i / 64) * Math.PI * 2, [x, y] = at(Math.cos(a) * rr, Math.sin(a) * rr); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
   ctx.stroke();
   if (d.top.shikiri) {
     ctx.strokeStyle = d.top.shikiriInk || '#201E1B'; ctx.lineWidth = Math.max(1.2, bw * 0.014);
-    const u = d.top.shikiri / PHYS.ringHalf, v = (d.top.shikiriLen || 0.34) / 2 / PHYS.ringHalf;
+    const u = d.top.shikiri / P.ringHalf, v = (d.top.shikiriLen || 0.34) / 2 / P.ringHalf;
     for (const s of [-1, 1]) { const a = at(s * u, -v), b = at(s * u, v); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
   }
   // 箱のふち
