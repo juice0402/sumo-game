@@ -9,7 +9,7 @@ import { OTEHON } from '../data/cpu-shapes.js';
 import { fukuOdds, drawFuku, addItem, ownedItems, tierOf, kindName } from '../game/fukubako.js';
 import { drawShapeThumb, thumbAuraBox } from './pick.js';
 import { auraPreview } from './aura.js';
-import { patternFill } from './papertex.js';
+import { patternFill, texImage } from './papertex.js';
 import { setupCanvas } from './ink.js';
 import { fitText } from './roster.js';
 import { playSfx } from './sound.js';
@@ -25,14 +25,18 @@ export function drawDohyoSwatch(cv, key) {
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const cx = W / 2, rx = W * 0.46, ry = rx * 0.34, top = H * 0.42, side = H * 0.22;
+  const topImg = texImage(d.top.img), sideImg = texImage(d.side.img);   // 土俵スキンの絵（Codex）があれば絵で
   // 横の面
   ctx.fillStyle = d.side.paper;
   ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, top + side); ctx.ellipse(cx, top + side, rx, ry, 0, Math.PI, 0, true); ctx.lineTo(cx + rx, top); ctx.closePath(); ctx.fill();
+  if (sideImg) { ctx.save(); ctx.clip(); const sh = sideImg.height * (2 * rx / sideImg.width); ctx.drawImage(sideImg, cx - rx, top + side + ry - sh, 2 * rx, sh); ctx.restore(); }
   ctx.strokeStyle = d.side.line; ctx.lineWidth = Math.max(1, W * 0.012);
   ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, top + side); ctx.ellipse(cx, top + side, rx, ry, 0, Math.PI, 0, true); ctx.lineTo(cx + rx, top); ctx.stroke();
   // 上の面
   ctx.fillStyle = d.top.pat ? patternFill(ctx, d.top.pat, d.top.paper, d.top.ink || '#201E1B', W * 1.2) : d.top.paper;
-  ctx.beginPath(); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+  if (topImg) { ctx.save(); ctx.clip(); ctx.drawImage(topImg, cx - rx, top - ry, 2 * rx, 2 * ry); ctx.restore(); }   // 真上の1枚絵を、ななめから見た楕円につぶす
+  ctx.beginPath(); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
   ctx.strokeStyle = d.top.ring || '#201E1B'; ctx.lineWidth = Math.max(2, rx * (d.top.ringW || 0.055) * 1.6);
   ctx.beginPath(); ctx.ellipse(cx, top, rx * 0.8, ry * 0.8, 0, 0, Math.PI * 2); ctx.stroke();
   ctx.strokeStyle = d.top.shikiriInk || '#201E1B'; ctx.lineWidth = Math.max(1.5, W * 0.016);

@@ -1,7 +1,7 @@
 // 取組の 2.5D（Three.js）。物理は2Dのまま。z=0 の面に、紙の力士を立てて描くだけ。
 // カメラは土俵にくっつける：描くときの y は「物理の y − 土俵の上の面の y」＝土俵のトンで画面がゆれない。
 import { COL, rand, fiberPattern, polyPath, inkStroke } from './ink.js';
-import { paperFill, patternFill } from './papertex.js';
+import { paperFill, patternFill, texImage } from './papertex.js';
 import { DOHYO, DOHYO_DEFAULT } from '../data/dohyo.js';
 import { LOOK } from '../data/look.js';
 import { PAPER } from '../data/config.js';
@@ -23,13 +23,17 @@ function topCanvas(d, P) {
   c.width = c.height = N;
   const g = c.getContext('2d');
   const k = N / (2 * P.ringHalf);
-  g.fillStyle = d.top.paper;
-  g.fillRect(0, 0, N, N);
-  if (d.top.pat) { g.fillStyle = patternFill(g, d.top.pat, d.top.paper, d.top.ink || COL.sumi, k); g.fillRect(0, 0, N, N); }   // 土俵スキンのもよう
-  g.globalAlpha = d.top.fiber;
-  g.fillStyle = fiberPattern(g);
-  g.fillRect(0, 0, N, N);
-  g.globalAlpha = 1;
+  const img = texImage(d.top.img);
+  if (img) g.drawImage(img, 0, 0, N, N);   // 土俵スキンの上の面の1枚絵（Codex・11/28）。輪と仕切り線は下で重ねる
+  else {
+    g.fillStyle = d.top.paper;
+    g.fillRect(0, 0, N, N);
+    if (d.top.pat) { g.fillStyle = patternFill(g, d.top.pat, d.top.paper, d.top.ink || COL.sumi, k); g.fillRect(0, 0, N, N); }   // 土俵スキンのもよう
+    g.globalAlpha = d.top.fiber;
+    g.fillStyle = fiberPattern(g);
+    g.fillRect(0, 0, N, N);
+    g.globalAlpha = 1;
+  }
   // 輪（俵）の外がわを、物理の俵の線（P.tawara）にぴったり合わせる＝見えている輪の外にふれたら負け
   const sw = d.top.ringW * N * 0.6, rr = rand(5), r = P.tawara * k - sw / 2, pts = [];
   for (let i = 0; i <= 120; i++) {
@@ -53,15 +57,21 @@ function sideCanvas(d, P) {
   c.width = w; c.height = h;
   const g = c.getContext('2d');
   const k = w / (2 * P.ringHalf);
-  g.fillStyle = d.side.paper;
-  g.fillRect(0, 0, w, h);
-  g.globalAlpha = 0.8;
-  g.fillStyle = fiberPattern(g);
-  g.fillRect(0, 0, w, h);
-  g.globalAlpha = 1;
-  g.strokeStyle = d.side.layer;
-  g.lineWidth = 1.5;
-  for (const y of [5, 9, 13]) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  const img = texImage(d.side.img);
+  if (img) {   // 土俵スキンの横の面の帯（Codex・11/28）。帯の縦横が合わないときは、まん中を切り出して貼る
+    const s = Math.max(w / img.width, h / img.height), sw = w / s, sh = h / s;
+    g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
+  } else {
+    g.fillStyle = d.side.paper;
+    g.fillRect(0, 0, w, h);
+    g.globalAlpha = 0.8;
+    g.fillStyle = fiberPattern(g);
+    g.fillRect(0, 0, w, h);
+    g.globalAlpha = 1;
+    g.strokeStyle = d.side.layer;
+    g.lineWidth = 1.5;
+    for (const y of [5, 9, 13]) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  }
   const m = d.side.inset * k;
   g.strokeStyle = d.side.line;
   g.lineWidth = 4;
