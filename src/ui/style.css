@@ -530,26 +530,30 @@ button{font:inherit;color:inherit;cursor:pointer}
 .chlist.r2>*{padding:16px 0 8px}
 .chlist small{font-size:12px;line-height:1.3;letter-spacing:.08em;color:var(--kin);white-space:nowrap}
 .chlist span:not(.mid):not(.sw){font-size:13px;line-height:1.3;letter-spacing:.06em;color:var(--washi2);white-space:nowrap}
-.chlist em{font-style:normal;font-size:11px;line-height:1.3;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chlist em{position:absolute;left:0;right:0;bottom:8px;writing-mode:horizontal-tb;text-align:center;font-style:normal;font-size:10px;line-height:1.2;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}   /* 日時は列の下に横書きで */
+.chlog>*{position:relative;padding-bottom:28px}
+.chlog .old em{color:var(--washi2)}
 .chlist .mid{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:0;height:100%}
-.chlist b{--max:26px;--room:calc(100cqh - 46px)}
+.chlist{--fs:clamp(24px,4.2vh,40px)}   /* 名前の大きさの上限：高い画面（iPad）では大きく・列の幅もそれに合わせる */
+.chlist b{--max:var(--fs);--room:calc(100cqh - 46px)}
 .chlist .hanko{flex:none;font-size:15px;padding:4px 2px;border-width:2px;transform:rotate(-6deg)}
 .chlist .hanko.win{background:var(--shu);border-color:var(--shu);color:var(--washi)}
 .chlist .hanko.lose{color:var(--washi2)}
 .chlist .hanko.draw{color:var(--kin)}
-.chlog{--cw:84px}
+.chlog{--cw:calc(var(--fs) + 58px)}
 .chlog .old{color:var(--dim)}
 .chlog .old b,.chlog .old .hanko{opacity:.55}
 .chempty{grid-column:1/-1;width:auto;align-items:center!important;justify-content:center}
-.chach{--cw:62px}
+.chach{--cw:calc(var(--fs) + 36px)}
 .chlist .not b{color:var(--dim);letter-spacing:.2em;--n:3!important}
-.chzk{--cw:58px}
-.chzk .mid b{--room:calc(100cqh - 96px)}
+.chzk{--cw:calc(var(--fs) + 32px)}
+.chzk .mid b{--room:calc(100cqh - 106px)}
 .zk-title .mid b,.zk-word .mid b{--room:calc(100cqh - 40px)}
-.zk-word{--cw:46px}
-.zk-title{--cw:68px}
-.chlist .sw{position:relative;flex:none;margin-top:auto;width:44px;height:52px;writing-mode:horizontal-tb}
+.zk-word{--cw:calc(var(--fs) + 20px)}
+.zk-title{--cw:calc(var(--fs) + 42px)}
+.chlist .sw{position:relative;flex:none;margin-top:auto;width:48px;height:62px;writing-mode:horizontal-tb}
 .chlist .sw canvas{position:absolute;inset:0;width:100%;height:100%}
+.chlist .sw .aura-cv{left:-5px;top:-18px;width:calc(100% + 10px);height:calc(100% + 22px);pointer-events:none}   /* 気は力士のまわりに出るので、見本より少し大きく */
 .zk-dohyo .sw{width:50px;height:36px}
 .chlist>.chosen::before{inset:0}
 .screen.enter .chlist>:nth-child(n+8){animation:none}

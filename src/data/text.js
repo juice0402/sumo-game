@@ -105,7 +105,7 @@ export const T = {
   // 帳面（#28・ui/chomen.js）。切りかえの字は page.html
   chNote: { log: '押すと、もう一度見られる', ach: '称号は見た目だけ・強さは変わらない', zukan: '見た目は福箱から出る・強さは変わらない' },
   logNone: 'まだ取組がない',
-  logOld: '前の版の取組は見られない',   // 保存したときと物理の版がちがう（再生のボタンは出さない）
+  logOld: '見られない',   // 保存したときと物理の版がちがう（再生のボタンは出さない）
   logVs: (name) => `対 ${name}`,
   logWhen: (t) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; },
   toChomen: '帳面へ',   // リプレイの結果のボタン

@@ -66,7 +66,7 @@ function enter(el) {
   resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
   el.classList.remove('enter');
   void el.offsetWidth;   // 動きを最初から
-  const items = el.querySelectorAll(ENTER);
+  const items = [...el.querySelectorAll(ENTER)].filter((c) => !c.matches('.chlist > :nth-child(n+8)'));   // 帳面の長い一覧は、見えるはじめの列だけ
   items.forEach((c, i) => c.style.setProperty('--i', i));
   el.classList.add('enter');
   const n = Math.min(items.length, 6);
