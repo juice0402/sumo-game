@@ -123,7 +123,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     resEl.hidden = true;
     gainEl.hidden = true;
     const S = STAGES[opt.stage] || STAGES.hyojun;
-    const bout = createBout({ a: me, b: foe.pts, seed, phys: Object.assign({ drive: getDrive() }, S.phys), record: true });
+    const drive = opt.drive || getDrive();   // リプレイ（帳面）は保存した動かし方で
+    const bout = createBout({ a: me, b: foe.pts, seed, phys: Object.assign({ drive }, S.phys), record: true });
     if (!stage) { stage = createStage(gl, bout.phys); curLook = 'kami'; }
     if (!stage) {
       bout.free();
@@ -142,9 +143,13 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     const nLen = (w) => Array.from(w.name || '').length;
     names.style.setProperty('--n', String(Math.max(4, nLen(a), nLen(b))));
     // 結果のボタン：稽古＝もう一番・相手をかえる・切り直す／巡業・本場所＝次の取組／初土俵＝四股名をさずかる だけ
-    const keiko = !opt.mode || opt.mode === 'keiko';
+    // リプレイ（帳面の取組記録から・#28）＝「帳面へ」だけ（小判・レート・戦績・実績は動かさない＝onResult は記録にさわらない）
+    const replay = !!opt.replay;
+    const keiko = !replay && (!opt.mode || opt.mode === 'keiko');
     btn('b-again').hidden = !keiko; btn('r-sub').hidden = !keiko;
-    btn('b-next').hidden = keiko;
+    btn('b-next').hidden = keiko || replay;
+    btn('b-home').textContent = opt.homeLabel || homeLabel;
+    btn('b-home').classList.toggle('sub', !replay);
     btn('b-next').textContent = opt.nextLabel || T.nextBout;
     btn('b-home').style.visibility = opt.mode === 'shodohyo' ? 'hidden' : '';   // 初土俵は部屋へを出さないが、場所は空けておく（主のボタンが動かない）
     const la = toLocal(me, 1, bout.phys), lb = toLocal(foe.pts, -1, bout.phys);
@@ -175,7 +180,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     st = {
       vs, vsAt, vsOutAt: vsAt + vsLen - (short ? 0.14 : 0.22), vsEnd: vsAt + vsLen, vsIn: false, vsOut: false, vsGone: false,
       sn, snAt: orbitStart + (short ? 0 : 0.35), snOutAt: short ? goAt + LOOK.goLead + 1.2 : orbitEnd - 0.45, snIn: false, snOut: false,
-      me, foe, seed, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
+      me, foe, seed, drive, opt, a, b, bout, phys: bout.phys, rec: bout.rec, la, lb, short,
       auras: auras.some(Boolean) ? auras : null, boxes: [boxOf(la), boxOf(lb)], outlines: [la.outline, lb.outline], idle3d: false,
       orbitStart, orbitEnd, goAt, playAt: goAt + LOOK.goLead,
       // 本場所の会場（11/27 空気感）：ざわめき・沸く・紙吹雪と座布団。V＝番付の会場の行・cheer＝{ upset（相手の番付が上の差）, test（道具のためし） }
@@ -429,7 +434,7 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
     kindEl.textContent = T.kind[r.kind](r.loser ? name(r.loser) : '');
     placeKind();
     // 巡業・本場所：番付や戦績のひとこと
-    let res = s.opt.onResult ? s.opt.onResult(r, s.kima) : '';
+    let res = s.opt.onResult ? s.opt.onResult(r, s.kima, { seed: s.seed, drive: s.drive }) : '';   // 3つめ＝帳面の取組記録に入れる物
     if (!res || typeof res === 'string') res = { text: res || '' };
     s.opt.gain = res.text || '';
     showTitles(res.titles || []);
@@ -458,7 +463,8 @@ export function initBout({ getDrive, getShort, onFoe, onRecut, onNext, onHome })
   cv.addEventListener('pointerdown', skip);
   document.getElementById('b-again').addEventListener('click', () => { if (st) start(st.me, st.foe, st.seed + 1, st.opt); });
   document.getElementById('b-next').addEventListener('click', () => { const m = st && st.opt.mode; stop(); if (onNext) onNext(m); });
-  document.getElementById('b-home').addEventListener('click', () => { stop(); if (onHome) onHome(); });
+  const homeLabel = btn('b-home').textContent;   // 「部屋へ」（字は page.html）。リプレイでは opt.homeLabel（帳面へ）
+  document.getElementById('b-home').addEventListener('click', () => { const h = st && st.opt.onHome; stop(); if (h) h(); else if (onHome) onHome(); });
   document.getElementById('b-foe').addEventListener('click', () => { stop(); onFoe(); });
   document.getElementById('b-recut').addEventListener('click', () => { stop(); onRecut(); });
   window.addEventListener('resize', () => {

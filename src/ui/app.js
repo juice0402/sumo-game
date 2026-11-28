@@ -4,39 +4,40 @@
 import { T } from '../data/text.js';
 import { STAGES, HONBASHO_STAGE } from '../data/stages.js';
 import { setRapier } from '../sim/battle.js';
-import { loadState, saveState, newRikishi, addRec, freshProgress, hasStash, stashSave, unstashSave } from '../game/save.js';
+import { loadState, saveState, newRikishi, addRec, wipeSave } from '../game/save.js';
 import { shikonaText, titleText, randomShikona, ownedWords } from '../game/names.js';
 import { CPU_SHAPES } from '../data/cpu-shapes.js';
 import { rankOf, rankIdx, eloDelta } from '../game/rating.js';
-import { BANZUKE } from '../data/banzuke.js';
 import { drawStage } from '../game/jungyo.js';
 import { makeFoe } from '../game/foe.js';
 import { initCut } from './cut.js';
 import { unpackLib } from './unpack.js';
 import { initPick, drawShapeThumb } from './pick.js';
 import { initBout } from './bout.js';
-import { initTools } from './tools.js';
+import { initToolSheet } from './toolsheet.js';
+import { initSettei } from './settei.js';
 import { initHeya } from './heya.js';
 import { reset as resetChoose } from './choose.js';
 import { renderSlots, initEdit, fitText, headText, setN } from './roster.js';
 import { choose, DON_VOL } from './choose.js';
 import { kobanFor, todayKey, ownedPapers, ownedAuras, ownedDohyo, shownItems } from '../game/fukubako.js';
 import { afterBout } from '../game/titles.js';
+import { logEntry, addLog } from '../game/log.js';
+import { initChomen } from './chomen.js';
 import { DOHYO } from '../data/dohyo.js';
+import { PAPERS, PAPER_DEFAULT } from '../data/papers.js';
+import { AURAS, AURA_DEFAULT } from '../data/auras.js';
 import { initFuku } from './fuku.js';
 import { loadPaperTextures } from './papertex.js';
 import { loadVenueArt } from './venue.js';
 import { initTitleList } from './titlelist.js';
 import { initJungyo, initBanzuke, initSelect, initDohyoPick } from './match.js';
-import { unlockAudio, setMuted, playSfx, sfxReady } from './sound.js';
+import { unlockAudio, playSfx, sfxReady } from './sound.js';
 import { applyButtonArt } from './btnart.js';
 
 applyButtonArt();
-// 字（Google Fonts）は待たずに画面を出す。届いたら使う（onload が止められている所でも効くように、ここでも）
-{
-  const l = document.getElementById('webfont');
-  if (l) { if (l.sheet) l.media = 'all'; else l.addEventListener('load', () => { l.media = 'all'; }); }
-}
+// 字は同梱（assets/ の woff2・ビルドが @font-face を入れる）。canvas に書く字（切る画面・会場）のために先に読んでおく
+try { if (document.fonts) for (const f of ['16px "Yuji Syuku"', '500 16px "Zen Kaku Gothic New"']) document.fonts.load(f).catch(() => {}); } catch (e) { /* 端末の字で続ける */ }
 
 const state = loadState();
 state.seed = (Date.now() % 9973) + 1;
@@ -49,6 +50,14 @@ function titlesAfter(mode, r, kima, foeId) {
   return afterBout(state, { mode, winner: r.winner, kima, foeId, hour: new Date().getHours() }).map(titleText);
 }
 
+// 帳面の取組記録（#28）：終わった取組を、リプレイに要る物といっしょに残す。opt は bout.start にわたした物・info は { seed, drive }
+function logBout(mode, me, foe, opt, r, kima, info) {
+  addLog(state, logEntry({
+    mode, stage: opt.stage, look: opt.look, venue: opt.venue, upset: opt.cheer && opt.cheer.upset, drive: info && info.drive, seed: info && info.seed,
+    me: me.shape, foe: foe.pts, a: opt.a, b: opt.b, papers: opt.papers, auras: opt.auras, winner: r.winner, kind: r.kind, kima,
+  }));
+}
+
 // 画面の行き来（もどるボタンは1つ前へ）
 let cur = null;
 const nav = [];
@@ -59,7 +68,7 @@ function enter(el) {
   resetChoose(el);   // メニューでえらんだ動き（朱の帯・すべって消えた列）をもとへ
   el.classList.remove('enter');
   void el.offsetWidth;   // 動きを最初から
-  const items = el.querySelectorAll(ENTER);
+  const items = [...el.querySelectorAll(ENTER)].filter((c) => !c.matches('.chlist > :nth-child(n+8)'));   // 帳面の長い一覧は、見えるはじめの列だけ
   items.forEach((c, i) => c.style.setProperty('--i', i));
   el.classList.add('enter');
   const n = Math.min(items.length, 6);
@@ -121,6 +130,8 @@ function boot() {
   const lbls = [...document.querySelectorAll('.menu .lbl')];
   const nMax = Math.max(...lbls.map((el) => Array.from(el.textContent).length));
   for (const el of lbls) el.style.setProperty('--n', String(nMax));
+  // 道具（試しのページだけ・index.html では toolsheet-off.js＝なし）。試しだけの切りかえを先に決めるので、はじめに
+  const tools = initToolSheet({ state, save, activeSlot, loadLibs, home, repaintHome: () => heya.home(state) });
   let editSlot = 0, bzTitle = '番付', stamping = false;
   const venueLv = () => (state.venueView != null ? state.venueView : rankIdx(state.rate));   // 本場所の会場の番付（道具で見る番付をかえられる）
   // 切る：どの枠を切るか・切ったあとどこへ行くか
@@ -155,7 +166,7 @@ function boot() {
       bout.start(me.shape, foe, state.seed++, {
         mode: 'keiko', a: who(me), b: { name: foe.name }, papers: [me.paper], auras: [me.aura],
         // 稽古は戦績・小判なし。称号（研究熱心など）だけ
-        onResult(r, kima) { const t = titlesAfter('keiko', r, kima, foe.id); save(); return { text: '', titles: t }; },
+        onResult(r, kima, info) { const t = titlesAfter('keiko', r, kima, foe.id); logBout('keiko', me, foe, this, r, kima, info); save(); return { text: '', titles: t }; },
       });
     },
     onBack: back,
@@ -213,7 +224,8 @@ function boot() {
       venue: m.mode === 'honbasho' ? venueLv() : -1,
       // 決着の演出（11/27）：番付が上の相手に勝てば座布団が舞う（upset＝番付の差）。道具の「いつも見る」では勝ち負けによらず
       cheer: { upset: rankIdx(foe.rate) - rankIdx(state.rate), test: !!state.cheerTest },
-      onResult(r, kima) {
+      onResult(r, kima, info) {
+        logBout(m.mode, me, foe, this, r, kima, info);
         addRec(me.rec, r.winner);
         // 小判（巡業・本場所）：勝ち30・負け10・その日の初勝利+100（data/fukubako.js）
         const kb = kobanFor(state, r.winner, todayKey());
@@ -247,7 +259,48 @@ function boot() {
     onHonbasho() { bzTitle = T.mode.honbasho; go('s-banzuke'); },
     onKeiko() { pick.resetMarks(); go('s-pick'); },
     onFuku() { go('s-fuku'); },
+    onChomen() { go('s-chomen'); },
+    onSettei() { go('s-settei'); },
   });
+
+  // 帳面（#28）：取組記録（押すとリプレイ）・実績・図鑑。リプレイは保存した物から同じ取組を作りなおして見せるだけ（記録にさわらない）
+  const chomen = initChomen({
+    getState: () => state,
+    getOwned: () => shownItems(state),
+    onReplay(e) {
+      // 物理（と本場所は会場の絵）を読んでから
+      Promise.all([loadLibs(), e.mode === 'honbasho' ? loadVenueArt() : null]).then(() => replay(e), () => {});
+    },
+  });
+  // 見た目の id（土俵スキン・紙質・気）は、今の一覧にない物ならいつもの物で（見た目だけ・勝敗は変わらない）
+  function replay(e) {
+    show('s-bout');
+    bout.start(e.a.pts, { pts: e.b.pts, name: e.b.name }, e.seed, {
+      mode: e.mode, stage: e.stage, look: DOHYO[e.look] ? e.look : null, venue: e.venue, drive: e.drive, replay: true, homeLabel: T.toChomen,
+      a: { name: e.a.name, sub: e.a.sub, rank: e.a.rank }, b: { name: e.b.name, sub: e.b.sub, rank: e.b.rank },
+      papers: e.pa.map((id) => (PAPERS[id] ? id : PAPER_DEFAULT)), auras: e.au.map((id) => (AURAS[id] ? id : AURA_DEFAULT)), cheer: { upset: e.up, test: false },
+      onResult: () => ({ text: T.replayLine(T.logWhen(e.t)) }),
+      onHome() { show('s-chomen'); },
+    });
+  }
+  onShow['s-chomen'] = () => chomen.show();
+
+  // 設定（11/28・issue #27）：音の大きさ・演出を短く・権利表記・データを消す
+  const settei = initSettei({
+    state, save,
+    // データを消す：保存（と道具で取っておいた保存）を消して、まっさらな状態でタイトルから（はじめての流れ）
+    onWipe() {
+      wipeSave();
+      const seed = state.seed;
+      for (const k of Object.keys(state)) delete state[k];
+      Object.assign(state, loadState(), { seed });
+      tools.reset();
+      settei.close();
+      nav.length = 0;
+      show('s-title');
+    },
+  });
+  onShow['s-settei'] = () => settei.show();
   onShow['s-home'] = () => heya.home(state);
 
   // 福箱（11/26）：小判で開ける。中身は見た目だけ
@@ -353,46 +406,6 @@ function boot() {
 
   for (const b of document.querySelectorAll('.back')) b.addEventListener('click', back);
 
-  // 道具（試作のあいだだけ・本番では消して、音と演出は「設定」へ）
-  const tools = initTools({ getShape: () => (activeSlot() ? activeSlot().shape : null), getDrive: () => state.drive });
-  // はじめての流れを見なおす（11/25 しょーくん「見るすべがなかった」）：いまの保存は取っておき、まっさらな部屋へ
-  const unstashBtn = document.getElementById('b-unstash');
-  const paintStash = () => { unstashBtn.hidden = !hasStash(); };
-  const PROGRESS = ['slots', 'active', 'rate', 'hon', 'jun', 'words', 'koban', 'kobanDay', 'items', 'dohyo', 'titles', 'streak', 'keikoWon'];
-  document.getElementById('b-intro').addEventListener('click', () => {
-    stashSave();
-    Object.assign(state, freshProgress());
-    save();
-    tools.close();
-    home();
-  });
-  unstashBtn.addEventListener('click', () => {
-    if (unstashSave()) { const st = loadState(); for (const k of PROGRESS) state[k] = st[k]; }
-    tools.close();
-    home();
-  });
-  document.getElementById('b-koban').addEventListener('click', () => { state.koban += 1000; save(); heya.home(state); });   // 福箱をためす（試作だけ）
-  document.getElementById('b-tools').addEventListener('click', () => { paintStash(); loadLibs().then(() => tools.open()); });
-  setMuted(state.mute);
-  const toggle = (id, key, after) => {
-    const b = document.getElementById(id);
-    const paint = () => b.setAttribute('aria-pressed', String(state[key]));
-    paint();
-    b.addEventListener('click', () => { state[key] = !state[key]; paint(); save(); if (after) after(); });
-  };
-  toggle('b-mute', 'mute', () => setMuted(state.mute));
-  toggle('b-short', 'short');
-  toggle('b-unlock', 'unlockAll');
-  state.cheerTest = false;   // 道具の「勝ったときの演出をいつも見る」（試しだけ・保存しない）
-  toggle('b-cheer', 'cheerTest');
-  const venueBtn = document.getElementById('b-venue');
-  const paintVenue = () => { venueBtn.textContent = T.venueView(state.venueView != null ? BANZUKE[state.venueView].name : ''); };
-  paintVenue();
-  venueBtn.addEventListener('click', () => {   // 番付どおり → 序ノ口 → … → 横綱 → 番付どおり
-    state.venueView = state.venueView == null ? 0 : state.venueView + 1 < BANZUKE.length ? state.venueView + 1 : null;
-    paintVenue(); save();
-  });
-  document.getElementById('credits').textContent = (T.credits || []).join(' ');
   // 音は最初のタップのあとでないと鳴らせない
   document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
   show('s-title');

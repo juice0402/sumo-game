@@ -497,3 +497,63 @@ button{font:inherit;color:inherit;cursor:pointer}
 .screen.v .foot .note+.actions{margin-top:12px}
 .screen.v>.drive{padding-bottom:0}
 .screen.v>.drive .seg{margin-bottom:0}
+
+/* 設定（11/28・issue #27）：勝負と同じ番付表の列（右から 音の大きさ・演出・権利表記・データを消す）。
+   切りかえは縦の筆の字を並べ、えらんだ物に縦の朱の帯（.vseg）。データを消すは、たしかめ中は列ごと朱（.on） */
+.setcol{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;padding:28px 0 14px}   /* 名前（右の小さい字）と切りかえ（その左の列）。勝負の札と同じ並び */
+.setcol small{white-space:nowrap;font-size:12px;line-height:1.3;letter-spacing:.12em;color:var(--kin)}
+.vseg{display:flex;flex-direction:row;align-items:center;gap:6px}
+.vseg button{border:0;border-radius:0;background:none;padding:10px 7px;font-size:min(21px,calc((100cqh - 120px) / 8.8));letter-spacing:.1em;line-height:1;white-space:nowrap;color:var(--dim);min-width:44px}
+.vseg button[aria-pressed=true]{background:var(--b-shuv) center/100% 100% no-repeat;color:var(--washi)}
+#st-wipe.on span{color:var(--washi)}
+/* 権利表記と全文（シート）。名前は筆・使う所とライセンスは小さなゴシック */
+.rtlist{border-top:5px double var(--washi2);margin-top:12px}
+.sheet .rtlist p{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.rtlist p b{font-size:19px;color:var(--washi);letter-spacing:.02em}
+.rtlist p span{color:var(--washi2);text-align:right}
+.sheet p.rtcred{margin:14px 0 10px;font-size:12px;line-height:1.7;color:var(--dim);white-space:pre-line;overflow-wrap:anywhere}
+.lic{margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font:500 11px/1.6 "Zen Kaku Gothic New",sans-serif;color:var(--washi2)}
+
+/* 帳面（#28・ui/chomen.js）：上に切りかえ（力士の編集と同じ字の下の筆の線）、二重の罫の中は番付表の列を右から（横にすべらせる）。
+   列の中は、右に金の小さい字｜まん中に名前（筆）｜左に説明（ゴシック）。ならんだ名前は同じ大きさ（sameSize） */
+#s-chomen{grid-template-rows:auto auto minmax(0,1fr) auto}
+#s-chomen>.hero{container-type:normal;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding-top:8px}
+#ch-tabs{gap:18px}
+.chkinds{gap:4px}
+.chkinds button{font-size:13px;letter-spacing:.12em;padding:4px 6px 10px;min-height:36px}
+.chlist.cols{display:grid;grid-auto-flow:column;grid-auto-columns:var(--cw,64px);grid-template-rows:repeat(var(--rows,1),minmax(0,1fr));direction:rtl;height:auto;min-height:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none}
+.chlist::-webkit-scrollbar{display:none}
+.chlist.r2{--rows:2}
+.chlist>*{direction:ltr;flex-direction:column;align-items:flex-start;gap:4px;padding:28px 0 12px}
+.chlist>*:last-child{border-left:1px solid var(--line)}
+.chlist.r2>*:nth-child(odd){border-bottom:1px solid var(--line)}
+.chlist.r2>*{padding:16px 0 8px}
+.chlist small{font-size:12px;line-height:1.3;letter-spacing:.08em;color:var(--kin);white-space:nowrap}
+.chlist span:not(.mid):not(.sw){font-size:13px;line-height:1.3;letter-spacing:.06em;color:var(--washi2);white-space:nowrap}
+.chlist em{position:absolute;left:0;right:0;bottom:8px;writing-mode:horizontal-tb;text-align:center;font-style:normal;font-size:10px;line-height:1.2;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}   /* 日時は列の下に横書きで */
+.chlog>*{position:relative;padding-bottom:28px}
+.chlog .old em{color:var(--washi2)}
+.chlist .mid{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:0;height:100%}
+.chlist{--fs:clamp(24px,4.2vh,40px)}   /* 名前の大きさの上限：高い画面（iPad）では大きく・列の幅もそれに合わせる */
+.chlist b{--max:var(--fs);--room:calc(100cqh - 46px)}
+.chlist .hanko{flex:none;font-size:15px;padding:4px 2px;border-width:2px;transform:rotate(-6deg)}
+.chlist .hanko.win{background:var(--shu);border-color:var(--shu);color:var(--washi)}
+.chlist .hanko.lose{color:var(--washi2)}
+.chlist .hanko.draw{color:var(--kin)}
+.chlog{--cw:calc(var(--fs) + 58px)}
+.chlog .old{color:var(--dim)}
+.chlog .old b,.chlog .old .hanko{opacity:.55}
+.chempty{grid-column:1/-1;width:auto;align-items:center!important;justify-content:center}
+.chach{--cw:calc(var(--fs) + 36px)}
+.chlist .not b{color:var(--dim);letter-spacing:.2em;--n:3!important}
+.chzk{--cw:calc(var(--fs) + 32px)}
+.chzk .mid b{--room:calc(100cqh - 106px)}
+.zk-title .mid b,.zk-word .mid b{--room:calc(100cqh - 40px)}
+.zk-word{--cw:calc(var(--fs) + 20px)}
+.zk-title{--cw:calc(var(--fs) + 42px)}
+.chlist .sw{position:relative;flex:none;margin-top:auto;width:48px;height:62px;writing-mode:horizontal-tb}
+.chlist .sw canvas{position:absolute;inset:0;width:100%;height:100%}
+.chlist .sw .aura-cv{left:-5px;top:-18px;width:calc(100% + 10px);height:calc(100% + 22px);pointer-events:none}   /* 気は力士のまわりに出るので、見本より少し大きく */
+.zk-dohyo .sw{width:50px;height:36px}
+.chlist>.chosen::before{inset:0}
+.screen.enter .chlist>:nth-child(n+8){animation:none}

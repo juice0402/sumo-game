@@ -86,6 +86,36 @@ export const T = {
   top: '最高位',
   worldLater: '世界の番付は、オンラインになってから',
   stageLine: (name, note) => `${name}・${note}`,
+  // 設定（11/28・issue #27）。画面の字は page.html、切りかえや確かめの字はここ
+  vol: ['消す', '小さい', 'ふつう'],   // 音の大きさ（0〜2・大きさの数は data/settings.js の VOL）
+  shortOpt: ['ふつう', '短く'],         // 演出を短く：切・入
+  wipe: ['データを消す', 'ほんとうに消す？', 'もう一度で消す'],   // 押すたびに次へ。3つめで消す
+  wipeDone: 'データを消した',
+  // 権利表記（設定 → 権利表記）。[名前, 使う所, ライセンス]。全文は assets/ の licenses（ビルドが作る）
+  rights: [
+    ['Yuji Syuku', '筆の字', 'SIL Open Font License 1.1'],
+    ['Zen Kaku Gothic New', 'ゴシックの字', 'SIL Open Font License 1.1'],
+    ['Rapier', '物理', 'Apache License 2.0'],
+    ['three.js', '立体', 'MIT License'],
+    ['Wyzowl SFX Kit', '効果音', 'CC0'],
+    ['Oculus Audio Pack 01', '効果音（金床）', 'CC BY 4.0'],
+  ],
+  licenseLoading: '読みこんでいます…',
+  licenseNg: '読みこめませんでした',
+  // 帳面（#28・ui/chomen.js）。切りかえの字は page.html
+  chNote: { log: '押すと、もう一度見られる', ach: '称号は見た目だけ・強さは変わらない', zukan: '見た目は福箱から出る・強さは変わらない' },
+  logNone: 'まだ取組がない',
+  logOld: '見られない',   // 保存したときと物理の版がちがう（再生のボタンは出さない）
+  logVs: (name) => `対 ${name}`,
+  logWhen: (t) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; },
+  toChomen: '帳面へ',   // リプレイの結果のボタン
+  replayLine: (when) => `帳面の取組　${when}`,   // リプレイの結果のひとこと（小判・番付は動かない）
+  achGot: '手に入れた',
+  achNow: (n, of) => `いま ${n}／${of}`,
+  achRank: (name) => `いま ${name}`,
+  zkStart: 'はじめから',
+  zkFuku: '福箱から出る',
+  zkBout: '取組で手に入る',
   fpSame: 'パソコンと同じ',
   fpDiff: 'パソコンとちがう',
   fpRef: (fp) => `パソコン：${fp}`,

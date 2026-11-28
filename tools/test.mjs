@@ -193,5 +193,71 @@ console.log(`四股名 ${names}通り・称号 ${TITLES.length}・土俵 ${Objec
   g.rate = 1950;
   ok(afterBout(g, { mode: 'honbasho', winner: 'b', kima: 'oshidashi', hour: 2 }).join() === 'ti_yofukashi,ti_sekitori' && g.streak === 0, '夜中・十両の称号がおかしい');
 }
+// 帳面の取組記録とリプレイ（#28）：保存した物から作りなおした取組が、保存した結果（勝ち負け・決着・決まり手）と同じか。
+// 稽古・本場所・巡業（土俵ぜんぶ）・動かし方2つで、保存（JSON）→ 読みこみ（cleanLog）→ 作りなおし
+{
+  const { logEntry, addLog, cleanLog, canReplay, replayBoutOpts } = await import('../src/game/log.js');
+  const { LOG_MAX } = await import('../src/data/settings.js');
+  const { CONFIG_VERSION } = await import('../src/data/config.js');
+  const play = (o) => {
+    const bout = createBout(Object.assign({ record: true }, o));
+    while (!bout.stepOnce()) { /* 進める */ }
+    const k = decideKimarite(bout, toLocal(o.a, 1, bout.phys), toLocal(o.b, -1, bout.phys));
+    const r = Object.assign({}, bout.result, { steps: bout.step, kima: k });
+    bout.free();
+    return r;
+  };
+  const cases = [['keiko', 'hyojun', 'hop'], ['honbasho', 'hyojun', 'push'], ...Object.keys(STAGES).map((id) => ['jungyo', id, 'hop'])];
+  const st = { log: [] };
+  cases.forEach(([mode, stage, drive], i) => {
+    const me = CPU_SHAPES[i % 5].pts, foe = CPU_SHAPES[(i + 2) % 5].pts, seed = 100 + i * 7;
+    const r = play({ a: me, b: foe, seed, phys: Object.assign({ drive }, STAGES[stage].phys) });
+    addLog(st, logEntry({ mode, stage, drive, seed, me, foe, a: { name: '甲' }, b: { name: '乙' }, papers: ['p_washi'], auras: ['a_none'], winner: r.winner, kind: r.kind, kima: r.kima, venue: mode === 'honbasho' ? 3 : -1, upset: 1 }));
+  });
+  const back = cleanLog(JSON.parse(JSON.stringify(st.log)));
+  ok(back.length === cases.length, `取組記録の読みこみで数が変わった（${back.length}）`);
+  for (const e of back) {
+    ok(canReplay(e), `取組記録が見られない（${e.mode} ${e.stage}）`);
+    const r = play(replayBoutOpts(e));
+    ok(r.winner === e.w && r.kind === e.k && r.kima === e.km, `リプレイの結果がちがう（${e.mode} ${e.stage} ${e.drive}：${e.w}${e.k}${e.km} → ${r.winner}${r.kind}${r.kima}）`);
+  }
+  ok(!canReplay(Object.assign({}, back[0], { v: CONFIG_VERSION - 1 })), '前の版の取組を見られることにしている');
+  ok(!canReplay(Object.assign({}, back[0], { sp: 'x' })), '土俵の物理が変わった取組を見られることにしている');
+  ok(!canReplay(Object.assign({}, back[0], { stage: 'nai' })), '知らない土俵の取組を見られることにしている');
+  for (let i = 0; i < LOG_MAX + 5; i++) addLog(st, Object.assign({}, back[0], { t: i }));
+  ok(st.log.length === LOG_MAX && st.log[0].t === LOG_MAX + 4, '取組記録が古いものから消えない');
+  ok(cleanLog([{ mode: 'keiko' }, null, 5, { mode: 'x', t: 1, seed: 1, a: back[0].a, b: back[0].b, stage: 'hyojun' }]).length === 0 && cleanLog('x').length === 0, 'こわれた取組記録を読みこんだ');
+  ok(JSON.stringify(cleanLog(back)) === JSON.stringify(back), '取組記録を読みなおすと中身が変わる');
+  ok(JSON.stringify(st.log).length < 60000, `取組記録が重い（${JSON.stringify(st.log).length}字）`);
+}
+
+// 設定（11/28・issue #27）：音の大きさの保存（前の mute:true は「消す」）・字の点検・index.html に道具とネットの字がない
+{
+  const mem = {};
+  globalThis.localStorage = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => { delete mem[k]; } };
+  const { loadState, saveState, wipeSave } = await import('../src/game/save.js');
+  const { VOL, VOL_DEFAULT } = await import('../src/data/settings.js');
+  const volOf = (d) => { mem['sumo-proto-v1'] = JSON.stringify(d); return loadState().vol; };
+  ok(volOf({}) === VOL_DEFAULT && volOf({ mute: true }) === 0 && volOf({ mute: false }) === VOL_DEFAULT && volOf({ vol: 1, mute: true }) === 1 && volOf({ vol: 9 }) === VOL_DEFAULT, '音の大きさの読みこみがおかしい');
+  ok(VOL.length === T.vol.length && VOL[0] === 0, '音の大きさの段の数と字がそろっていない');
+  mem['sumo-proto-v1'] = JSON.stringify({ rate: 1600, koban: 5 });
+  ok(Array.isArray(loadState().log) && loadState().log.length === 0 && loadState().rate === 1600, '前の形の保存（log なし）が読めない');
+  const st = loadState(); st.vol = 0; saveState(st);
+  const saved = JSON.parse(mem['sumo-proto-v1']);
+  ok(saved.vol === 0 && saved.mute === true, '音を消したとき mute も書く（前の版でも消したまま）');
+  mem['sumo-proto-v1-bak'] = '{}';
+  wipeSave();
+  ok(!('sumo-proto-v1' in mem) && !('sumo-proto-v1-bak' in mem), 'データを消すで保存が残った');
+  delete globalThis.localStorage;
+  const { missingGlyphs } = await import('./fontcheck.mjs');
+  const miss = missingGlyphs();
+  for (const n in miss) ok(false, `字 ${n} に足りない字「${miss[n]}」（python3 -I tools/fonts.py）`);
+  const { readFileSync: rf, existsSync: ex } = await import('node:fs');
+  const html = rf(new URL('../index.html', import.meta.url), 'utf8');
+  ok(!/id="(b-tools|s-tools)"/.test(html), 'index.html に道具がある');
+  ok(!/fonts\.googleapis|fonts\.gstatic/.test(html), 'index.html がネットの字を読む');
+  const fontRefs = [...html.matchAll(/url\("?(assets\/[^")]+\.woff2)"?\)/g)].map((m) => m[1]);
+  ok(fontRefs.length === 3 && fontRefs.every((f) => ex(new URL('../' + f, import.meta.url))), 'index.html の字（assets/ の woff2）がない');
+}
 console.log(fails ? `NG ${fails}件` : `OK（指紋 ${fp}）`);
 process.exit(fails ? 1 : 0);
