@@ -30,7 +30,13 @@ export function drawDohyoSwatch(cv, key) {
   // 横の面
   ctx.fillStyle = d.side.paper;
   ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, top + side); ctx.ellipse(cx, top + side, rx, ry, 0, Math.PI, 0, true); ctx.lineTo(cx + rx, top); ctx.closePath(); ctx.fill();
-  if (sideImg) { ctx.save(); ctx.clip(); ctx.drawImage(sideImg, cx - rx, top, 2 * rx, side + ry); ctx.restore(); }   // 横の面いっぱいに（上の面のふちまで・すきまを作らない）
+  if (sideImg) {   // 横の面いっぱいに（上の面のふちまで・すきまを作らない）。くり返す帯（特殊土俵）は高さを合わせて並べる
+    ctx.save(); ctx.clip();
+    const hh = side + ry;
+    if (d.side.tile) { const tw = sideImg.width * (hh / sideImg.height); for (let x = cx - Math.ceil(rx / tw) * tw - tw / 2; x < cx + rx; x += tw) ctx.drawImage(sideImg, x, top, tw, hh); }
+    else ctx.drawImage(sideImg, cx - rx, top, 2 * rx, hh);
+    ctx.restore();
+  }
   ctx.strokeStyle = d.side.line; ctx.lineWidth = Math.max(1, W * 0.012);
   ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, top + side); ctx.ellipse(cx, top + side, rx, ry, 0, Math.PI, 0, true); ctx.lineTo(cx + rx, top); ctx.stroke();
   // 上の面
