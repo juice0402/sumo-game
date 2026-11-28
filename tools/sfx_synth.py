@@ -1,5 +1,5 @@
 # 和太鼓のドンと紙のシュッをコードで作る（C・コードで作った音・11/26 聞きくらべで しょーくんが A をえらんだ）
-# 使い方: python3 -I tools/sfx_synth.py [出力のフォルダ＝assets/sfx]  （numpy・scipy・ffmpeg が要る）
+# 使い方: python3 -I tools/sfx_synth.py [出力のフォルダ＝media/sfx]  （numpy・scipy・ffmpeg が要る）
 import numpy as np, scipy.signal as sg, subprocess, sys, os
 SR = 44100
 rng = np.random.default_rng(7)
@@ -45,7 +45,7 @@ def save(y, name, vol=0.89):
     y = y / np.abs(y).max() * vol
     raw = (y * 32767).astype('<i2').tobytes()
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-f', 's16le', '-ar', str(SR), '-ac', '1', '-i', '-', '-b:a', '80k', name], input=raw, check=True)
-out = sys.argv[1] if len(sys.argv) > 1 else 'assets/sfx'
+out = sys.argv[1] if len(sys.argv) > 1 else 'media/sfx'
 # 雑音は乱数で作るので、作る順番で音が変わる。聞きくらべと同じ順番で作る（B・C は聞きくらべの候補・えらばなかった）
 don = taiko()                                                    # A 和太鼓・長胴 → don.mp3
 taiko(f0=96, decay=0.8, glide=1.3, skin=0.7, wet=0.1, dur=1.2)   # B 和太鼓・中くらい

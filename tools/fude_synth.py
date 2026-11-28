@@ -1,5 +1,5 @@
 # 筆の音（C・コードで作った音・11/28 聞きくらべで しょーくんが B をえらんだ）
-# 使い方: python3 -I tools/fude_synth.py [出力のフォルダ＝assets/sfx]  （numpy・scipy・ffmpeg が要る）
+# 使い方: python3 -I tools/fude_synth.py [出力のフォルダ＝media/sfx]  （numpy・scipy・ffmpeg が要る）
 # 雑音は乱数で作るので、聞きくらべと同じ順番で A〜D を作り、B だけを fude.mp3 にする
 import numpy as np, scipy.signal as sg, subprocess, sys
 SR = 44100
@@ -69,7 +69,7 @@ def save(y, name, vol=0.89):
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-f', 's16le', '-ar', str(SR), '-ac', '1', '-i', '-', '-b:a', '80k', name],
                    input=(y * 32767).astype('<i2').tobytes(), check=True)
 
-out = sys.argv[1] if len(sys.argv) > 1 else 'assets/sfx'
+out = sys.argv[1] if len(sys.argv) > 1 else 'media/sfx'
 gap = lambda s: np.zeros(int(SR * s))
 A = room(stroke(0.42, harai=0.45))                                                      # A 一画のサーッ（はらい）
 B = room(np.r_[stroke(0.15, harai=0, tome=True), gap(0.05), stroke(0.24, harai=0.5)])  # B 二画のサッ・サーッ

@@ -1,4 +1,4 @@
-# Codex の絵（art-irai の art/ の枝の PNG）を、部品に切って緑（または黒）を抜き、assets/art/*.webp にする。
+# Codex の絵（art-irai の art/ の枝の PNG）を、部品に切って緑（または黒）を抜き、media/art/*.webp にする。
 #   python3 -I tools/art_cut.py <PNG> <型> <出力の名前…>
 #   python3 -I tools/art_cut.py <PNG> <型> <名前…> [--q 品質] [--aq すけ具合の品質] [--scale 倍率]（名前@倍率 で1つだけ小さく）
 #   tex の後ろに --period（もようの紙・くり返しの長さで切る）・tint=#RRGGBB（色を地の色に合わせる）
@@ -68,7 +68,7 @@ def save(im, name):
     k = OPT['scale']
     if '@' in name: name, k = name.split('@')[0], float(name.split('@')[1])
     if k < 1: im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
-    im.save(f'assets/art/{name}.webp', 'WEBP', quality=int(OPT['q']), alpha_quality=int(OPT['aq']), method=6)
+    im.save(f'media/art/{name}.webp', 'WEBP', quality=int(OPT['q']), alpha_quality=int(OPT['aq']), method=6)
     print(name, im.size)
 
 def key_black(im, boost):
@@ -137,7 +137,7 @@ if kind == 'tex':
         im = Image.fromarray(out.astype(np.uint8), 'RGB')
     mx = int(names[1]); k = mx / max(im.size)
     im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
-    im.save(f'assets/art/{names[0]}.webp', 'WEBP', quality=int(OPT['q']), method=6)
+    im.save(f'media/art/{names[0]}.webp', 'WEBP', quality=int(OPT['q']), method=6)
     print(names[0], im.size)
     sys.exit()
 im = key_green(Image.open(src))

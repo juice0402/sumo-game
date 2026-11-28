@@ -1,7 +1,7 @@
 # 本場所の会場の音（11/27 しょーくん「空気感とか演出とかも、かなり豪華なものに」→ 会場のざわめき・歓声と拍手・ストンとパッの音）
 #   コードで作る（C）：zawa（ざわめき・ループ）・doyo（どよめき「おおっ」）・kansei（歓声「わあーっ」）・pa（明かりがパッ＝大きなスイッチ）
 #   koe-irai からえらぶ（CC0 Wyzowl）：hakushu（拍手）・suton（ストン）
-# 使い方: python3 -I tools/kaijo_sfx.py --koe <koe-irai のフォルダ> [出力のフォルダ＝assets/sfx]  （numpy・scipy・ffmpeg が要る）
+# 使い方: python3 -I tools/kaijo_sfx.py --koe <koe-irai のフォルダ> [出力のフォルダ＝media/sfx]  （numpy・scipy・ffmpeg が要る）
 # 人の声は、のどの音（のこぎり波）を口の形（母音の共鳴）に通して作る。たくさん重ねて遠くの会場の響きに入れると、言葉の聞こえないざわめきになる
 import numpy as np, scipy.signal as sg, subprocess, sys
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     koe = None
     if '--koe' in args:
         i = args.index('--koe'); koe = args[i + 1]; del args[i:i + 2]
-    out = args[0] if args else 'assets/sfx'
+    out = args[0] if args else 'media/sfx'
     # 乱数の順番で音が変わる。この順番で作る
     save(zawa(), f'{out}/zawa.mp3', vol=0.8, kbps=40)
     save(doyo(), f'{out}/doyo.mp3', kbps=48)

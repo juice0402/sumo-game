@@ -95,14 +95,15 @@ function loadLibs() {
   ready = domReady
     .then(() => {
       try {
-        const el = document.getElementById('lib-sfx');
-        if (el) { window.SUMO_SFX = JSON.parse(el.textContent); el.remove(); sfxReady(); }
+        const A = window.SUMO_ASSETS;
+        if (A && A.sfx) { window.SUMO_SFX = { ...A.sfx }; sfxReady(); }   // assets/ の効果音（11/28〜・D）
       } catch (e) { /* 音なしで続ける */ }
       loadPaperTextures();   // 紙質のテクスチャ（Codex の絵・タイトルの間に読む。読む前はコードのもよう）
     })
     .then(() => run('lib-rapier'))
-    .then(() => pause().then(() => unpackLib('lib-wasm')))
-    .then((wasm) => { window.__SUMO_WASM = wasm.buffer; return window.RAPIER.init(); })
+    // 物理の wasm は assets/ のファイル：fetch → arrayBuffer（instantiateStreaming は使わない＝App Store のアプリは wasm の種類を伝えない）
+    .then(() => fetch(window.SUMO_ASSETS.wasm).then((r) => { if (!r.ok && r.status !== 0) throw new Error('wasm ' + r.status); return r.arrayBuffer(); }))
+    .then((buf) => { window.__SUMO_WASM = buf; return window.RAPIER.init(); })
     .then(() => { delete window.__SUMO_WASM; setRapier(window.RAPIER); return run('lib-three'); });
   ready.catch(() => {
     const el = document.getElementById('err');

@@ -1,4 +1,4 @@
-// 効果音（Web Audio）。ビルドが window.SUMO_SFX = { "<名前>": "data:audio/mpeg;base64,…" } を入れる。
+// 効果音（Web Audio）。window.SUMO_SFX = { "<名前>": "assets/<名前>.<印>.mp3" }（app.js が SUMO_ASSETS.sfx から入れる・前の data: も読める）。
 import { fromBase64 } from './unpack.js';
 const MIN_GAP = 0.04; // 同じ音は40ms以内なら鳴らさない
 let ctx = null;
@@ -53,7 +53,9 @@ function loadBufs() {
     for (const name of Object.keys(src)) {
       if (bufs[name]) continue;
       try {
-        decode(dataToBuffer(src[name])).then((b) => { bufs[name] = b; delete src[name]; }, () => {});   // ほどいたら文字は捨てる（メモリを軽く）
+        const u = src[name];
+        const raw = u.startsWith('data:') ? Promise.resolve(dataToBuffer(u)) : fetch(u).then((r) => r.arrayBuffer());   // assets/ の mp3（11/28〜）
+        raw.then(decode).then((b) => { bufs[name] = b; delete src[name]; }, () => {});
       } catch (e) { /* その音だけあきらめる */ }
     }
   } catch (e) { /* 音が出なくてもゲームは続く */ }
